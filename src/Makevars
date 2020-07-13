@@ -1,0 +1,100 @@
+CXX_STD=CXX11
+
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+
+PKG_CPPFLAGS=-I../inst -I../inst/include
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
+PKG_LIBS=  $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials
+LIBS=-L./ -L../inst
+
+.PHONY: all ../inst/libsundials.a
+
+SOURCES_NVECSERIAL= ./sundials/nvector/serial/fnvector_serial.c \
+./sundials/nvector/serial/nvector_serial.c
+
+SOURCES_SUNDIALS= ./sundials/sundials/sundials_band.c ./sundials/sundials/sundials_dense.c \
+./sundials/sundials/sundials_direct.c ./sundials/sundials/sundials_iterative.c \
+./sundials/sundials/sundials_linearsolver.c \
+./sundials/sundials/sundials_math.c ./sundials/sundials/sundials_matrix.c \
+./sundials/sundials/sundials_nonlinearsolver.c \
+./sundials/sundials/sundials_nvector.c ./sundials/sundials/sundials_nvector_senswrapper.c
+#./sundials/sundials/sundials_version.c
+
+SOURCES_SUNMAT = ./sundials/sunmatrix/dense/fsunmatrix_dense.c \
+./sundials/sunmatrix/dense/sunmatrix_dense.c \
+./sundials/sunmatrix/band/fsunmatrix_band.c \
+./sundials/sunmatrix/band/sunmatrix_band.c
+
+SOURCES_SUNLINSOL_DENSE = ./sundials/sunlinsol/dense/fsunlinsol_dense.c \
+./sundials/sunlinsol/dense/sunlinsol_dense.c
+
+SOURCES_SUNLINSOL_BAND = ./sundials/sunlinsol/band/sunlinsol_band.c \
+./sundials/sunlinsol/band/fsunlinsol_band.c
+
+SOURCES_SUNNONLINSOL = ./sundials/sunnonlinsol/newton/sunnonlinsol_newton.c \
+./sundials/sunnonlinsol/newton/fsunnonlinsol_newton.c \
+./sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c \
+./sundials/sunnonlinsol/fixedpoint/fsunnonlinsol_fixedpoint.c
+
+SOURCES_CVODE= ./sundials/cvode/cvode.c ./sundials/cvode/cvode_bandpre.c \
+./sundials/cvode/cvode_bbdpre.c \
+./sundials/cvode/cvode_diag.c \
+./sundials/cvode/cvode_io.c \
+./sundials/cvode/cvode_ls.c \
+./sundials/cvode/cvode_nls.c
+
+SOURCES_ARKODE = ./sundials/arkode/arkode.c \
+./sundials/arkode/arkode_adapt.c \
+./sundials/arkode/arkode_arkstep.c \
+./sundials/arkode/arkode_arkstep_io.c \
+./sundials/arkode/arkode_arkstep_nls.c \
+./sundials/arkode/arkode_bandpre.c \
+./sundials/arkode/arkode_bbdpre.c \
+./sundials/arkode/arkode_butcher.c \
+./sundials/arkode/arkode_butcher_dirk.c \
+./sundials/arkode/arkode_butcher_erk.c \
+./sundials/arkode/arkode_erkstep.c \
+./sundials/arkode/arkode_erkstep_io.c \
+./sundials/arkode/arkode_interp.c \
+./sundials/arkode/arkode_io.c \
+./sundials/arkode/arkode_ls.c \
+./sundials/arkode/arkode_mristep.c \
+./sundials/arkode/arkode_mristep_io.c \
+./sundials/arkode/arkode_root.c
+
+
+SOURCES =  interface_fct.cpp solver.cpp basic_functions.cpp param_interpolation.cpp params.cpp state.cpp RcppExports.cpp optimizer.cpp solve_ode_system.cpp ode_example.cpp
+
+OBJECTS = $(SOURCES:.cpp=.o)
+
+SOURCES_SUNDIALS_ALL= $(SOURCES_NVECSERIAL) $(SOURCES_SUNDIALS) $(SOURCES_SUNMAT) $(SOURCES_SUNLINSOL_DENSE) $(SOURCES_SUNLINSOL_BAND) $(SOURCES_SUNNONLINSOL) $(SOURCES_CVODE) $(SOURCES_ARKODE)
+
+OBJECTS_SUNDIALS_ALL = $(SOURCES_SUNDIALS_ALL:.c=.o)
+
+#OBJECTS= interface_fct.o solver.o basic_functions.o param_interpolation.o params.o state.o RcppExports.o optimizer.o tests.o test_solver.o test_paramsort_spline.o #solve_ode_system.o twostage.o comparison_fct.o $(SOURCES_SUNDIALS_ALL:.c=.o)
+
+all: $(SHLIB)
+
+all: $(SHLIB) ../inst/libsundials.a
+
+$(SHLIB): $(OBJECTS_SUNDIALS_ALL) ../inst/libsundials.a
+
+../inst/libsundials.a: $(OBJECTS_SUNDIALS_ALL)
+	$(AR) -crvs ../inst/libsundials.a $(OBJECTS_SUNDIALS_ALL)
+	$(RANLIB) $@
+
+clean:	
+	(cd ./sundials/sundials; rm -f *.o) 
+	(cd ./sundials/nvector/serial;rm -f *.o) 
+	(cd ./sundials/sunmatrix/dense;rm -f *.o)
+	(cd ./sundials/sunmatrix/band;rm -f *.o) 
+	(cd ./sundials/sunlinsol/dense;rm -f *.o) 
+	(cd ./sundials/sunlinsol/band;rm -f *.o) 
+	(cd ./sundials/sunnonlinsol/newton;rm -f *.o) 
+	(cd ./sundials/sunnonlinsol/fixedpoint;rm -f *.o) 
+	(cd ./sundials/cvode;rm -f *.o) 
+	(cd ./sundials/arkode;rm -f *.o) 
+	(cd ./sundials/arkode;rm -f *.o) 
+	rm -f *.dll 
+	rm -f *.exe 
+	(cd ../inst;rm -f *.a)
