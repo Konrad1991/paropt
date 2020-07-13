@@ -56,5 +56,5 @@ First of all I'm very greatful to my supervisor Arnd Heyer who supported me in w
 Also I would like to thank Satyaprakash Nayak which gave me inspiration to solve coding problems.
 Moreover, I would like to thank Tobias Bartsch for elaborately testing of the package.
 Furthermore, gratitude is owned to Johannes Krämer for many discussion about simulations. 
-Special thanks to my girlfriend Jana Schmitt for supporting me all the way.
+Special thanks to my girlfriend Jana for supporting me all the way.
 
