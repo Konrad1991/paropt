@@ -89,3 +89,4 @@ test_that("check Import_States", {
   expect_equal(paropt:::test_Import_States(paste(path, "/test.txt", sep = "")), list_states)
   expect_equal(paropt:::test_Import_States(paste(path, "/test_NA.txt", sep = "")), list_states_NA)
 })
+

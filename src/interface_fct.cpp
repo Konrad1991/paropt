@@ -13,6 +13,7 @@
                    std::string where_to_save_output_parameter,
                  std::string solvertype) {
 
+    // extract parameters
     std::vector<int> params_cut_idx_vec;
     std::vector<double> params_time_combi_vec;
     std::vector<double> param_combi_start;
@@ -23,6 +24,7 @@
     Import_Parameter(start, lower, upper, params_cut_idx_vec, params_time_combi_vec,
     param_combi_start, param_combi_lb, param_combi_ub, header_parameter);
 
+    // extract states
     std::vector<int> hs_cut_idx_vec;
     std::vector<double> hs_time_combi_vec;
     std::vector<double> hs_harvest_state_combi_vec;
@@ -30,10 +32,12 @@
 
     Import_states(states, hs_cut_idx_vec, hs_time_combi_vec, hs_harvest_state_combi_vec, header_states);
 
+    // check if ngen is positiv
     if(ngen <= 0) {
       Rcpp::stop("\nERROR: number of generations should be a positiv number");
     }
 
+    // extract initial values
     int tmpcount=0;
 
     std::vector<double> init_state ( hs_cut_idx_vec.size() );
@@ -42,6 +46,7 @@
       tmpcount += hs_cut_idx_vec[i];
     }
 
+    // check absolute_tolerances
     if(static_cast<int>(init_state.size()) > absolute_tolerances.length()) {
       Rcpp::stop("\nERROR: absolute tolerances not defined for each state");
       //exit (EXIT_FAILURE);
@@ -52,6 +57,8 @@
       //exit (EXIT_FAILURE);
     }
 
+    // check time in parameters vs state time
+    // ============================================================
     std::vector<double>::iterator max_time_param_vector = std::max_element(params_time_combi_vec.begin(), params_time_combi_vec.end());
     std::vector<double>::iterator min_time_param_vector = std::min_element(params_time_combi_vec.begin(), params_time_combi_vec.end());
     std::vector<double>::iterator max_time_harvest_vector = std::max_element(hs_time_combi_vec.begin(), hs_time_combi_vec.end());
@@ -91,7 +98,9 @@
         Rcpp::warning("\nERROR: integration_times has not the same entries as the time vector of state input");
       }
     }
+    // ============================================================
 
+    // check size of parameters either constant length = 1 or length>4 => variable
     for(size_t i = 0; i < params_cut_idx_vec.size(); i++) {
       if(params_cut_idx_vec[i] == 1 || params_cut_idx_vec[i] >=4) {
         // everything is fine. 4 values needed for spline
@@ -100,12 +109,13 @@
       }
     }
 
+    // checks of ODE-System
+    // ==================================================================
     if(TYPEOF(ode_system) != CLOSXP) {
       Rcpp::stop("\nERROR: type of odesystem should be closure");
       //exit (EXIT_FAILURE);
     }
 
-    // ==================================================================
     Rcpp::NumericVector new_states(init_state.size());
     realtype time_param_sort = params_time_combi_vec[0];
     std::vector<double> parameter_input;
@@ -154,6 +164,8 @@
     }
     // ==================================================================
 
+    // Test integration
+    // ==================================================================
     time_state_information param_model;
 
     param_model.init_state = init_state;
@@ -179,7 +191,10 @@
     } else {
       Rcpp::stop("\nERROR: Unknown solvertyp");
     }
+    // ==================================================================
 
+    // Optimization
+    // ==================================================================
     settingsPSO param_pso;
 
     param_pso.err_tol = error;
@@ -209,7 +224,10 @@
     smsq = optimizing.pso();
     std::vector<double> temp;
     optimizing.get_best_particle_param_values(temp);
+    // ==================================================================
 
+    // solve ODE-System with optimized parameters
+    // ==================================================================
     if(solvertype == "bdf") {
     solver_bdf_save(temp, ode_system, param_model, where_to_save_output_states, header_states);
     }
@@ -224,8 +242,10 @@
     } else {
       Rcpp::stop("\nERROR: Unknown solvertyp");
     }
+    // ==================================================================
 
     // export parameter
+    // ==================================================================
     int idxcount = 0;
     std::vector<std::vector<double> > params_export(params_cut_idx_vec.size());
     for(size_t i = 0; i < params_cut_idx_vec.size(); i++) {
@@ -266,7 +286,7 @@
       myfile << "\n";
       rowcounter++;
     }
-
+    // ==================================================================
 
     return Rcpp::List::create(Rcpp::Named("Error of best parameters:") = smsq,
                        Rcpp::Named("Error set by user:") = error,
