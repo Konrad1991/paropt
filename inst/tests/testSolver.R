@@ -1,8 +1,8 @@
 library(testthat)
-library(ParOpt2)
+library(paropt)
 
 context("test Solver")
-path <- system.file("tests/testthat/files", package = "ParOpt2")
+path <- system.file("tests/testthat/files", package = "paropt")
 # # Test Solver =======================================================
 Rcpp::cppFunction('Rcpp::NumericVector ode(double t, std::vector<double> params, Rcpp::NumericVector y) {
   Rcpp::NumericVector ydot(y.length());
@@ -25,14 +25,14 @@ out <- read.table(paste(path, "/outputdeSolve.txt", sep = ""), header = T)
 correct <- list(out[,2], out[,3])
 
 test_that("check ode solving", {
-  expect_equal(ParOpt2:::test_solver(seq(0, 100, pi/2), ode, 1e-6, c(1e-8, 1e-8), paste(path, "/paramstartLV.txt", sep = ""),
+  expect_equal(paropt:::test_solver(seq(0, 100, pi/2), ode, 1e-6, c(1e-8, 1e-8), paste(path, "/paramstartLV.txt", sep = ""),
                                      paste(path, "/lbLV.txt", sep = ""),paste(path, "/ubLV.txt", sep = ""),
                                      paste(path, "/states_LV.txt", sep = ""), solvertype = "bdf"), correct,
                tolerance = 0.001)
 })
 
 test_solving_with_start_values <- function(solvertype) {
-  out <- ParOpt2:::test_solve_ode_system(seq(0, 100, pi/2), ode, 1e-6, c(1e-8, 1e-8), paste(path, "/paramstartLV.txt", sep = ""),
+  out <- paropt:::test_solve_ode_system(seq(0, 100, pi/2), ode, 1e-6, c(1e-8, 1e-8), paste(path, "/paramstartLV.txt", sep = ""),
                                   paste(path, "/states_LV.txt", sep = ""), solvertype)
   return(out)
 }
@@ -44,6 +44,6 @@ test_that("check ode solving with start parameter values as text file", {
 })
 
 test_that("check error calculation", {
-  expect_equal(ParOpt2:::test_error_calculation(paste(path,"/error.txt", sep = ""),paste(path,"/measured.txt", sep ="")), 12)
+  expect_equal(paropt:::test_error_calculation(paste(path,"/error.txt", sep = ""),paste(path,"/measured.txt", sep ="")), 12)
 })
 
