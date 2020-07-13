@@ -1,5 +1,7 @@
 #include "solver.hpp"
 
+static int check_retval(void *returnvalue, const char *funcname, int opt);
+
 struct usr_data{
   Rcpp::Function ode_systen;
   std::vector<double> parameter;
