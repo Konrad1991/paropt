@@ -1,0 +1,7 @@
+time a b
+1 2 2
+2 NA NA
+3 NA NA
+4 NA NA
+5 NA NA
+6 3  3
