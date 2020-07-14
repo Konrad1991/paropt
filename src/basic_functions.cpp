@@ -105,12 +105,27 @@ for(size_t i = 0; i < temp.size(); i++) { // temp.size() - 1 --> last line often
 // used for conversion from string to double
 template<class T> T fromString(const std::string& s)
 {
-    std::size_t dot, min_idx, e_idx, E_idx, plus_idx;
-    dot = s.find('.');
-    min_idx = s.find('-');
-    e_idx = s.find('e');
-    E_idx = s.find('E');
-    plus_idx = s.find('+');
+    //std::size_t dot, min_idx, e_idx, E_idx, plus_idx;
+    //dot = s.find('.');
+    //min_idx = s.find('-');
+    //e_idx = s.find('e');
+    //E_idx = s.find('E');
+    //plus_idx = s.find('+');
+    char dot, minus, ex, Ex, plus;
+
+    dot = '.';
+    minus = '-';
+    ex = 'e';
+    Ex = 'E';
+    plus = '+';
+
+    for (char const &c: s) {
+      if(std::isdigit(c) || c == dot || c == minus || c == ex || c == Ex || c == plus) {
+      } else {
+        Rcpp::stop("\nERROR: Not a number in input. As non-numeric input only NA allowed");
+      }
+    }
+    /*
      for(std::string::size_type i = 0; i < s.size(); i++) {
        if(std::isdigit(s[i]) || i == dot || i == min_idx || i == e_idx || i == E_idx || i == plus_idx) {
          // it is a digit or "."
@@ -118,7 +133,7 @@ template<class T> T fromString(const std::string& s)
          Rcpp::stop("\nERROR: Not a number in input. As non-numeric input only NA allowed");
        }
      }
-
+     */
      std::istringstream stream (s);
      T t;
      stream >> t;
