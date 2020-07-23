@@ -5,9 +5,9 @@
 typedef int (*ode_cpp_fct)(double &t, std::vector<double> &params, std::vector<double> &states);
 
 // [[Rcpp::export]]
-Rcpp::List solve_ode_system(Rcpp::NumericVector integration_times,
+Rcpp::List solve_ode_system(std::vector<double> integration_times,
                    ode_cpp_fct ode_system, double relative_tolerance,
-                   Rcpp::NumericVector absolute_tolerances,
+                   std::vector<double> absolute_tolerances,
                     std::string start, std::string states,
                    std::string where_to_save_output_states,std::string solvertype) {
 
@@ -103,7 +103,7 @@ Rcpp::List solve_ode_system(Rcpp::NumericVector integration_times,
   // ==================================================================
 
   // Integration
-  time_state_information param_model;
+  time_state_information_Rcpp_interface param_model;
 
   param_model.init_state = init_state;
   param_model.par_times = params_time_combi_vec;
@@ -116,7 +116,6 @@ Rcpp::List solve_ode_system(Rcpp::NumericVector integration_times,
   param_model.absolute_tolerances = absolute_tolerances;
 
   double smsq;
-  // test integration
   if(solvertype == "bdf") {
     smsq = solver_bdf_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
   }

@@ -65,3 +65,15 @@ struct time_state_information_two_stage {
   std::vector<int> state_idx_cut;
   Rcpp::NumericVector integration_times;
 };
+
+struct time_state_information_Rcpp_interface {
+  std::vector<double> init_state;
+  std::vector<double> par_times;
+  std::vector<int> param_idx_cuts;
+  std::vector<double> state_measured;
+  std::vector<double> state_times;
+  std::vector<int> state_idx_cut;
+  std::vector<double> integration_times;
+  double reltol;
+  std::vector<double> absolute_tolerances;
+};
