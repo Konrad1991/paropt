@@ -93,7 +93,7 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
   return 0;
 }
 
-double solver_bdf(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
+double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -101,7 +101,7 @@ double solver_bdf(std::vector<double> &param_combi_start, SEXP ode_system, time_
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -190,10 +190,10 @@ double solver_bdf(std::vector<double> &param_combi_start, SEXP ode_system, time_
     SUNLinSolFree(LS);
     SUNMatDestroy(A);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_bdf_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -312,10 +312,10 @@ std::vector<std::string> headers) {
        SUNLinSolFree(LS);
        SUNMatDestroy(A);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_adams(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
+double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -323,7 +323,7 @@ double solver_adams(std::vector<double> &param_combi_start, SEXP ode_system, tim
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -400,10 +400,10 @@ double solver_adams(std::vector<double> &param_combi_start, SEXP ode_system, tim
        N_VDestroy(abstol);
        CVodeFree(&cvode_mem);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_adams_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -412,7 +412,7 @@ std::vector<std::string> headers) {
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -511,10 +511,10 @@ std::vector<std::string> headers) {
        N_VDestroy(abstol);
        CVodeFree(&cvode_mem);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_erk(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
+double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -522,7 +522,7 @@ double solver_erk(std::vector<double> &param_combi_start, SEXP ode_system, time_
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -593,10 +593,10 @@ double solver_erk(std::vector<double> &param_combi_start, SEXP ode_system, time_
        N_VDestroy(abstol);
        ERKStepFree(&arkode_mem);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_erk_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -605,7 +605,7 @@ std::vector<std::string> headers) {
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -697,10 +697,10 @@ std::vector<std::string> headers) {
        N_VDestroy(abstol);
        ERKStepFree(&arkode_mem);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_ark(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
+double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -708,7 +708,7 @@ double solver_ark(std::vector<double> &param_combi_start, SEXP ode_system, time_
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -797,10 +797,10 @@ double solver_ark(std::vector<double> &param_combi_start, SEXP ode_system, time_
        SUNLinSolFree(LS);
        ARKStepFree(&arkode_mem);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_ark_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -809,7 +809,7 @@ std::vector<std::string> headers) {
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -916,7 +916,7 @@ std::vector<std::string> headers) {
        SUNLinSolFree(LS);
        ARKStepFree(&arkode_mem);
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+ return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
 static int check_retval(void *returnvalue, const char *funcname, int opt)
