@@ -1,6 +1,6 @@
 #include "header.hpp"
 #include "optimizer.hpp"
-#include "solver.hpp"
+#include "solver_Rcpp_interface.hpp"
 
 typedef int (*ode_cpp_fct)(double &t, std::vector<double> &params, std::vector<double> &states);
 
@@ -54,9 +54,7 @@ Rcpp::List solve_ode_system(std::vector<double> integration_times,
   std::vector<double>::iterator max_time_harvest_vector = std::max_element(hs_time_combi_vec.begin(), hs_time_combi_vec.end());
   std::vector<double>::iterator min_time_harvest_vector = std::min_element(hs_time_combi_vec.begin(), hs_time_combi_vec.end());
 
-  bool max_time_diff_zero = double_diff(*max_time_param_vector, 0);
-  //bool max_time_param_vs_max_time_harvest = double_diff(*max_time_param_vector, *max_time_harvest_vector);
-  //bool min_time_param_vs_min_time_harvest = double_diff(*min_time_param_vector, *min_time_harvest_vector);
+  bool max_time_diff_zero = double_diff_Rcpp_interface(*max_time_param_vector, 0);
   if(!max_time_diff_zero) {
     if(*max_time_param_vector > *max_time_harvest_vector) { //check || or &&
       Rcpp::warning("\nERROR: Maximum of timevector of parameter larger then corresponding timepoint of state vector");
@@ -83,7 +81,7 @@ Rcpp::List solve_ode_system(std::vector<double> integration_times,
 
   bool check_entries_time;
   for(int i = 0; i < integration_times.length(); i++) {
-    check_entries_time = double_diff(integration_times[i],integration_time_assumption[i]);
+    check_entries_time = double_diff_Rcpp_interface(integration_times[i],integration_time_assumption[i]);
     if(!check_entries_time) {
       Rcpp::warning("\nERROR: integration_times has not the same entries as the time vector of state input");
       //exit (EXIT_FAILURE);
