@@ -25,14 +25,13 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "solver_Rcpp_interface.hpp"
-
-typedef int (*ode_cpp_fct)(double &t, std::vector<double> &params, std::vector<double> &states);
+#include "header.hpp"
+#include "paropt_types.h"
 
 #define Ith(v,i)    NV_Ith_S(v,i-1)         /* Ith numbers components 1..NEQ */
 #define IJth(A,i,j) SM_ELEMENT_D(A,i-1,j-1) /* IJth numbers rows,cols 1..NEQ */
 
-static int check_retval(void *returnvalue, const char *funcname, int opt);
+static int check_retval_Rcpp_interface(void *returnvalue, const char *funcname, int opt);
 
 bool double_diff_Rcpp_interface(double x, double y) {
   bool equal = false;
@@ -56,7 +55,7 @@ void own_error_handler_Rcpp_interface(int error_code, const char *module, const 
 
 
 struct usr_data_Rcpp_interface{
-  ode_cpp_fct ode_systen;
+  Rcpp::XPtr<OS> ode_system;
   std::vector<double> parameter;
   std::vector<double> parameter_time;
   std::vector<int> parameter_cut_idx;
@@ -66,7 +65,8 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
 
   // cast pointer to structure and store elements
   struct usr_data_Rcpp_interface *my_ode_system = (struct usr_data_Rcpp_interface*)user_data;
-  ode_cpp_fct odes = (*my_ode_system).ode_systen;
+  OS odes;
+  odes = *(*my_ode_system).ode_system;
   std::vector<double> params = (*my_ode_system).parameter;
   std::vector<double> params_time = (*my_ode_system).parameter_time;
   std::vector<int> params_cut_idx = (*my_ode_system).parameter_cut_idx;
@@ -93,7 +93,7 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
   return 0;
 }
 
-double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -118,9 +118,9 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
    cvode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -130,7 +130,7 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
    reltol = solv_param_struc.reltol;
 
    cvode_mem = CVodeCreate(CV_BDF);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_cvode_mem = &cvode_mem;
@@ -142,22 +142,22 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
    struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
    void*ptr_to_my_ode_system = &my_ode_system;
    retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-   if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
 
    retval = CVodeInit(cvode_mem, wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-   if (check_retval(&retval, "CVodeInit", 1)) return(1);
+   if (check_retval_Rcpp_interface(&retval, "CVodeInit", 1)) return(1);
 
    retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-   if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+   if (check_retval_Rcpp_interface(&retval, "CVodeSVtolerances", 1)) return(1);
 
    A = SUNDenseMatrix(NEQ, NEQ);
-   if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
+   if(check_retval_Rcpp_interface((void *)A, "SUNDenseMatrix", 0)) return(1);
 
    LS = SUNLinSol_Dense(y, A);
-   if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
+   if(check_retval_Rcpp_interface((void *)LS, "SUNLinSol_Dense", 0)) return(1);
 
    retval = CVodeSetLinearSolver(cvode_mem, LS, A);
-   if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
+   if(check_retval_Rcpp_interface(&retval, "CVodeSetLinearSolver", 1)) return(1);
 
    //int CVodetmpcount=0;
    double return_time;
@@ -193,7 +193,7 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -202,7 +202,7 @@ std::vector<std::string> headers) {
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -219,9 +219,9 @@ std::vector<std::string> headers) {
    cvode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -231,7 +231,7 @@ std::vector<std::string> headers) {
    reltol = solv_param_struc.reltol;
 
    cvode_mem = CVodeCreate(CV_BDF);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_cvode_mem = &cvode_mem;
@@ -243,22 +243,22 @@ std::vector<std::string> headers) {
      struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
      void*ptr_to_my_ode_system = &my_ode_system;
      retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+     if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
 
      retval = CVodeInit(cvode_mem, wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-     if (check_retval(&retval, "CVodeInit", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "CVodeInit", 1)) return(1);
 
      retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-     if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "CVodeSVtolerances", 1)) return(1);
 
      A = SUNDenseMatrix(NEQ, NEQ);
-     if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
+     if(check_retval_Rcpp_interface((void *)A, "SUNDenseMatrix", 0)) return(1);
 
      LS = SUNLinSol_Dense(y, A);
-     if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
+     if(check_retval_Rcpp_interface((void *)LS, "SUNLinSol_Dense", 0)) return(1);
 
      retval = CVodeSetLinearSolver(cvode_mem, LS, A);
-     if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
+     if(check_retval_Rcpp_interface(&retval, "CVodeSetLinearSolver", 1)) return(1);
 
      //int CVodetmpcount=0;
      double return_time;
@@ -301,7 +301,7 @@ std::vector<std::string> headers) {
                    myfile << return_time;
                    myfile << "\t";
                    myfile << "\n";
-                   if (check_retval(&retval, "CVode", 1)) {
+                   if (check_retval_Rcpp_interface(&retval, "CVode", 1)) {
                        break;}
            }
        }
@@ -315,7 +315,7 @@ std::vector<std::string> headers) {
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -336,9 +336,9 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, ode_c
    cvode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -348,7 +348,7 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, ode_c
    reltol = solv_param_struc.reltol;
 
    cvode_mem = CVodeCreate(CV_ADAMS);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_cvode_mem = &cvode_mem;
@@ -360,16 +360,16 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, ode_c
      struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
      void*ptr_to_my_ode_system = &my_ode_system;
      retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+     if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
 
      retval = CVodeInit(cvode_mem, wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-     if (check_retval(&retval, "CVodeInit", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "CVodeInit", 1)) return(1);
 
      retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-     if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "CVodeSVtolerances", 1)) return(1);
 
      retval = CVDiag(cvode_mem);
-     if(check_retval(&retval, "CVDiag", 1)) return(1);
+     if(check_retval_Rcpp_interface(&retval, "CVDiag", 1)) return(1);
 
      //int CVodetmpcount=0;
      double return_time;
@@ -403,7 +403,7 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, ode_c
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -425,9 +425,9 @@ std::vector<std::string> headers) {
    cvode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -437,7 +437,7 @@ std::vector<std::string> headers) {
    reltol = solv_param_struc.reltol;
 
    cvode_mem = CVodeCreate(CV_ADAMS);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_cvode_mem = &cvode_mem;
@@ -449,16 +449,16 @@ std::vector<std::string> headers) {
      struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
      void*ptr_to_my_ode_system = &my_ode_system;
      retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+     if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
 
      retval = CVodeInit(cvode_mem, wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-     if (check_retval(&retval, "CVodeInit", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "CVodeInit", 1)) return(1);
 
      retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-     if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "CVodeSVtolerances", 1)) return(1);
 
      retval = CVDiag(cvode_mem);
-     if(check_retval(&retval, "CVDiag", 1)) return(1);
+     if(check_retval_Rcpp_interface(&retval, "CVDiag", 1)) return(1);
 
      //int CVodetmpcount=0;
      double return_time;
@@ -501,7 +501,7 @@ std::vector<std::string> headers) {
                    myfile << return_time;
                    myfile << "\t";
                    myfile << "\n";
-                   if (check_retval(&retval, "CVode", 1)) {
+                   if (check_retval_Rcpp_interface(&retval, "CVode", 1)) {
                        break;}
 
            }
@@ -514,7 +514,7 @@ std::vector<std::string> headers) {
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -535,9 +535,9 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
    arkode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -547,7 +547,7 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
    reltol = solv_param_struc.reltol;
 
    arkode_mem = ERKStepCreate(wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ERKCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)arkode_mem, "ERKCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_arkode_mem = &arkode_mem;
@@ -559,10 +559,10 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
      struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
      void*ptr_to_my_ode_system = &my_ode_system;
      retval = ERKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "ERKStepSetUserData", 0)) return(1);
+     if (check_retval_Rcpp_interface((void *)arkode_mem, "ERKStepSetUserData", 0)) return(1);
 
      retval = ERKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ERKStepSVtolerances", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "ERKStepSVtolerances", 1)) return(1);
 
      //int CVodetmpcount=0;
      double return_time;
@@ -596,7 +596,7 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -618,9 +618,9 @@ std::vector<std::string> headers) {
    arkode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -630,7 +630,7 @@ std::vector<std::string> headers) {
    reltol = solv_param_struc.reltol;
 
    arkode_mem = ERKStepCreate(wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ERKCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)arkode_mem, "ERKCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_arkode_mem = &arkode_mem;
@@ -642,10 +642,10 @@ std::vector<std::string> headers) {
      struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
      void*ptr_to_my_ode_system = &my_ode_system;
      retval = ERKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "ERKStepSetUserData", 0)) return(1);
+     if (check_retval_Rcpp_interface((void *)arkode_mem, "ERKStepSetUserData", 0)) return(1);
 
      retval = ERKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ERKStepSVtolerances", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "ERKStepSVtolerances", 1)) return(1);
 
      //int CVodetmpcount=0;
      double return_time;
@@ -688,7 +688,7 @@ std::vector<std::string> headers) {
                    myfile << return_time;
                    myfile << "\t";
                    myfile << "\n";
-                   if (check_retval(&retval, "CVode", 1)) {
+                   if (check_retval_Rcpp_interface(&retval, "CVode", 1)) {
                        break;}
            }
        }
@@ -700,7 +700,7 @@ std::vector<std::string> headers) {
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -723,9 +723,9 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
    arkode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -735,15 +735,15 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
    reltol = solv_param_struc.reltol;
 
    A = SUNDenseMatrix(NEQ, NEQ);
-   if (check_retval((void *)A, "SUNDenseMatrix", 0)) return 1;
+   if (check_retval_Rcpp_interface((void *)A, "SUNDenseMatrix", 0)) return 1;
    LS = SUNLinSol_Dense(y, A);
-   if (check_retval((void*)LS, "SUNLinSol_Dense", 0)) return 1;
+   if (check_retval_Rcpp_interface((void*)LS, "SUNLinSol_Dense", 0)) return 1;
 
    // right hand side => y' = f(t,y); f(t,y) = f_E + f_I
    // f_E = explizit Part; f_I = implicit part
    // f_E is zero => fully implicit
    arkode_mem = ARKStepCreate(NULL, wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ARKStepCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)arkode_mem, "ARKStepCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_arkode_mem = &arkode_mem;
@@ -755,16 +755,16 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
      struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
      void*ptr_to_my_ode_system = &my_ode_system;
      retval = ARKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "ARKStepSetUserData", 0)) return(1);
+     if (check_retval_Rcpp_interface((void *)arkode_mem, "ARKStepSetUserData", 0)) return(1);
 
      retval = ARKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ARKStepSVtolerances", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "ARKStepSVtolerances", 1)) return(1);
 
      retval = ARKStepSetLinearSolver(arkode_mem, LS, A);
-     if (check_retval(&retval, "ARKStepSetLinearSolver", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "ARKStepSetLinearSolver", 1)) return(1);
 
      //retval = ARKStepSetLinear(arkode_mem, 1);
-     //if (check_retval(&retval, "ARKStepSetLinear", 1)) return 1;
+     //if (check_retval_Rcpp_interface(&retval, "ARKStepSetLinear", 1)) return 1;
 
      //int CVodetmpcount=0;
      double return_time;
@@ -800,7 +800,7 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, ode_cpp_fct ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -824,9 +824,9 @@ std::vector<std::string> headers) {
    arkode_mem = NULL;
 
    y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)y, "N_VNew_Serial", 0)) return(1);
    abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
@@ -836,15 +836,15 @@ std::vector<std::string> headers) {
    reltol = solv_param_struc.reltol;
 
    A = SUNDenseMatrix(NEQ, NEQ);
-   if (check_retval((void *)A, "SUNDenseMatrix", 0)) return 1;
+   if (check_retval_Rcpp_interface((void *)A, "SUNDenseMatrix", 0)) return 1;
    LS = SUNLinSol_Dense(y, A);
-   if (check_retval((void*)LS, "SUNLinSol_Dense", 0)) return 1;
+   if (check_retval_Rcpp_interface((void*)LS, "SUNLinSol_Dense", 0)) return 1;
 
    // right hand side => y' = f(t,y); f(t,y) = f_E + f_I
    // f_E = explizit Part; f_I = implicit part
    // f_E is zero => fully implicit
    arkode_mem = ARKStepCreate(NULL, wrapper_ode_system_Rcpp_interface, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ARKCreate", 0)) return(1);
+   if (check_retval_Rcpp_interface((void *)arkode_mem, "ARKCreate", 0)) return(1);
 
    // set error handler to Rcpp::Rcerr
    //void* ptr_to_arkode_mem = &arkode_mem;
@@ -856,13 +856,13 @@ std::vector<std::string> headers) {
      struct usr_data_Rcpp_interface my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
      void*ptr_to_my_ode_system = &my_ode_system;
      retval = ARKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "aRKStepSetUserData", 0)) return(1);
+     if (check_retval_Rcpp_interface((void *)arkode_mem, "aRKStepSetUserData", 0)) return(1);
 
      retval = ARKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ARKStepSVtolerances", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "ARKStepSVtolerances", 1)) return(1);
 
      retval = ARKStepSetLinearSolver(arkode_mem, LS, A);
-     if (check_retval(&retval, "ARKStepSetLinearSolver", 1)) return(1);
+     if (check_retval_Rcpp_interface(&retval, "ARKStepSetLinearSolver", 1)) return(1);
 
      //int CVodetmpcount=0;
      double return_time;
@@ -905,7 +905,7 @@ std::vector<std::string> headers) {
                    myfile << return_time;
                    myfile << "\t";
                    myfile << "\n";
-                   if (check_retval(&retval, "CVode", 1)) {
+                   if (check_retval_Rcpp_interface(&retval, "CVode", 1)) {
                      break;}
            }
        }
@@ -919,7 +919,7 @@ std::vector<std::string> headers) {
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-static int check_retval(void *returnvalue, const char *funcname, int opt)
+static int check_retval_Rcpp_interface(void *returnvalue, const char *funcname, int opt)
 {
   int *retval;
   /* Check if SUNDIALS function returned NULL pointer - no memory allocated */

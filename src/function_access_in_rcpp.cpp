@@ -1,21 +1,31 @@
-#include "header.hpp"
+#include "basic_functions.hpp"
 #include "optimizer.hpp"
 #include "solver_Rcpp_interface.hpp"
+#include "paropt_types.h"
+using namespace Rcpp;
 
-typedef int (*ode_cpp_fct)(double &t, std::vector<double> &params, std::vector<double> &states);
 
+#include <thread>
+#include <string> //cast int to string
+
+//' @export
+//' @useDynLib paropt, .registration = TRUE
+//' @importFrom Rcpp evalCpp
 // [[Rcpp::export]]
-Rcpp::List solve_ode_system(std::vector<double> integration_times,
-                   ode_cpp_fct ode_system, double relative_tolerance,
-                   std::vector<double> absolute_tolerances,
-                    std::string start, std::string states,
-                   std::string where_to_save_output_states,std::string solvertype) {
+Rcpp::List function_access(
+  std::vector<double> integration_times,
+  Rcpp::XPtr<OS> fctptr, double relative_tolerance,
+  std::vector<double> absolute_tolerances,
+  std::string start, std::string states,
+  std::string where_to_save_output_states,std::string solvertype) {
+
 
   // extract parameters
   std::vector<int> params_cut_idx_vec;
   std::vector<double> params_time_combi_vec;
   std::vector<double> param_combi_start;
   std::vector<std::string> header_parameter;
+
 
   Import_start_parameter(start, params_cut_idx_vec, params_time_combi_vec,  param_combi_start, header_parameter);
 
@@ -27,6 +37,7 @@ Rcpp::List solve_ode_system(std::vector<double> integration_times,
 
   Import_states(states, hs_cut_idx_vec, hs_time_combi_vec, hs_harvest_state_combi_vec, header_states);
 
+
   // extract initial values
   int tmpcount=0;
 
@@ -37,12 +48,12 @@ Rcpp::List solve_ode_system(std::vector<double> integration_times,
   }
 
   // check absolute_tolerances
-  if(static_cast<int>(init_state.size()) > absolute_tolerances.length()) {
+  if(static_cast<int>(init_state.size()) > absolute_tolerances.size()) {
     Rcpp::stop("\nERROR: absolute tolerances not defined for each state");
     //exit (EXIT_FAILURE);
   }
 
-  if(static_cast<int>(init_state.size()) < absolute_tolerances.length()) {
+  if(static_cast<int>(init_state.size()) < absolute_tolerances.size()) {
     Rcpp::stop("\nERROR: dimension error for absolute tolerances");
     //exit (EXIT_FAILURE);
   }
@@ -74,13 +85,13 @@ Rcpp::List solve_ode_system(std::vector<double> integration_times,
   for(int i = 0; i < hs_cut_idx_vec[0];i++) {
     integration_time_assumption[i] = hs_time_combi_vec[i];
   }
-  if(integration_times.length() > static_cast<int>(integration_time_assumption.size())) {
+  if(integration_times.size() > static_cast<int>(integration_time_assumption.size())) {
     Rcpp::stop("\nERROR: integration_times must not be larger than time of state input");
     //exit (EXIT_FAILURE);
   }
 
   bool check_entries_time;
-  for(int i = 0; i < integration_times.length(); i++) {
+  for(int i = 0; i < integration_times.size(); i++) {
     check_entries_time = double_diff_Rcpp_interface(integration_times[i],integration_time_assumption[i]);
     if(!check_entries_time) {
       Rcpp::warning("\nERROR: integration_times has not the same entries as the time vector of state input");
@@ -113,19 +124,46 @@ Rcpp::List solve_ode_system(std::vector<double> integration_times,
   param_model.reltol = relative_tolerance;
   param_model.absolute_tolerances = absolute_tolerances;
 
-  double smsq;
+  double smsq = 0.0;
+
+  OS ode_system = *fctptr;
+
   if(solvertype == "bdf") {
-    smsq = solver_bdf_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+    smsq = solver_bdf_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
   }
   else if(solvertype == "ADAMS") {
-    smsq = solver_adams_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+    smsq = solver_adams_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
   } else if(solvertype == "ERK") {
-    smsq = solver_erk_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+    smsq = solver_erk_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
   } else if(solvertype == "ARK") {
-    smsq = solver_ark_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+    smsq = solver_ark_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
   } else {
     Rcpp::stop("\nERROR: Unknown solvertyp");
   }
+
+  // ================================================================================
+  std::vector<std::thread> threads(2);
+  std::vector<double> results(2);
+
+  std::vector<std::vector<double> > par(2);
+
+  par[0].resize(param_combi_start.size());
+  par[1].resize(param_combi_start.size());
+
+  for(int i = 0; i < par.size(); i++) {
+    for(int j = 0; j < param_combi_start.size(); j++) {
+        par[i][j] = param_combi_start[j]*static_cast<double>(i+j);
+    }
+  }
+
+  for(int i = 0; i < 2; i++) {
+    std::thread temp(solver_bdf_save_Rcpp_interface, std::ref(par[i]), fctptr, param_model, std::to_string(i), header_states);
+    //where_to_save_output_states, header_states);
+    threads[i] = std::move(temp);
+  }
+  threads[0].join();
+  threads[1].join();
+  // ================================================================================
 
   return Rcpp::List::create(Rcpp::Named("Error of input-parameters:") = smsq,
                      Rcpp::Named("Solver set by user:") = solvertype,

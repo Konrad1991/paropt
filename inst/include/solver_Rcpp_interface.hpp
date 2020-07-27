@@ -27,26 +27,27 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "header.hpp"
+#include "paropt_types.h"
 
 //static int check_retval(void *returnvalue, const char *funcname, int opt);
-double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &param_model);
+double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &param_model);
 
-double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers);
 
-double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &param_model);
+double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &param_model);
 
-double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers);
 
-double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc);
+double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc);
 
-double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers);
 
-double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc);
+double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc);
 
-double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
+double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers);
 
 int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, void *user_data);

@@ -4,7 +4,7 @@ $(info The name of the shared library to be created is: $(SHLIB))
 CXX_STD=CXX11
 PKG_CPPFLAGS=-I../inst/include -I../inst
 PKG_CXXFLAGS= $(SHLIB_OPENMP_CXXFLAGS) -I../inst/include -I../inst
-PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -L../inst -lsundials
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -L../inst -lsundials -lpthread
 PKG_LIB = -std = gnu++11
 LIBS=-L./ -L../inst 
 
@@ -62,7 +62,7 @@ SOURCES_ARKODE = ./sundials/arkode/arkode.c \
 ./sundials/arkode/arkode_mristep_io.c \
 ./sundials/arkode/arkode_root.c
 
-SOURCES =  interface_fct.cpp solver.cpp basic_functions.cpp param_interpolation.cpp params.cpp state.cpp RcppExports.cpp optimizer.cpp solve_ode_system.cpp ode_example.cpp tests.cpp test_solver.cpp test_paramsort_spline.cpp
+SOURCES =  interface_fct.cpp solver.cpp basic_functions.cpp param_interpolation.cpp params.cpp state.cpp RcppExports.cpp optimizer.cpp solve_ode_system.cpp ode_example.cpp tests.cpp test_solver.cpp test_paramsort_spline.cpp function_access_in_rcpp.cpp solver_Rcpp_interface.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 
