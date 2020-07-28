@@ -42,14 +42,15 @@ bool double_diff_Rcpp_interface(double x, double y) {
   return equal;
 }
 
+// Rcpp::Rcerr is not thread safe!!!
 void own_error_handler_Rcpp_interface(int error_code, const char *module, const char *function, char *msg, void *usr_data) {
   if(error_code < 0) {
-    Rcpp::Rcerr << "Error:" << " " << error_code << " " << msg << " " << "In module:" << " " << module << " " << "and in fct:" << " " << function << std::endl;
+    //Rcpp::Rcerr << "Error:" << " " << error_code << " " << msg << " " << "In module:" << " " << module << " " << "and in fct:" << " " << function << std::endl;
   }
   else if(error_code == 0) {
-    Rcpp::warning("\nSundials: function encounters error: %s", function);
+    //Rcpp::warning("\nSundials: function encounters error: %s", function);
   } else {
-    Rcpp::warning("\nSundials-warning during integration with: error_code: %i", error_code);
+    //Rcpp::warning("\nSundials-warning during integration with: error_code: %i", error_code);
   }
 }
 
