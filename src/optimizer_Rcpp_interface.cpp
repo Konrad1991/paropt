@@ -259,7 +259,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
         par_c_soc = par_initial_c_soc - (par_initial_c_soc - par_final_c_soc) * (iter + 1) / n_gen;
     }
     // =============================
-    // population loop
+    // population loop Nr.1
     // =============================
     for (int i=0; i < n_pop; i++)
     {
@@ -320,32 +320,26 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
           }
         }
       }
+
+    }
       // =============================
 
+      // population loop Nr.2
+      for (int i=0; i < n_pop; i++)
+      {
       // evaluate updated particle
       // =============================
-      if(classical_pso == true) {
         for(size_t l = 0; l < param_temp.size(); l++) {
           param_temp[l] = P(i,l);
         }
         prop_objfn_val = fctptr(param_temp, odes, model);
         objfn_vals(i) = prop_objfn_val;
-      } else {
-        real_values = lower_start_bounds.t() + (upper_start_bounds.t() - lower_start_bounds.t())%P.row(i);
-
-        for(size_t l = 0; l < param_temp.size(); l++) {
-          if(real_values(l) > upper_start_bounds(l)) {
-            real_values(l) = upper_start_bounds(l);
-          } else if(real_values(l) < lower_start_bounds(l)) {
-            real_values(l) = lower_start_bounds(l);
-          }
-            param_temp[l] = real_values(l);
-        }
-      prop_objfn_val = fctptr(param_temp, odes, model);
-      objfn_vals(i) = prop_objfn_val;
       }
       // =============================
 
+      // population loop Nr.3
+      for (int i=0; i < n_pop; i++)
+      {
       // Update personal best particle
       // =============================
       if (objfn_vals(i) < best_vals(i))
@@ -354,7 +348,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
         best_vecs.row(i) = P.row(i);
       }
       // =============================
-    }
+      }
     // =============================
 
     // Update global best particle
