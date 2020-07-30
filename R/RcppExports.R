@@ -16,6 +16,10 @@ ode_example <- function(t, params, y) {
     .Call(`_paropt_ode_example`, t, params, y)
 }
 
+optimizer_access_in_Rcpp <- function(integration_times, ode_sys, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter, solvertype) {
+    .Call(`_paropt_optimizer_access_in_Rcpp`, integration_times, ode_sys, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter, solvertype)
+}
+
 solve_ode_system <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, where_to_save_output_states, solvertype) {
     .Call(`_paropt_solve_ode_system`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, where_to_save_output_states, solvertype)
 }

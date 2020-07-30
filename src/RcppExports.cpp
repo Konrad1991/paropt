@@ -65,6 +65,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// optimizer_access_in_Rcpp
+Rcpp::List optimizer_access_in_Rcpp(std::vector<double> integration_times, Rcpp::XPtr<OS> ode_sys, double relative_tolerance, std::vector<double> absolute_tolerances, std::string start, std::string lower, std::string upper, std::string states, int npop, int ngen, double error, std::string where_to_save_output_states, std::string where_to_save_output_parameter, std::string solvertype);
+RcppExport SEXP _paropt_optimizer_access_in_Rcpp(SEXP integration_timesSEXP, SEXP ode_sysSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP startSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP statesSEXP, SEXP npopSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP where_to_save_output_statesSEXP, SEXP where_to_save_output_parameterSEXP, SEXP solvertypeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type integration_times(integration_timesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::XPtr<OS> >::type ode_sys(ode_sysSEXP);
+    Rcpp::traits::input_parameter< double >::type relative_tolerance(relative_toleranceSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type absolute_tolerances(absolute_tolerancesSEXP);
+    Rcpp::traits::input_parameter< std::string >::type start(startSEXP);
+    Rcpp::traits::input_parameter< std::string >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< std::string >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< std::string >::type states(statesSEXP);
+    Rcpp::traits::input_parameter< int >::type npop(npopSEXP);
+    Rcpp::traits::input_parameter< int >::type ngen(ngenSEXP);
+    Rcpp::traits::input_parameter< double >::type error(errorSEXP);
+    Rcpp::traits::input_parameter< std::string >::type where_to_save_output_states(where_to_save_output_statesSEXP);
+    Rcpp::traits::input_parameter< std::string >::type where_to_save_output_parameter(where_to_save_output_parameterSEXP);
+    Rcpp::traits::input_parameter< std::string >::type solvertype(solvertypeSEXP);
+    rcpp_result_gen = Rcpp::wrap(optimizer_access_in_Rcpp(integration_times, ode_sys, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter, solvertype));
+    return rcpp_result_gen;
+END_RCPP
+}
 // solve_ode_system
 Rcpp::List solve_ode_system(Rcpp::NumericVector integration_times, SEXP ode_system, double relative_tolerance, Rcpp::NumericVector absolute_tolerances, std::string start, std::string states, std::string where_to_save_output_states, std::string solvertype);
 RcppExport SEXP _paropt_solve_ode_system(SEXP integration_timesSEXP, SEXP ode_systemSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP startSEXP, SEXP statesSEXP, SEXP where_to_save_output_statesSEXP, SEXP solvertypeSEXP) {
@@ -277,6 +301,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_paropt_function_access", (DL_FUNC) &_paropt_function_access, 8},
     {"_paropt_interface_function", (DL_FUNC) &_paropt_interface_function, 14},
     {"_paropt_ode_example", (DL_FUNC) &_paropt_ode_example, 3},
+    {"_paropt_optimizer_access_in_Rcpp", (DL_FUNC) &_paropt_optimizer_access_in_Rcpp, 14},
     {"_paropt_solve_ode_system", (DL_FUNC) &_paropt_solve_ode_system, 8},
     {"_paropt_test_paramsort_and_spline", (DL_FUNC) &_paropt_test_paramsort_and_spline, 4},
     {"_paropt_test_solver", (DL_FUNC) &_paropt_test_solver, 9},

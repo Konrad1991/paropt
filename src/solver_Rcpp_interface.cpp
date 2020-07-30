@@ -56,7 +56,7 @@ void own_error_handler_Rcpp_interface(int error_code, const char *module, const 
 
 
 struct usr_data_Rcpp_interface{
-  Rcpp::XPtr<OS> ode_system;
+  OS ode_system; //Rcpp::XPtr<OS> ode_system;
   std::vector<double> parameter;
   std::vector<double> parameter_time;
   std::vector<int> parameter_cut_idx;
@@ -67,7 +67,7 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
   // cast pointer to structure and store elements
   struct usr_data_Rcpp_interface *my_ode_system = (struct usr_data_Rcpp_interface*)user_data;
   OS odes;
-  odes = *(*my_ode_system).ode_system;
+  odes = (*my_ode_system).ode_system; //*(*my_ode_system).ode_system;
   std::vector<double> params = (*my_ode_system).parameter;
   std::vector<double> params_time = (*my_ode_system).parameter_time;
   std::vector<int> params_cut_idx = (*my_ode_system).parameter_cut_idx;
@@ -94,7 +94,7 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
   return 0;
 }
 
-double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -194,7 +194,7 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::X
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -316,7 +316,7 @@ std::vector<std::string> headers) {
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -404,7 +404,7 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp:
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -515,7 +515,7 @@ std::vector<std::string> headers) {
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -597,7 +597,7 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::X
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
@@ -701,7 +701,7 @@ std::vector<std::string> headers) {
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
+double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -801,7 +801,7 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::X
  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, Rcpp::XPtr<OS> ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
+double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface solv_param_struc, std::string speicherfile,
 std::vector<std::string> headers) {
 
   std::vector<double> init_state = solv_param_struc.init_state;

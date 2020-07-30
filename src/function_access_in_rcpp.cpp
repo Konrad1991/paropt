@@ -129,14 +129,14 @@ Rcpp::List function_access(
   OS ode_system = *fctptr;
 
   if(solvertype == "bdf") {
-    smsq = solver_bdf_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
+    smsq = solver_bdf_save_Rcpp_interface(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
   }
   else if(solvertype == "ADAMS") {
-    smsq = solver_adams_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
+    smsq = solver_adams_save_Rcpp_interface(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
   } else if(solvertype == "ERK") {
-    smsq = solver_erk_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
+    smsq = solver_erk_save_Rcpp_interface(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
   } else if(solvertype == "ARK") {
-    smsq = solver_ark_save_Rcpp_interface(param_combi_start, fctptr, param_model, where_to_save_output_states, header_states);
+    smsq = solver_ark_save_Rcpp_interface(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
   } else {
     Rcpp::stop("\nERROR: Unknown solvertyp");
   }
@@ -157,7 +157,7 @@ Rcpp::List function_access(
   }
 
   for(int i = 0; i < 2; i++) {
-    std::thread temp(solver_bdf_save_Rcpp_interface, std::ref(par[i]), fctptr, param_model, std::to_string(i), header_states);
+    std::thread temp(solver_bdf_save_Rcpp_interface, std::ref(par[i]), *fctptr, param_model, std::to_string(i), header_states);
     //where_to_save_output_states, header_states);
     threads[i] = std::move(temp);
   }

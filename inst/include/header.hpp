@@ -44,6 +44,16 @@ struct settingsPSO {
   double pso_par_w_damp;
 };
 
+struct settingsPSO_Rcpp_interface {
+  double err_tol;
+  int pso_n_pop;
+  int pso_n_gen;
+  double pso_par_initial_w;
+  double pso_par_w_max;
+  double pso_par_w_min;
+  double pso_par_w_damp;
+};
+
 struct time_state_information {
   std::vector<double> init_state;
   std::vector<double> par_times;

@@ -1,0 +1,71 @@
+---
+title: "Untitled"
+author: "Konrad Krämer"
+date: "30 7 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# paropt
+
+Parameter Optimizing of ODEs
+
+The package *paropt* is build in order to optimize parameters of ode-systems. Thus, the aim is that the output of the integration matches previously measured states. The user has to supply an ode-system in the form of a Rcpp-function. The information about states and parameters are passed via text-files. Additional information such as e.g. the relative tolerance are passed in R.
+
+# Overview
+
+The package *paropt* uses a particle swarm optimizer ('https://github.com/kthohr/optim') in order to find a global best solution. Furthermore, in order to evaluate each particle during optimzation four different solvers can be used all derived from SUNDIALS ('https://computing.llnl.gov/projects/sundials'). For more details see vignette. 
+
+# Example
+
+```{r, echo = F}
+path <- system.file("examples", package = "paropt")
+setwd(path)
+library(paropt)
+Rcpp::sourceCpp(paste(path,"/ode.cpp", sep = ""))
+df <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
+time <- df$time
+param_start <- "start.txt"
+param_lb <- "lb.txt"
+param_ub <- "ub.txt"
+states <- "states_LV.txt"
+state_output <- "final_stateoutput.txt"
+par_output <- "optimized_params.txt"
+set.seed(1)
+optimizer(time, ode, 1e-6, c(1e-8, 1e-8),
+         param_start, param_lb, param_ub,
+         states, npop = 40, ngen = 200, error = 1,
+         state_output, par_output, "bdf")
+df_in_silico <- read.table(paste(path, "/final_stateoutput.txt", sep = ""), header = TRUE)
+plot(df$time, df$n1, pch = 19, main = "predator", ylab = "predator", xlab = "time")
+points(df_in_silico$time, df_in_silico$n1, pch = 19, col = "darkred")
+legend(1, 26, legend = c("measured", "in silico"),
+col = c("black", "darkred"),lty = 1:2, cex = 0.8) 
+plot(df$time, df$n2, pch = 19, main = "prey",ylab = "prey", xlab = "time")
+points(df_in_silico$time, df_in_silico$n2, pch = 19, col = "darkred")
+legend(1, 26, legend = c("measured", "in silico"),
+col = c("black", "darkred"),lty = 1:2, cex = 0.8)
+```
+
+
+# Acknowledgment
+
+I would like to thank all the people who supported me writing this R-Package.
+First of all I'm very greatful to my supervisor Arnd Heyer who supported me in writing the package.
+Also I would like to thank Satyaprakash Nayak which gave me inspiration to solve coding problems.
+Moreover, I would like to thank Tobias Bartsch for elaborately testing of the package.
+Furthermore, gratitude is owned to Johannes Krämer for many discussion about simulations. 
+Special thanks to my girlfriend Jana for supporting me all the way.
+
