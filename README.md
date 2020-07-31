@@ -1,23 +1,3 @@
----
-title: "Untitled"
-author: "Konrad Krämer"
-date: "30 7 2020"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
-)
-```
-
 # paropt
 
 Parameter Optimizing of ODEs
