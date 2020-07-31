@@ -337,6 +337,33 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       }
       // =============================
 
+      /*
+      // This will never work!!!!
+
+      std::vector<std::future<double> > futures(npop);
+      std::vector<std::threads> threads(2);
+      std::packaged_task<double(std::vector<double>, OS, time_state_information_Rcpp_interface)>
+              myTask( [](std::vector<double> param_temp, OS odes, time_state_information_Rcpp_interface model) {return fctptr(param_temp, odes, model); });
+
+      int counter_parallel = 0;
+      while(counter_parallel < npop) {
+        for(int i_p = 0; i_p < threads.size(); i_p++) {
+          threads[i] = std::thread(myTask.get_future()); // not correct
+          futures[counter_parallel] = threads[i]; // not correct
+          myTask(param_temp, odes, model);
+        }
+        counter_parallel++;
+      }
+
+      for(int i_f = 0; i_f < npop; i_f++) {
+        objfn_vals(i_f) = futures[i_f].get();
+      }
+
+      for(int i_t = 0; i_t < threads.size(); i_t++) {
+        threads[i].join();
+      }
+      */
+
       // population loop Nr.3
       for (int i=0; i < n_pop; i++)
       {
