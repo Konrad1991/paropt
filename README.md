@@ -116,8 +116,8 @@ points(is$time, is$n2, pch = 19, col = "darkred")
 ```
 # Further plans
 
-- Add different error calculation
-- Give users the possibility to use their own spline (at least in the Rcpp-Interface)
+- Add different error calculations
+- Give users the possibility to use their own spline (at least for the Rcpp-Interface)
 
 # Acknowledgment
 
