@@ -114,7 +114,10 @@ plot(df$time, df$n2)
 points(is$time, is$n2, pch = 19, col = "darkred")
 */
 ```
+# Further plans
 
+- Add different error calculation
+- Give users the possibility to use their own spline (at least in the Rcpp-Interface)
 
 # Acknowledgment
 
