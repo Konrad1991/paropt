@@ -10,7 +10,7 @@ The package *paropt* uses a particle swarm optimizer ('https://github.com/kthohr
 
 # Example
 
-```{Rcpp, echo = F}
+```Rcpp
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(paropt)]]
