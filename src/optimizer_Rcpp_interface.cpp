@@ -38,6 +38,28 @@ For details see: https://github.com/kthohr/optim
 
 #include "optimizer_Rcpp_interface.hpp"
 
+
+typedef double (*fctptr2)(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc);
+std::mutex mtx;
+
+void helper_fct (arma::mat inp, arma::vec & errors, int index, int number_of_rows, const int nvals, OS odes, time_state_information_Rcpp_interface model,
+                 fctptr2 fctptr){
+  std::vector<double> param_temp(nvals);
+  double prop_objfn_val = 0.;
+  for(int j = 0; j < number_of_rows; j++) {
+
+    for(int i = 0; i < nvals; i++) {
+      param_temp[i] = inp(j, i);
+    }
+    prop_objfn_val = fctptr(param_temp, odes, model);
+
+    mtx.lock();
+    errors(index + j) = prop_objfn_val;
+    mtx.unlock();
+  }
+}
+
+
 Optimizer_Rcpp_interface::Optimizer_Rcpp_interface(
         std::vector<double> t_start,
         std::vector<double> t_lb,
@@ -114,6 +136,36 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
   arma::vec lower_start_bounds(m_lb.size());
   arma::vec upper_start_bounds(m_ub.size());
 
+  // preparation for multithreading
+  // =============================
+  int hardware_con = std::thread::hardware_concurrency();
+  int supported_threads = hardware_con == 0 ? 2 : hardware_con;
+  int max_amount_of_threads = (supported_threads > n_pop) ? n_pop : hardware_con;
+  int quotient = n_pop/max_amount_of_threads;
+  int remainder = n_pop % max_amount_of_threads;
+  int threads = max_amount_of_threads;
+  std::vector<int> indices(threads);
+  std::vector<int> sizes(threads);
+
+  // fill sizes
+  if(remainder == 0) {
+    for(int i = 0; i < threads; i++) {
+      sizes[i] = quotient;
+    }
+  } else {
+    for(int i = 0; i < threads; i++) {
+      if(i < threads-1) {
+        sizes[i] = quotient;
+      } else {
+        sizes[i] = quotient + remainder;
+      }
+    }
+  }
+  indices[0] = 0;
+  for(int i = 1; i < indices.size(); i++) {
+    indices[i] = indices[i-1] + sizes[i-1];
+  }
+  std::vector<arma::Mat<double> > sub_mats(max_amount_of_threads);
   // =============================
 
   // define borders for start values
@@ -324,6 +376,8 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
     }
       // =============================
 
+
+      /*
       // population loop Nr.2
       for (int i=0; i < n_pop; i++)
       {
@@ -336,33 +390,21 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
         objfn_vals(i) = prop_objfn_val;
       }
       // =============================
-
-      /*
-      // This will never work!!!!
-
-      std::vector<std::future<double> > futures(npop);
-      std::vector<std::threads> threads(2);
-      std::packaged_task<double(std::vector<double>, OS, time_state_information_Rcpp_interface)>
-              myTask( [](std::vector<double> param_temp, OS odes, time_state_information_Rcpp_interface model) {return fctptr(param_temp, odes, model); });
-
-      int counter_parallel = 0;
-      while(counter_parallel < npop) {
-        for(int i_p = 0; i_p < threads.size(); i_p++) {
-          threads[i] = std::thread(myTask.get_future()); // not correct
-          futures[counter_parallel] = threads[i]; // not correct
-          myTask(param_temp, odes, model);
-        }
-        counter_parallel++;
-      }
-
-      for(int i_f = 0; i_f < npop; i_f++) {
-        objfn_vals(i_f) = futures[i_f].get();
-      }
-
-      for(int i_t = 0; i_t < threads.size(); i_t++) {
-        threads[i].join();
-      }
       */
+
+      // Parallel loop Nr.2
+      std::vector<std::thread> th(max_amount_of_threads);
+      for(int i = 0; i < sub_mats.size(); i++) {
+        sub_mats[i] = P(arma::span(indices[i], indices[i] + sizes[i]-1), arma::span(0, n_vals-1)); // span(first row, last row), span(first column, last column)
+      }
+
+      for(int i = 0; i < max_amount_of_threads; i++) {
+        th[i] = std::thread(helper_fct, sub_mats[i], std::ref(objfn_vals), indices[i], sizes[i], n_vals, odes, model, fctptr);
+      }
+
+      for(int i = 0; i < max_amount_of_threads; i++) {
+        th[i].join();
+      }
 
       // population loop Nr.3
       for (int i=0; i < n_pop; i++)

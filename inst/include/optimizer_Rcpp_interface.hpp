@@ -39,6 +39,8 @@ For details see: https://github.com/kthohr/optim
 #pragma once
 #include "header.hpp"
 #include "paropt_types.h"
+#include <thread>
+#include <mutex>
 
 class Optimizer_Rcpp_interface {
 private:
