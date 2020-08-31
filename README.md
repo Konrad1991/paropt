@@ -25,7 +25,8 @@ typedef int (*OS)(double &t, std::vector<double> &params, std::vector<double> &s
 
 int ode_system(double &t, std::vector<double> &params, std::vector<double> & states) {
 
-  // do not use any R-Code or R-Objects if the optimzation should run in parallel. User have to guarantee that the function can be called by several threads in parallel
+  // do not use any R-Code or R-Objects if the optimzation should run in parallel.
+  // Users have to guarantee that the function can be called by several threads in parallel
   // define parameters (vector params contain the parameter in the order as defined in the corresponding textfiles)
   double a = params[0];
   double b = params[1];
