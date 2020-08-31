@@ -19,12 +19,13 @@ The package *paropt* uses a particle swarm optimizer ('https://github.com/kthohr
 typedef int (*OS)(double &t, std::vector<double> &params, std::vector<double> &states);
 
 int ode_system(double &t, std::vector<double> &params, std::vector<double> & states) {
-  // define parameters
+  // define parameters (vector params contain the parameter in the order as defined in the corresponding textfiles)
   double a = params[0];
   double b = params[1];
   double c = params[2];
   double d = params[3];
   
+  // states have to be in the same order as specified in the textfile "states_LV.txt" (Otherwise the error-calculation does not work) 
   double n1 = states[0];
   double n2 = states[1];
   
