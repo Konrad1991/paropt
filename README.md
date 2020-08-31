@@ -8,6 +8,11 @@ The package *paropt* is build in order to optimize parameters of ode-systems. Th
 
 The package *paropt* uses a particle swarm optimizer ('https://github.com/kthohr/optim') in order to find a global best solution. Furthermore, in order to evaluate each particle during optimzation four different solvers can be used all derived from SUNDIALS ('https://computing.llnl.gov/projects/sundials'). For more details see vignette. 
 
+# Installation
+
+*paropt* can be installed in R using install.packages("paropt") in order to use the version which is on CRAN. If you want to use the github-version use 
+remotes::install_github("Konrad1991/paropt", ref = "Rcpp-Interface") within R (below you can see an example showing a parallized version of the parameter optimization of the predator-prey model). 
+
 # Example
 
 ```Rcpp
