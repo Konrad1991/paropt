@@ -439,8 +439,10 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       Rcpp::Rcerr << "No convergence for: " << convergence_threshold << " generations. Optimizing stoped" << std::endl;
       break;
     }
+    if(iter % 50 == 0) {
     Rcpp::Rcerr << "global best val" << "\t" << global_best_val << std::endl;
     Rcpp::Rcerr << "Generation number:" << "\t" << iter << std::endl;
+    }
     // =============================
     err = global_best_val;
     Rcpp::checkUserInterrupt();
