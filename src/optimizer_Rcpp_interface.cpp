@@ -138,7 +138,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
 
   // preparation for multithreading
   // =============================
-  int hardware_con = std::thread::hardware_concurrency();
+  int hardware_con = 20; //std::thread::hardware_concurrency(); // does not work on server?
   int supported_threads = hardware_con == 0 ? 2 : hardware_con;
   int max_amount_of_threads = (supported_threads > n_pop) ? n_pop : hardware_con;
   int quotient = n_pop/max_amount_of_threads;
