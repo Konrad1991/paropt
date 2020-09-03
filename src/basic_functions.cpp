@@ -96,8 +96,8 @@ else Rcpp::Rcerr << "Unable to open file";
 
 for(size_t i = 0; i < temp.size(); i++) { // temp.size() - 1 --> last line often empty
 	if(ncol != temp[i]) {
+    Rcpp::Rcerr << "In Line: " << i+1 << " only " << temp[i] << " columns found. Expected where " << ncol << " columns." << std::endl;
     Rcpp::stop("\nERROR: Not the same number of columns in each row");
-    //exit (EXIT_FAILURE);
 	}
 }
 }
@@ -122,7 +122,7 @@ template<class T> T fromString(const std::string& s)
     for (char const &c: s) {
       if(std::isdigit(c) || c == dot || c == minus || c == ex || c == Ex || c == plus) {
       } else {
-        Rcpp::stop("\nERROR: Not a number in input. As non-numeric input only NA allowed");
+        Rcpp::stop("\nERROR: Not a number in input. Only digits, NA, '.', '-', '+', 'e', 'E' are allowed.");
       }
     }
     /*
@@ -246,7 +246,7 @@ bool check_time_column(std::vector<double> time_vector, std::string time) {
 	if(time == "time") {
     name = true;
   } else {
-			Rcpp::Rcerr << "Error: First column has to be the Name time" << std::endl;}
+		Rcpp::Rcerr << "Error: First column has to be the Name time" << std::endl;}
 	for(size_t i = 0; i < time_vector.size(); i++) {
 		if(std::isnan(time_vector[i])) {
 		Rcpp::Rcerr << "Error: Time vector is not allowed to contain NAs" << std::endl;
@@ -368,29 +368,42 @@ std::vector<std::string> &test) {
   // Error checks
   // ===================================================
   if(test.size() != test_lb.size() || test.size() != test_ub.size()) {
-    Rcpp::stop("\nERROR: Different number of names of parameters between startvalues, lower bounds and upper bounds");
-    //exit (EXIT_FAILURE);
+    Rcpp::Rcerr << "Number of columns in startvalues.txt: " << test.size() << std::endl;
+    Rcpp::Rcerr << "Number of columns in lower_bounds.txt: " << test_lb.size() << std::endl;
+    Rcpp::Rcerr << "Number of columns in upper_bounds.txt: " << test_ub.size() << std::endl;
+    Rcpp::stop("\nERROR: Different number of columns between startvalues, lower bounds and upper bounds");
   }
 
   for(size_t i = 0; i < test.size(); i++) {
     if(test[i] != test_lb[i] || test[i] != test_ub[i]) {
-      Rcpp::stop("\nERROR: Different of names for parameters between startvalues, lower bounds and upper bounds");
+      Rcpp::Rcerr << "Error names are different in column: " << i + 1 << "." << std::endl;
+      Rcpp::Rcerr << " Name in startvalues.txt: " << test[i] << std::endl;
+      Rcpp::Rcerr << " Name in lower_bounds.txt: " << test_lb[i] << std::endl;
+      Rcpp::Rcerr << " Name in upper_bounds.txt: " << test_ub[i] << std::endl;
+      Rcpp::stop("\nERROR: Different names in headers of textfiles defined");
       //exit (EXIT_FAILURE);
     }
   }
 
   if(ncol != ncol_lb || ncol != ncol_ub) {
-    Rcpp::stop("\nERROR: Different number of cols between startvalues, lower bounds and upper bounds");
-    //exit (EXIT_FAILURE);
+    Rcpp::Rcerr << "Number of columns in startvalues.txt: " << test.size() << std::endl;
+    Rcpp::Rcerr << "Number of columns in lower_bounds.txt: " << test_lb.size() << std::endl;
+    Rcpp::Rcerr << "Number of columns in upper_bounds.txt: " << test_ub.size() << std::endl;
+    Rcpp::stop("\nERROR: Different number of columns between startvalues, lower bounds and upper bounds");
   }
   if(nrow != nrow_lb || nrow != nrow_ub) {
-    Rcpp::stop("\nERROR: Different number of rows between startvalues, lower bounds and upper bounds");
-    //exit (EXIT_FAILURE);
+    Rcpp::Rcerr << "Number of rows in startvalues.txt: " << nrow << std::endl;
+    Rcpp::Rcerr << "Number of rows in lower_bounds.txt: " << nrow_lb << std::endl;
+    Rcpp::Rcerr << "Number of rows in upper_bounds.txt: " << nrow_ub << std::endl;
+    Rcpp::stop("\nERROR: Different number of rowss between startvalues, lower bounds and upper bounds");
   }
 
   if(nc.size() != nc_lb.size() || nc.size() != nc_ub.size()) {
-    Rcpp::stop("\nERROR: Different number of cols of imported numeric values between startvalues, lower bounds and upper bounds");
-    //exit (EXIT_FAILURE);
+    //Rcpp::stop("\nERROR: Different number of cols of imported numeric values between startvalues, lower bounds and upper bounds");
+    Rcpp::Rcerr << "Number of columns in startvalues.txt: " << nc.size() << std::endl;
+    Rcpp::Rcerr << "Number of columns in lower_bounds.txt: " << nc_lb.size() << std::endl;
+    Rcpp::Rcerr << "Number of columns in upper_bounds.txt: " << nc_ub.size() << std::endl;
+    Rcpp::stop("\nERROR: Different number of columns between startvalues, lower bounds and upper bounds");
   }
 
   for(int i = 0; i < ncol; i++) {
@@ -404,8 +417,12 @@ std::vector<std::string> &test) {
     }
 
   if(nc_without_NA.size() != nc_without_NA_lb.size() || nc_without_NA.size() != nc_without_NA_ub.size()) {
-    Rcpp::stop("\nERROR: Different number of cols of imported numeric values without NA between startvalues, lower bounds and upper bounds");
+    //Rcpp::stop("\nERROR: Different number of cols of imported numeric values without NA between startvalues, lower bounds and upper bounds");
     //exit (EXIT_FAILURE);
+    Rcpp::Rcerr << "number of rows start values:" << "\t" << nc_without_NA[i].size() << std::endl;
+    Rcpp::Rcerr << "number of rows lb values:" << "\t" << nc__without_NA_lb[i].size() << std::endl;
+    Rcpp::Rcerr << "number of rows ub values:" << "\t" << nc__without_NA_ub[i].size() << std::endl;
+    Rcpp::stop("\nERROR: Different number of rows of imported numeric values between startvalues, lower bounds and upper bounds");
   }
   // ===================================================
 
@@ -414,7 +431,7 @@ std::vector<std::string> &test) {
   bool time_check = false;
   time_check = check_time_column(nc[0], "time");
   if(time_check == false) {
-    Rcpp::stop("\nERROR: time column of startvalues not correct");
+    Rcpp::stop("\nERROR: time column of startvalues.txt not correct");
     //exit (EXIT_FAILURE);
   }
   std::vector<double> time(nc[0].size());
@@ -422,20 +439,23 @@ std::vector<std::string> &test) {
   bool time_check_lb = false;
   time_check_lb = check_time_column(nc_lb[0], "time");
   if(time_check_lb == false) {
-    Rcpp::stop("\nERROR: time column of lower bounds not correct");
+    Rcpp::stop("\nERROR: time column of lower_bounds.txt not correct");
     //exit (EXIT_FAILURE);
   }
 
   bool time_check_ub = false;
   time_check_ub = check_time_column(nc_ub[0], "time");
   if(time_check_ub == false) {
-    Rcpp::stop("\nERROR: time column of upper bounds not correct");
+    Rcpp::stop("\nERROR: time column of upper_bounds.txt not correct");
     //exit (EXIT_FAILURE);
   }
 
   for(size_t i = 0; i < time.size(); i++) {
     if(nc[0][i] != nc_lb[0][i] || nc[0][i] != nc_ub[0][i]) {
-      Rcpp::stop("\nERROR:Different time vector for startvalues, lower bounds and upper bounds");
+      Rcpp::Rcerr << "time vector entry in row: " << i + 1 <<  " in startvalues.txt" << "\t" << nc[0][i] << std::endl;
+      Rcpp::Rcerr << "time vector entry in row: " << i + 1 <<  " in lower_bounds.txt" << "\t" << nc_lb[0][i] << std::endl;
+      Rcpp::Rcerr << "time vector entry in row: " << i + 1 <<  " in upper_bounds.txt" << "\t" << nc_ub[0][i] << std::endl;
+      Rcpp::stop("\nERROR: time vector differs between startvalues.txt, lower_bounds.txt and upper_bounds.txt");
       //exit (EXIT_FAILURE);
     }
     time[i] = nc[0][i];

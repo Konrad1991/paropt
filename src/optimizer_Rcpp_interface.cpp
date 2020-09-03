@@ -445,7 +445,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
     }
     // =============================
     err = global_best_val;
-    Rcpp::checkUserInterrupt();
+    Rcpp::checkUserInterrupt(); 
   }
   // =============================
 
