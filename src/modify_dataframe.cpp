@@ -33,17 +33,17 @@ typedef Rcpp::DataFrame DF;
 
 enum class IMPORT_PARAMETER {
   UNDEFINED,
-  ERROR,
+  Error,
   SUCCESS
-}
+};
 
 enum class TIME {
-  ERROR,
+  Error,
   UNDEFINED,
   NOT_TIME_AS_NAME,
   CONTAINS_NA,
   SUCCESS
-}
+};
 
 enum class EC1 {
   UNDEFINED,
@@ -52,25 +52,25 @@ enum class EC1 {
   R_UgL,
   R_LgU,
   SUCCESS
-}
+};
 
 enum class EC2 {
   UNDEFINED,
   SUCCESS,
-  ERROR
-}
+  Error
+};
 
 enum class EC3 {
   SUCCESS,
-  ERROR
-}
+  Error
+};
 
 
 enum class IMPORT_STATES {
-  UNDEFINED;
-  ERROR,
+  UNDEFINED,
+  Error,
   SUCCESS
-}
+};
 /*
 Dataframe to MD
 */
@@ -114,14 +114,14 @@ void DF_to_MD (DF x, MD &r, VS &rs) {
 /*
 Remove NAs
 */
-void remove_NA (MD &Res, MD &Inp, int NROW, int NCOL) {
+void remove_NA2 (MD &Res, MD &Inp, int NROW, int NCOL) {
 
   Res.resize(NCOL);
   VI R_min_NA(NCOL);
 
   for(int i = 0; i < NCOL; i++) {
     for(int j = 0; j < NROW; j++) {
-      if (!std::isnan(Inp[])) {
+      if (!std::isnan(Inp[i][j])) {
         R_min_NA[i] = R_min_NA[i] + 1;
       }
     }
@@ -147,12 +147,14 @@ void remove_NA (MD &Res, MD &Inp, int NROW, int NCOL) {
 /*
 check time column
 */
-enum TIME CTC (VD T, VS HEADS) {
+enum TIME CTC (VD T, std::string HEADS) {
 
   enum TIME res = TIME::UNDEFINED;
 
   bool name = false;
   bool values_all_numeric = false;
+
+  std::string time = HEADS;
 
   unsigned int counter = 0;
   if(time == "time") {
@@ -179,17 +181,17 @@ enum TIME CTC (VD T, VS HEADS) {
   } else if(name == true && values_all_numeric == false) {
     res = TIME::CONTAINS_NA;
   } else if (name == false && values_all_numeric == false) {
-    res = TIME::ERROR;
+    res = TIME::Error;
   }
 
   return res;
 }
 
 /*
-error checker Nr.1
+Error checker Nr.1
 */
 enum EC1 CHECK1 (MD L, MD U, int &LINE) {
-  enum EC1 res: EC1::UNDEFINED;
+  enum EC1 res = EC1::UNDEFINED;
 
   if(L.size() > U.size()) {
     res = EC1::C_LgU;
@@ -218,9 +220,9 @@ enum EC1 CHECK1 (MD L, MD U, int &LINE) {
 }
 
 /*
-error checker Nr.2
+Error checker Nr.2
 */
-enum EC2 CHECK2 (VS L, VS U, int &LINE) {
+enum EC2 CHECK2 (VD L, VD U, int &LINE) {
 
   enum EC2 res = EC2::UNDEFINED;
 
@@ -228,7 +230,7 @@ enum EC2 CHECK2 (VS L, VS U, int &LINE) {
 
     if (L[i] != U[i]) {
       LINE = i;
-      res = EC2::ERROR;
+      res = EC2::Error;
       return res;
     }
   }
@@ -237,21 +239,21 @@ enum EC2 CHECK2 (VS L, VS U, int &LINE) {
 }
 
 /*
-error checker Nr.3
+Error checker Nr.3
 */
 enum EC3 CHECK3 (MI T_L, MI T_U, VI L, VI U) {
 
-  enum EC3 res = EC3::ERROR;
+  enum EC3 res = EC3::Error;
 
   if(T_L.size() != T_U.size()) {
-    Rcpp::stop("\nERROR: Different number of time_points between startvalues, lower bounds and upper bounds");
+    Rcpp::stop("\nError: Different number of time_points between startvalues, lower bounds and upper bounds");
   }
 
   for(int i = 0; i < T_L.size(); i++) {
 
     if(T_L[i].size() != T_U[i].size()) {
       Rcpp::Rcerr << "In column:  " << i << std::endl;
-      Rcpp::stop("\nERROR: Different number of time_points between lower bounds and upper bounds");
+      Rcpp::stop("\nError: Different number of time_points between lower bounds and upper bounds");
     }
 
   }
@@ -260,7 +262,7 @@ enum EC3 CHECK3 (MI T_L, MI T_U, VI L, VI U) {
 
     if(L[i] != U[i]) {
       Rcpp::Rcerr << "In column:  " << i << std::endl;
-      Rcpp::stop("\nERROR: NA values not at the same position");
+      Rcpp::stop("\nError: NA values not at the same position");
     }
 
   }
@@ -286,43 +288,43 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
   DF_to_MD(ub, U, Us);
 
   for(int i = 0; i < L.size(); i++) {
-    header_parameter[i] = L[i];
+    header_parameter[i] = Ls[i];
   }
 
   // remove NA in data
   MD Lf; MD Uf;
-  remove_NA(Lf, L, lb.nrows(), lb.size());
-  remove_NA(Uf, U, ub.nrows(), ub.size());
+  remove_NA2(Lf, L, lb.nrows(), lb.size());
+  remove_NA2(Uf, U, ub.nrows(), ub.size());
 
   // check time column
-  enum TIME TL = CTC(Lf[0], Ls[0]):
-  enum TIME TU = CTC(Uf[0], Us[0]):
+  enum TIME TL = CTC(Lf[0], Ls[0]);
+  enum TIME TU = CTC(Uf[0], Us[0]);
   if(TL != TIME::SUCCESS) {
-    Rcpp::stop("\nERROR: Time column of lower bounds is not correct");
-  } else if ( UL != TIME::SUCCESS) {
-    Rcpp::stop("\nERROR: Time column of upper bounds is not correct");
+    Rcpp::stop("\nError: Time column of lower bounds is not correct");
+  } else if ( TU != TIME::SUCCESS) {
+    Rcpp::stop("\nError: Time column of upper bounds is not correct");
   }
 
   // Error checks
-  int line_error = -1;
-  enum EC1 e1 = CHECK1(Lf, Uf, line_error);
+  int line_Error = -1;
+  enum EC1 e1 = CHECK1(Lf, Uf, line_Error);
   if(e1 == EC1::C_UgL) {
-    Rcpp::stop("\nERROR: More columns in dataframe for upper bounds than in dataframes containing lower bounds");
+    Rcpp::stop("\nError: More columns in dataframe for upper bounds than in dataframes containing lower bounds");
   } else if (e1 == EC1::C_LgU) {
-    Rcpp::stop("\nERROR: More columns in dataframe for lower bounds than in dataframes containing upper bounds");
+    Rcpp::stop("\nError: More columns in dataframe for lower bounds than in dataframes containing upper bounds");
   } else if (e1 == EC1::R_UgL) {
-    Rcpp::Rcerr << "In column:  " << line_error << std::endl;
-    Rcpp::stop("\nERROR: More rows in dataframe for upper bounds than in dataframes containing lower bounds");
+    Rcpp::Rcerr << "In column:  " << line_Error << std::endl;
+    Rcpp::stop("\nError: More rows in dataframe for upper bounds than in dataframes containing lower bounds");
   } else if (e1 == EC1::R_LgU) {
-    Rcpp::Rcerr << "In column:  " << line_error << std::endl;
-    Rcpp::stop("\nERROR: More rows in dataframe for lower bounds than in dataframes containing upper bounds");
+    Rcpp::Rcerr << "In column:  " << line_Error << std::endl;
+    Rcpp::stop("\nError: More rows in dataframe for lower bounds than in dataframes containing upper bounds");
   }
 
-  line_error = -1;
-  enum EC2 e2 = CHECK2(Lf[0], Uf[0], line_error);
-  if(e2 == E2::ERROR) {
+  line_Error = -1;
+  enum EC2 e2 = CHECK2(Lf[0], Uf[0], line_Error);
+  if(e2 == EC2::Error) {
     Rcpp::Rcerr << "In column:  " << std::endl;
-    Rcpp::stop("\nERROR: Headers are different!");
+    Rcpp::stop("\nError: Headers are different!");
   }
 
   // extract time column
@@ -340,7 +342,7 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
   MI TP_U(ub.size());
 
   int COLS = lb.size();
-  int ROWS = lb[0].size();
+  int ROWS = lb.nrows();
 
   for(int i = 0; i < COLS; i++) {
     for(int j = 0; j < ROWS; j++) {
@@ -363,14 +365,14 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
 
   // fill vectors
   std::list<ParamClass> paramlist;
-  for(int i = 1; i < ncol; i++) {
+  for(int i = 1; i < COLS; i++) {
     std::vector<double> temp_lb(NROW_L_MIN_NA[i]);
     std::vector<double> temp_ub(NROW_L_MIN_NA[i]);
     std::vector<double> temp_time(NROW_L_MIN_NA[i]);
     for(int j = 0; j < NROW_L_MIN_NA[i]; j++) {
       temp_lb[j] = Lf[i][j];
       temp_ub[j] = Uf[i][j];
-      temp_time[j] = nc[0][TP_L[i][j]];
+      temp_time[j] = L[0][TP_L[i][j]];
     }
     if(temp_time.size() == 1) {
       Rcpp::Rcerr << Ls[i] << ":" << "\t" << "Parameter is const" << std::endl;
@@ -390,14 +392,14 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
   ParamOrder.get_up_combi(param_combi_ub);
 
   ret = IMPORT_PARAMETER::SUCCESS;
-  return res;
+  return ret;
 }
 
 
 /*
 Import start parameter
 */
-enum IMPORT__START_PARAMETER ip (DF Start
+enum IMPORT_PARAMETER ip (DF Start,
   VI &params_cut_idx_vec, VD &params_time_combi_vec, VD &param_combi, VS &header_parameter) {
 
   enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
@@ -408,18 +410,18 @@ enum IMPORT__START_PARAMETER ip (DF Start
   DF_to_MD(Start, D, N);
 
 
-  for(int i = 0; i < D.size(); i++) {
-    header_parameter[i] = D[i];
+  for(int i = 0; i < N.size(); i++) {
+    header_parameter[i] = N[i];
   }
 
   // remove NA in data
   MD Df;
-  remove_NA(Df, D, Start.nrows(), Start.size());
+  remove_NA2(Df, D, Start.nrows(), Start.size());
 
   // check time column
-  enum TIME Enum_TIME = CTC(Df[0], N[0]):
-  if(Enum_Time != TIME::SUCCESS) {
-    Rcpp::stop("\nERROR: Time column of parameters is not correct");
+  enum TIME Enum_TIME = CTC(Df[0], N[0]);
+  if(Enum_TIME != TIME::SUCCESS) {
+    Rcpp::stop("\nError: Time column of parameters is not correct");
   }
 
   // extract time column
@@ -433,13 +435,13 @@ enum IMPORT__START_PARAMETER ip (DF Start
   MI TP(Start.size()); // TP = time points
 
   int COLS = Start.size();
-  int ROWS = Start[0].size();
+  int ROWS = Start.nrows();
 
   for(int i = 0; i < COLS; i++) {
     for(int j = 0; j < ROWS; j++) {
 
       if(!std::isnan(D[i][j])) {
-        NROW_L_MIN_NA[i] = NROW_MIN_NA[i] + 1;
+        NROW_MIN_NA[i] = NROW_MIN_NA[i] + 1;
         TP[i].push_back(j);
       }
 
@@ -447,7 +449,7 @@ enum IMPORT__START_PARAMETER ip (DF Start
   }
 
   std::list<ParamClass> paramlist;
-  for(int i = 1; i < ncol; i++) {
+  for(int i = 1; i < COLS; i++) {
     std::vector<double> temp_param(NROW_MIN_NA[i]);
     std::vector<double> temp_time(NROW_MIN_NA[i]);
     for(int j = 0; j < NROW_MIN_NA[i]; j++) {
@@ -468,14 +470,14 @@ enum IMPORT__START_PARAMETER ip (DF Start
   ParamOrderClass ParamOrder(paramlist);
   ParamOrder.cut_idx(params_cut_idx_vec);
   ParamOrder.get_time_combi(params_time_combi_vec);
-  ParamOrder.get_param_combi(param_combi_start);
+  ParamOrder.get_param_combi(param_combi);
 
   ret = IMPORT_PARAMETER::SUCCESS;
-  return res;
+  return ret;
 }
 
 
-void Import_states(DF Start,
+enum IMPORT_STATES Import_states(DF Start,
 VI &hs_cut_idx_vec,
 VD &hs_time_combi_vec,
 VD &hs_harvest_state_combi_vec,
@@ -502,9 +504,9 @@ VD &hs_harvest_state_combi_vec,
   }
 
   // check time column
-  enum TIME Enum_TIME = CTC(Df[0], N[0]):
-  if(Enum_Time != TIME::SUCCESS) {
-    Rcpp::stop("\nERROR: Time column of states is not correct");
+  enum TIME Enum_TIME = CTC(Df[0], N[0]);
+  if(Enum_TIME != TIME::SUCCESS) {
+    Rcpp::stop("\nError: Time column of states is not correct");
   }
 
   // extract time vector
@@ -536,5 +538,5 @@ VD &hs_harvest_state_combi_vec,
 
   ret = IMPORT_STATES::SUCCESS;
 
-  return res;
+  return ret;
 }
