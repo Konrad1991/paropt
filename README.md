@@ -51,7 +51,7 @@ Rcpp::List test_integration(std::vector<double> integration_times,
                             std::string states,
                             std::string output,
                             std::string output_parameter,
-                            std::string solvertyp) {
+                            std::string solvertype) {
   std::vector<double> abs_tol = {1e-8, 1e-8};
   
   Rcpp::Environment pkg = Rcpp::Environment::namespace_env("paropt");
@@ -60,19 +60,19 @@ Rcpp::List test_integration(std::vector<double> integration_times,
   Rcpp::XPtr<OS> xpfun = Rcpp::XPtr<OS>(new OS(&ode_system));
   
   return Rcpp::List::create(f(integration_times,
-                              xpfun,
-                              1e-6,
-                              abs_tol,
-                              start,
-                              lb,
-                              ub,
-                              states,
-                              40,
-                              1500,
-                              0.001,
-                              output,
-                              output_parameter,
-                              solvertyp) );
+                              xpfun, // pointer to ode system
+                              1e-6, // reltol
+                              abs_tol, // absolute tolerances
+                              start, // startvalues for parameter
+                              lb, // lower bounds
+                              ub, // upper bounds
+                              states, // states
+                              40, // particel
+                              1500, // number of generations
+                              0.001, // desired error
+                              output, // output states
+                              output_parameter, // output parameter
+                              solvertype) );
 }
 
 
