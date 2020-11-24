@@ -70,7 +70,7 @@ test_that("check Import_Parameter", {
 test_that("check if is numeric", {
   expect_error(paropt:::test_Import_Parameter(paste(path, "/test_non_numeric.txt", sep = ""),
                                                paste(path, "/test_non_numeric_lb.txt", sep = ""),
-                                               paste(path, "/test_non_numeric_ub.txt", sep = "")), "ERROR: Not a number in input. As non-numeric input only NA allowed")
+                                               paste(path, "/test_non_numeric_ub.txt", sep = "")), "\nERROR: Not a number in input. Only digits, NA, '.', '-', '+', 'e', 'E' are allowed.")
 })
 
 
@@ -88,5 +88,31 @@ names(list_states_NA) <- c("cut", "time", "start")
 test_that("check Import_States", {
   expect_equal(paropt:::test_Import_States(paste(path, "/test.txt", sep = "")), list_states)
   expect_equal(paropt:::test_Import_States(paste(path, "/test_NA.txt", sep = "")), list_states_NA)
+})
+
+lb <- data.frame(time = seq(0, 24, 2), a = 1:13, b = 1:13)
+ub <- data.frame(time = seq(0, 24, 2), a = 100:112, b = 100:112)
+res <- list()
+res[[1]] <- c(13,13)
+res[[2]] <- rep(seq(0,24,2),2)
+res[[3]] <- rep(1:13, 2)
+res[[4]] <- rep(100:112, 2)
+names(res) <- c("cut", "time", "lower", "upper")
+test_that("check import parameters", {
+  expect_equal(paropt:::test_Import_Parameter_DF(lb, ub), res)
+})
+
+res2 <- list()
+res2[[1]] <- c(13,13)
+res2[[2]] <- rep(seq(0,24,2),2)
+res2[[3]] <- rep(1:13, 2)
+res2[[4]] <- c("time", "a", "b")
+names(res2) <- c("cut", "time", "start", "header")
+test_that("check import parameters", {
+  expect_equal(paropt:::test_Import_Start_Parameter_DF(lb), res2)
+})
+
+test_that("check import states", {
+  expect_equal(paropt:::test_Import_States_DF(lb), res2)
 })
 

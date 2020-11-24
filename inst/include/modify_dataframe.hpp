@@ -8,47 +8,6 @@ typedef std::vector<std::vector<int> > MI;
 typedef std::vector<std::string> VS;
 typedef Rcpp::DataFrame DF;
 
-enum class IMPORT_PARAMETER {
-  UNDEFINED,
-  Error,
-  SUCCESS
-};
-
-enum class TIME {
-  Error,
-  UNDEFINED,
-  NOT_TIME_AS_NAME,
-  CONTAINS_NA,
-  SUCCESS
-};
-
-enum class EC1 {
-  UNDEFINED,
-  C_UgL, // Column_Upper greater lower
-  C_LgU,
-  R_UgL,
-  R_LgU,
-  SUCCESS
-};
-
-enum class EC2 {
-  UNDEFINED,
-  SUCCESS,
-  Error
-};
-
-enum class EC3 {
-  SUCCESS,
-  Error
-};
-
-
-enum class IMPORT_STATES {
-  UNDEFINED,
-  Error,
-  SUCCESS
-};
-
 void DF_to_MD (DF x, MD &r, VS &rs);
 
 void remove_NA2 (MD &Res, MD &Inp, int NROW, int NCOL);
@@ -64,7 +23,7 @@ enum EC3 CHECK3 (MI T_L, MI T_U, VI L, VI U);
 enum IMPORT_PARAMETER ip (DF lb, DF ub,
   VI &params_cut_idx_vec, VD &params_time_combi_vec, VD &param_combi_lb, VD &param_combi_ub, VS &header_parameter);
 
-enum IMPORT__START_PARAMETER ip (DF Start
+enum IMPORT_PARAMETER ip_start (DF Start,
     VI &params_cut_idx_vec, VD &params_time_combi_vec, VD &param_combi, VS &header_parameter);
 
 enum IMPORT_STATES Import_states(DF Start,

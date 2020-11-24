@@ -8,6 +8,7 @@ remove compiler warnings
 #include "state.hpp"
 #include "param_interpolation.hpp"
 #include "solver.hpp"
+#include "modify_dataframe.hpp"
 
 // [[Rcpp::export]]
 int test_no_file_exist(std::string importfile) {
@@ -591,4 +592,83 @@ if(new_states.length() != init_state.size()) {
 }
 
 return 0;
+}
+
+
+
+
+
+// [[Rcpp::export]]
+Rcpp::List test_Import_Parameter_DF(Rcpp::DataFrame lb, Rcpp::DataFrame ub) {
+  typedef std::vector<double> VD;
+  typedef std::vector<int> VI;
+  typedef std::vector<std::vector<double> > MD;
+  typedef std::vector<std::vector<int> > MI;
+  typedef std::vector<std::string> VS;
+  typedef Rcpp::DataFrame DF;
+
+  enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
+  VI params_cut_idx_vec;
+  VD params_time_combi_vec;
+  VD param_combi_lb;
+  VD param_combi_ub;
+  VS header_parameter;
+
+  ip (lb, ub, params_cut_idx_vec, params_time_combi_vec,
+    param_combi_lb, param_combi_ub, header_parameter);
+
+  return Rcpp::List::create(Rcpp::Named("cut") = params_cut_idx_vec,
+                       Rcpp::Named("time") = params_time_combi_vec,
+                       Rcpp::Named("lower") = param_combi_lb,
+                       Rcpp::Named("upper") = param_combi_ub);
+
+}
+
+
+// [[Rcpp::export]]
+Rcpp::List test_Import_Start_Parameter_DF(Rcpp::DataFrame start) {
+  enum IMPORT_PARAMETER ip_start (DF Start,
+      VI &params_cut_idx_vec, VD &params_time_combi_vec, VD &param_combi, VS &header_parameter);
+
+  typedef std::vector<double> VD;
+  typedef std::vector<int> VI;
+  typedef std::vector<std::vector<double> > MD;
+  typedef std::vector<std::vector<int> > MI;
+  typedef std::vector<std::string> VS;
+  typedef Rcpp::DataFrame DF;
+
+  enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
+  VI params_cut_idx_vec;
+  VD params_time_combi_vec;
+  VD param_combi;
+  VS header_parameter;
+
+
+  ip_start(start, params_cut_idx_vec, params_time_combi_vec, param_combi, header_parameter);
+
+  return Rcpp::List::create(Rcpp::Named("cut") = params_cut_idx_vec,
+                       Rcpp::Named("time") = params_time_combi_vec,
+                       Rcpp::Named("start") = param_combi,
+                     Rcpp::Named("header") = header_parameter);
+}
+
+// [[Rcpp::export]]
+Rcpp::List test_Import_States_DF(Rcpp::DataFrame states) {
+  typedef std::vector<double> VD;
+  typedef std::vector<int> VI;
+  typedef std::vector<std::vector<double> > MD;
+  typedef std::vector<std::vector<int> > MI;
+  typedef std::vector<std::string> VS;
+  typedef Rcpp::DataFrame DF;
+
+  VI hs_cut_idx_vec;
+  VD hs_time_combi_vec;
+  VD states_vec;
+  VS headers;
+  Import_states(states, hs_cut_idx_vec, hs_time_combi_vec, states_vec, headers);
+
+  return Rcpp::List::create(Rcpp::Named("cut") = hs_cut_idx_vec,
+                       Rcpp::Named("time") = hs_time_combi_vec,
+                       Rcpp::Named("start") = states_vec,
+                     Rcpp::Named("header") = headers);
 }

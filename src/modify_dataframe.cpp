@@ -19,6 +19,7 @@ include in Makevar
 #include <stdio.h>
 #include "state.hpp"
 #include "params.hpp"
+#include "header.hpp"
 
 #include <Rcpp.h>
 
@@ -31,46 +32,6 @@ typedef std::vector<std::vector<int> > MI;
 typedef std::vector<std::string> VS;
 typedef Rcpp::DataFrame DF;
 
-enum class IMPORT_PARAMETER {
-  UNDEFINED,
-  Error,
-  SUCCESS
-};
-
-enum class TIME {
-  Error,
-  UNDEFINED,
-  NOT_TIME_AS_NAME,
-  CONTAINS_NA,
-  SUCCESS
-};
-
-enum class EC1 {
-  UNDEFINED,
-  C_UgL, // Column_Upper greater lower
-  C_LgU,
-  R_UgL,
-  R_LgU,
-  SUCCESS
-};
-
-enum class EC2 {
-  UNDEFINED,
-  SUCCESS,
-  Error
-};
-
-enum class EC3 {
-  SUCCESS,
-  Error
-};
-
-
-enum class IMPORT_STATES {
-  UNDEFINED,
-  Error,
-  SUCCESS
-};
 /*
 Dataframe to MD
 */
@@ -105,7 +66,7 @@ void DF_to_MD (DF x, MD &r, VS &rs) {
 
   for(int i = 0; i < NCOL; i++) {
     for(int j = 0; j < NROW; j++) {
-      r[i][j] = M(i , j);
+      r[i][j] = M(j,i); //M(i , j);
     }
   }
 
@@ -222,7 +183,7 @@ enum EC1 CHECK1 (MD L, MD U, int &LINE) {
 /*
 Error checker Nr.2
 */
-enum EC2 CHECK2 (VD L, VD U, int &LINE) {
+enum EC2 CHECK2 (VS L, VS U, int &LINE) {
 
   enum EC2 res = EC2::UNDEFINED;
 
@@ -287,6 +248,7 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
   DF_to_MD(lb, L, Ls);
   DF_to_MD(ub, U, Us);
 
+  header_parameter.resize(L.size());
   for(int i = 0; i < L.size(); i++) {
     header_parameter[i] = Ls[i];
   }
@@ -321,7 +283,7 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
   }
 
   line_Error = -1;
-  enum EC2 e2 = CHECK2(Lf[0], Uf[0], line_Error);
+  enum EC2 e2 = CHECK2(Ls, Us, line_Error);
   if(e2 == EC2::Error) {
     Rcpp::Rcerr << "In column:  " << std::endl;
     Rcpp::stop("\nError: Headers are different!");
@@ -399,7 +361,7 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
 /*
 Import start parameter
 */
-enum IMPORT_PARAMETER ip (DF Start,
+enum IMPORT_PARAMETER ip_start (DF Start,
   VI &params_cut_idx_vec, VD &params_time_combi_vec, VD &param_combi, VS &header_parameter) {
 
   enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
@@ -409,7 +371,7 @@ enum IMPORT_PARAMETER ip (DF Start,
   VS N;
   DF_to_MD(Start, D, N);
 
-
+  header_parameter.resize(Start.size());
   for(int i = 0; i < N.size(); i++) {
     header_parameter[i] = N[i];
   }
@@ -490,6 +452,7 @@ VD &hs_harvest_state_combi_vec,
   VS N;
   DF_to_MD(Start, Df, N);
 
+  headers.resize(N.size());
   for(int i = 0; i < N.size(); i++) {
     headers[i] = N[i];
   }

@@ -282,6 +282,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// test_Import_Parameter_DF
+Rcpp::List test_Import_Parameter_DF(Rcpp::DataFrame lb, Rcpp::DataFrame ub);
+RcppExport SEXP _paropt_test_Import_Parameter_DF(SEXP lbSEXP, SEXP ubSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type lb(lbSEXP);
+    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type ub(ubSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_Import_Parameter_DF(lb, ub));
+    return rcpp_result_gen;
+END_RCPP
+}
+// test_Import_Start_Parameter_DF
+Rcpp::List test_Import_Start_Parameter_DF(Rcpp::DataFrame start);
+RcppExport SEXP _paropt_test_Import_Start_Parameter_DF(SEXP startSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type start(startSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_Import_Start_Parameter_DF(start));
+    return rcpp_result_gen;
+END_RCPP
+}
+// test_Import_States_DF
+Rcpp::List test_Import_States_DF(Rcpp::DataFrame states);
+RcppExport SEXP _paropt_test_Import_States_DF(SEXP statesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::DataFrame >::type states(statesSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_Import_States_DF(states));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 // validate (ensure exported C++ functions exist before calling them)
 static int _paropt_RcppExport_validate(const char* sig) { 
@@ -316,6 +350,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_paropt_test_Import_States", (DL_FUNC) &_paropt_test_Import_States, 1},
     {"_paropt_test_error_calculation", (DL_FUNC) &_paropt_test_error_calculation, 2},
     {"_paropt_test_interface_fct", (DL_FUNC) &_paropt_test_interface_fct, 13},
+    {"_paropt_test_Import_Parameter_DF", (DL_FUNC) &_paropt_test_Import_Parameter_DF, 2},
+    {"_paropt_test_Import_Start_Parameter_DF", (DL_FUNC) &_paropt_test_Import_Start_Parameter_DF, 1},
+    {"_paropt_test_Import_States_DF", (DL_FUNC) &_paropt_test_Import_States_DF, 1},
     {"_paropt_RcppExport_registerCCallable", (DL_FUNC) &_paropt_RcppExport_registerCCallable, 0},
     {NULL, NULL, 0}
 };

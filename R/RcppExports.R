@@ -76,6 +76,18 @@ test_interface_fct <- function(integration_times, ode_system, relative_tolerance
     .Call(`_paropt_test_interface_fct`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter)
 }
 
+test_Import_Parameter_DF <- function(lb, ub) {
+    .Call(`_paropt_test_Import_Parameter_DF`, lb, ub)
+}
+
+test_Import_Start_Parameter_DF <- function(start) {
+    .Call(`_paropt_test_Import_Start_Parameter_DF`, start)
+}
+
+test_Import_States_DF <- function(states) {
+    .Call(`_paropt_test_Import_States_DF`, states)
+}
+
 # Register entry points for exported C++ functions
 methods::setLoadAction(function(ns) {
     .Call('_paropt_RcppExport_registerCCallable', PACKAGE = 'paropt')
