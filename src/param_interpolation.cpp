@@ -1,3 +1,10 @@
+/* !!revision!!
+try catch block around CatmullRomSpline.
+If NA, INf, etc. --> error
+*/
+
+
+
 /********************************************************************
 //
 //  file: param_interpolation.cpp
@@ -6,7 +13,7 @@
 //    - sort function which passes time, timevector
 //      and parametervector to spline
 //    - Cubic Spline interpolation for variable parameters
-//    - Similar to Hermite Spline 
+//    - Similar to Hermite Spline
 //    - periodic Spline
 //
 *********************************************************************/

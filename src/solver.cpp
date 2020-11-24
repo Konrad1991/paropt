@@ -1,3 +1,11 @@
+/* !!revision!!
+// remove RKs ?
+// do not print error --> instead store it and export file later
+
+error check if error is inf, NA etc.
+*/
+
+
 /*
 BSD 3-Clause License
 

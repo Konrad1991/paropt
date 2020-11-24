@@ -1,3 +1,17 @@
+/* !!revision!!
+completly set up a new PSO.
+
+1. classical pso
+2. pso as clerc propose it
+3. Initialisation in own fct
+4. calculation of neighberhood in own fct
+
+5. implement TPO
+*/
+
+
+
+
 /*################################################################################
   ##
   ##   Copyright (C) 2016-2018 Keith O'Hara

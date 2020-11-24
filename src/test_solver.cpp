@@ -1,3 +1,7 @@
+/* !!revision!!
+remove compiler warnings
+*/
+
 #include "solver.hpp"
 
 static int check_retval(void *returnvalue, const char *funcname, int opt);

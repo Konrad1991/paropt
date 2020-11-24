@@ -1,3 +1,7 @@
+/* !!revision!!
+remove compiler warnings
+*/
+
 #include "solver.hpp"
 
 struct test_parameter{

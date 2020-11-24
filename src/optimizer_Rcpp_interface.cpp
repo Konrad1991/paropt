@@ -1,3 +1,25 @@
+/* !!revision!!
+completly set up a new PSO.
+
+1. classical pso
+2. pso as clerc propose it
+3. Initialisation in own fct
+4. calculation of neighberhood in own fct
+
+5. implement TPO
+
+6. preparation of multithreading have to be improved.
+   Maybe it is sometimes better not to use all threads. Due to large overhead.
+   Especially a problem if solving is fast.
+   Thus, it is necessary to test how fast solving is and based on this choose number of threads.
+   Give user possibility to define number of threads which should be used
+Maybe it is possible to have only one PSO; not well arranged though
+
+
+*/
+
+
+
 /*################################################################################
   ##
   ##   Copyright (C) 2016-2018 Keith O'Hara
@@ -445,7 +467,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
     }
     // =============================
     err = global_best_val;
-    Rcpp::checkUserInterrupt(); 
+    Rcpp::checkUserInterrupt();
   }
   // =============================
 

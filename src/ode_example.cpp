@@ -1,3 +1,8 @@
+/* !!revision!!
+improvements necessary:
+names for states: prey and predator;
+names for parameter: death_rate_prey etc.; Use readable names
+*/
 #include <Rcpp.h>
 
 // [[Rcpp::export]]

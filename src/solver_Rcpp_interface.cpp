@@ -1,3 +1,9 @@
+/* !!revision!!
+remove RKs?
+
+error check if error is inf, NA etc.
+*/
+
 /*
 BSD 3-Clause License
 

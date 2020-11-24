@@ -1,3 +1,10 @@
+/* !!revision!!
+better structure
+
+Need more checks: last line empty etc.
+*/
+
+
 //#pragma once
 
 #include <iostream>
@@ -419,9 +426,9 @@ std::vector<std::string> &test) {
   if(nc_without_NA.size() != nc_without_NA_lb.size() || nc_without_NA.size() != nc_without_NA_ub.size()) {
     //Rcpp::stop("\nERROR: Different number of cols of imported numeric values without NA between startvalues, lower bounds and upper bounds");
     //exit (EXIT_FAILURE);
-    Rcpp::Rcerr << "number of rows start values:" << "\t" << nc_without_NA[i].size() << std::endl;
-    Rcpp::Rcerr << "number of rows lb values:" << "\t" << nc__without_NA_lb[i].size() << std::endl;
-    Rcpp::Rcerr << "number of rows ub values:" << "\t" << nc__without_NA_ub[i].size() << std::endl;
+    Rcpp::Rcerr << "number of rows start values:" << "\t" << nc_without_NA.size() << std::endl;
+    Rcpp::Rcerr << "number of rows lb values:" << "\t" << nc_without_NA_lb.size() << std::endl;
+    Rcpp::Rcerr << "number of rows ub values:" << "\t" << nc_without_NA_ub.size() << std::endl;
     Rcpp::stop("\nERROR: Different number of rows of imported numeric values between startvalues, lower bounds and upper bounds");
   }
   // ===================================================

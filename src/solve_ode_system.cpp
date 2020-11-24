@@ -1,3 +1,11 @@
+/* !!revision!!
+improve error handling: try; catch
+
+remove start values
+*/
+
+
+
 #include "header.hpp"
 #include "optimizer.hpp"
 #include "solver.hpp"

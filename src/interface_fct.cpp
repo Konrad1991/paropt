@@ -1,3 +1,13 @@
+/* !!revision!!
+improve error handling: try; catch
+
+// better name of fct?
+
+remove start values
+
+Add feature to pass data.frame instead of string
+*/
+
 #include "header.hpp"
 #include "optimizer.hpp"
 #include "solver.hpp"

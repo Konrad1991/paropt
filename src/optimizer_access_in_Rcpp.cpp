@@ -1,3 +1,15 @@
+/* !!revision!!
+improve error handling: try; catch
+
+// better name of fct?
+
+remove start values
+
+Add feature to pass data.frame instead of string
+*/
+
+
+
 #include "header.hpp"
 #include "optimizer_Rcpp_interface.hpp"
 #include "paropt_types.h"
