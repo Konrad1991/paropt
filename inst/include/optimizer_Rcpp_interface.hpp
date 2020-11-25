@@ -44,7 +44,6 @@ For details see: https://github.com/kthohr/optim
 
 class Optimizer_Rcpp_interface {
 private:
-    std::vector<double> m_start;
     std::vector<double> m_lb;
     std::vector<double> m_ub;
     settingsPSO_Rcpp_interface setpso;
@@ -55,7 +54,6 @@ private:
     OS odes; //Rcpp::XPtr<OS> odes;
 public:
     Optimizer_Rcpp_interface (
-        std::vector<double> t_start,
         std::vector<double> t_lb,
         std::vector<double> t_ub,
         settingsPSO_Rcpp_interface t_set_pso,

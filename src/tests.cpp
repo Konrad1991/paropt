@@ -8,7 +8,7 @@ remove compiler warnings
 #include "state.hpp"
 #include "param_interpolation.hpp"
 #include "solver.hpp"
-#include "modify_dataframe.hpp"
+#include "header.hpp"
 
 // [[Rcpp::export]]
 int test_no_file_exist(std::string importfile) {

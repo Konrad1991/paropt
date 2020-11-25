@@ -11,7 +11,7 @@
 #include <cvode/cvode_diag.h> // for ADAMS
 #include <arkode/arkode_erkstep.h> // for ERK
 #include <arkode/arkode_arkstep.h> // for fully implicit systems
-#include "basic_functions.hpp"
+#include "modify_dataframe.hpp"
 #include "param_interpolation.hpp"
 
 #include <cmath>
@@ -86,48 +86,6 @@ struct time_state_information_Rcpp_interface {
   std::vector<double> integration_times;
   double reltol;
   std::vector<double> absolute_tolerances;
-};
-
-
-enum class IMPORT_PARAMETER {
-  UNDEFINED,
-  Error,
-  SUCCESS
-};
-
-enum class TIME {
-  Error,
-  UNDEFINED,
-  NOT_TIME_AS_NAME,
-  CONTAINS_NA,
-  SUCCESS
-};
-
-enum class EC1 {
-  UNDEFINED,
-  C_UgL, // Column_Upper greater lower
-  C_LgU,
-  R_UgL,
-  R_LgU,
-  SUCCESS
-};
-
-enum class EC2 {
-  UNDEFINED,
-  SUCCESS,
-  Error
-};
-
-enum class EC3 {
-  SUCCESS,
-  Error
-};
-
-
-enum class IMPORT_STATES {
-  UNDEFINED,
-  Error,
-  SUCCESS
 };
 
 /*

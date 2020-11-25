@@ -364,7 +364,7 @@ double ARK_return_data(std::vector<double> &param_combi_start, SEXP ode_system, 
    return 0.;
 }
 
-// [[Rcpp::export]]
+/*
 std::vector<std::vector<double> > test_solver(Rcpp::NumericVector integration_times,
                    SEXP ode_system, double relative_tolerance,
                    Rcpp::NumericVector absolute_tolerances, std::string start,
@@ -422,8 +422,9 @@ std::vector<std::vector<double> > test_solver(Rcpp::NumericVector integration_ti
     }
     return nc;
 }
+*/
 
-// [[Rcpp::export]]
+/*
 std::vector<std::vector<double> > test_solve_ode_system(Rcpp::NumericVector integration_times,
                    SEXP ode_system, double relative_tolerance,
                    Rcpp::NumericVector absolute_tolerances,
@@ -525,7 +526,7 @@ std::vector<std::vector<double> > test_solve_ode_system(Rcpp::NumericVector inte
 
 return nc;
 }
-
+*/
 
 static int check_retval(void *returnvalue, const char *funcname, int opt)
 {

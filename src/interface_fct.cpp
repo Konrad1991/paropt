@@ -14,32 +14,48 @@ Add feature to pass data.frame instead of string
 
 #define NA std::nan("l")
 
+typedef std::vector<double> VD;
+typedef std::vector<int> VI;
+typedef std::vector<std::vector<double> > MD;
+typedef std::vector<std::vector<int> > MI;
+typedef std::vector<std::string> VS;
+typedef Rcpp::DataFrame DF;
+
+
   // [[Rcpp::export]]
   Rcpp::List interface_function(Rcpp::NumericVector integration_times,
                      SEXP ode_system, double relative_tolerance,
-                     Rcpp::NumericVector absolute_tolerances, std::string start,
-                       std::string lower, std::string upper, std::string states,
-                     int npop, int ngen, double error, std::string where_to_save_output_states,
-                   std::string where_to_save_output_parameter,
+                     Rcpp::NumericVector absolute_tolerances,
+                       Rcpp::DataFrame lb, Rcpp::DataFrame ub, Rcpp::DataFrame states,
+                     int npop, int ngen, double error,
                  std::string solvertype) {
 
-    // extract parameters
-    std::vector<int> params_cut_idx_vec;
-    std::vector<double> params_time_combi_vec;
-    std::vector<double> param_combi_start;
-    std::vector<double> param_combi_lb;
-    std::vector<double> param_combi_ub;
-    std::vector<std::string> header_parameter;
 
-    Import_Parameter(start, lower, upper, params_cut_idx_vec, params_time_combi_vec,
-    param_combi_start, param_combi_lb, param_combi_ub, header_parameter);
+     // extract parameters
+
+    enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
+    VI params_cut_idx_vec;
+    VD params_time_combi_vec;
+    VD param_combi_lb;
+    VD param_combi_ub;
+    VS header_parameter;
+
+    ret = ip (lb, ub, params_cut_idx_vec, params_time_combi_vec,
+                     param_combi_lb, param_combi_ub, header_parameter);
+
+    // create randomly param_combi_start vector
+
+    VD param_combi_start(param_combi_lb.size());
+    for(unsigned int i = 0; i < param_combi_lb.size(); i++) {
+      double rd = arma::randu();
+      param_combi_start[i] = param_combi_lb[i] + (param_combi_ub[i] - param_combi_lb[i])*rd;
+    }
 
     // extract states
-    std::vector<int> hs_cut_idx_vec;
-    std::vector<double> hs_time_combi_vec;
-    std::vector<double> hs_harvest_state_combi_vec;
-    std::vector<std::string> header_states;
-
+    VI hs_cut_idx_vec;
+    VD hs_time_combi_vec;
+    VD hs_harvest_state_combi_vec;
+    VS header_states;
     Import_states(states, hs_cut_idx_vec, hs_time_combi_vec, hs_harvest_state_combi_vec, header_states);
 
     // check if ngen is positiv
@@ -189,15 +205,16 @@ Add feature to pass data.frame instead of string
     param_model.absolute_tolerances = absolute_tolerances;
 
     // test integration
+    Rcpp::NumericMatrix DF(integration_times.size(),init_state.size());
     if(solvertype == "bdf") {
-      solver_bdf_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_bdf_save(param_combi_start, ode_system, param_model, DF);
     }
     else if(solvertype == "ADAMS") {
-      solver_adams_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_adams_save(param_combi_start, ode_system, param_model, DF);
     } else if(solvertype == "ERK") {
-      solver_erk_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_erk_save(param_combi_start, ode_system, param_model, DF);
     } else if(solvertype == "ARK") {
-      solver_ark_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_ark_save(param_combi_start, ode_system, param_model, DF);
     } else {
       Rcpp::stop("\nERROR: Unknown solvertyp");
     }
@@ -228,7 +245,7 @@ Add feature to pass data.frame instead of string
       Rcpp::stop("\nERROR: Unknown solvertyp");
     }
 
-    Optimizer optimizing(param_combi_start,param_combi_lb,param_combi_ub,param_pso,param_model, fctptr_to_solver ,ode_system);
+    Optimizer optimizing(param_combi_lb,param_combi_ub,param_pso,param_model, fctptr_to_solver ,ode_system);
 
     double smsq;
     smsq = optimizing.pso();
@@ -239,19 +256,24 @@ Add feature to pass data.frame instead of string
     // solve ODE-System with optimized parameters
     // ==================================================================
     if(solvertype == "bdf") {
-    solver_bdf_save(temp, ode_system, param_model, where_to_save_output_states, header_states);
+    solver_bdf_save(temp, ode_system, param_model, DF);
     }
     else if(solvertype == "ADAMS") {
-      solver_adams_save(temp, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_adams_save(temp, ode_system, param_model, DF);
     }
     else if(solvertype == "ERK") {
-      solver_erk_save(temp, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_erk_save(temp, ode_system, param_model, DF);
     }
     else if(solvertype == "ARK") {
-      solver_ark_save(temp, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_ark_save(temp, ode_system, param_model, DF);
     } else {
       Rcpp::stop("\nERROR: Unknown solvertyp");
     }
+    Rcpp::CharacterVector CV(header_states.size()-1);
+    for(unsigned int i = 1; i < header_states.size(); i++) {
+      CV[i-1] = header_states[i];
+    }
+    colnames(DF) = CV;
     // ==================================================================
 
     // export parameter
@@ -266,36 +288,27 @@ Add feature to pass data.frame instead of string
       }
     }
 
-    std::ofstream myfile;
-    myfile.open(where_to_save_output_parameter);
-    for(size_t i = 0; i < header_parameter.size(); i++) {
-        myfile << header_parameter[i];
-        myfile << "\t";
-    }
-    myfile << "\n";
-
     std::vector<int>::iterator max_cut_vector = std::max_element(params_cut_idx_vec.begin(), params_cut_idx_vec.end());
     int idx_largest_parameter = std::max_element(params_cut_idx_vec.begin(), params_cut_idx_vec.end()) - params_cut_idx_vec.begin();
 
+    Rcpp::NumericMatrix PAROUT(*max_cut_vector, params_export.size()+1);
     int rowcounter = 0;
     while(rowcounter < *max_cut_vector) {
       for(size_t i = 0; i < params_export.size()+1; i++) {
 
         if(i == 0) {
-          myfile << params_time_combi_vec[params_cut_idx_vec[idx_largest_parameter] + rowcounter];
-          myfile << "\t";
+          PAROUT(rowcounter, i) = params_time_combi_vec[params_cut_idx_vec[idx_largest_parameter] + rowcounter];
         } else {
         if(rowcounter < params_cut_idx_vec[i-1]) { // <=
-          myfile << params_export[i-1][rowcounter];
-          myfile << "\t";} else {
-            myfile << "NA";
-            myfile << "\t";
+          PAROUT(rowcounter, i) = params_export[i-1][rowcounter];
+        } else {
+          PAROUT(rowcounter, i) = NA;
           }
         }
       }
-      myfile << "\n";
       rowcounter++;
     }
+
     // ==================================================================
 
     return Rcpp::List::create(Rcpp::Named("Error of best parameters:") = smsq,
@@ -304,5 +317,7 @@ Add feature to pass data.frame instead of string
                        Rcpp::Named("Number of generations for PSO:") = ngen,
                        Rcpp::Named("Solver set by user:") = solvertype,
                        Rcpp::Named("relative tolerance:") = relative_tolerance,
-                       Rcpp::Named("absolute tolerance(s):") = absolute_tolerances);
+                       Rcpp::Named("absolute tolerance(s):") = absolute_tolerances,
+                     Rcpp::Named("Parameter:") = PAROUT,
+                   Rcpp::Named("States:") = DF);
   }

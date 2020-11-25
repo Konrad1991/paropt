@@ -4,36 +4,24 @@
 #' @export
 #' @useDynLib paropt, .registration = TRUE
 #' @importFrom Rcpp evalCpp
-function_access <- function(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, where_to_save_output_states, solvertype) {
-    .Call(`_paropt_function_access`, integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, where_to_save_output_states, solvertype)
+function_access <- function(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype) {
+    .Call(`_paropt_function_access`, integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype)
 }
 
-interface_function <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter, solvertype) {
-    .Call(`_paropt_interface_function`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter, solvertype)
+interface_function <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, lb, ub, states, npop, ngen, error, solvertype) {
+    .Call(`_paropt_interface_function`, integration_times, ode_system, relative_tolerance, absolute_tolerances, lb, ub, states, npop, ngen, error, solvertype)
 }
 
 ode_example <- function(t, params, y) {
     .Call(`_paropt_ode_example`, t, params, y)
 }
 
-optimizer_access_in_Rcpp <- function(integration_times, ode_sys, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter, solvertype) {
-    .Call(`_paropt_optimizer_access_in_Rcpp`, integration_times, ode_sys, relative_tolerance, absolute_tolerances, start, lower, upper, states, npop, ngen, error, where_to_save_output_states, where_to_save_output_parameter, solvertype)
+optimizer_access_in_Rcpp <- function(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype) {
+    .Call(`_paropt_optimizer_access_in_Rcpp`, integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype)
 }
 
-solve_ode_system <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, where_to_save_output_states, solvertype) {
-    .Call(`_paropt_solve_ode_system`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, where_to_save_output_states, solvertype)
-}
-
-test_paramsort_and_spline <- function(timepoints, start, lower, upper) {
-    .Call(`_paropt_test_paramsort_and_spline`, timepoints, start, lower, upper)
-}
-
-test_solver <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, start, lower, upper, states, solvertype) {
-    .Call(`_paropt_test_solver`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, lower, upper, states, solvertype)
-}
-
-test_solve_ode_system <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, solvertype) {
-    .Call(`_paropt_test_solve_ode_system`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, solvertype)
+solve_ode_system <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, solvertype) {
+    .Call(`_paropt_solve_ode_system`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, solvertype)
 }
 
 test_no_file_exist <- function(importfile) {

@@ -36,6 +36,7 @@ int test_call_paramsort(realtype t, void *user_data, std::vector<double> &spline
   return 0;
 }
 
+/*
 // [[Rcpp::export]]
 std::vector<std::vector<double> > test_paramsort_and_spline(Rcpp::NumericVector timepoints, std::string start,std::string lower, std::string upper) {
 
@@ -82,3 +83,4 @@ for(size_t i = 0; i < testimport.size(); i++) {
 
 return output; //testimport; //output;
 }
+*/

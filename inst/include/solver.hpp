@@ -31,23 +31,19 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //static int check_retval(void *returnvalue, const char *funcname, int opt);
 double solver_bdf(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &param_model);
 
-double solver_bdf_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
-std::vector<std::string> headers);
+double solver_bdf_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF);
 
 double solver_adams(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &param_model);
 
-double solver_adams_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
-std::vector<std::string> headers);
+double solver_adams_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF);
 
 double solver_erk(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc);
 
-double solver_erk_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
-std::vector<std::string> headers);
+double solver_erk_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF);
 
 double solver_ark(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc);
 
-double solver_ark_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, std::string speicherfile,
-std::vector<std::string> headers);
+double solver_ark_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF);
 
 int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 

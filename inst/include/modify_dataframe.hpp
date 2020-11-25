@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 #include "header.hpp"
 
 typedef std::vector<double> VD;
@@ -7,6 +7,47 @@ typedef std::vector<std::vector<double> > MD;
 typedef std::vector<std::vector<int> > MI;
 typedef std::vector<std::string> VS;
 typedef Rcpp::DataFrame DF;
+
+enum class IMPORT_PARAMETER {
+  UNDEFINED,
+  Error,
+  SUCCESS
+};
+
+enum class TIME {
+  Error,
+  UNDEFINED,
+  NOT_TIME_AS_NAME,
+  CONTAINS_NA,
+  SUCCESS
+};
+
+enum class EC1 {
+  UNDEFINED,
+  C_UgL, // Column_Upper greater lower
+  C_LgU,
+  R_UgL,
+  R_LgU,
+  SUCCESS
+};
+
+enum class EC2 {
+  UNDEFINED,
+  SUCCESS,
+  Error
+};
+
+enum class EC3 {
+  SUCCESS,
+  Error
+};
+
+
+enum class IMPORT_STATES {
+  UNDEFINED,
+  Error,
+  SUCCESS
+};
 
 void DF_to_MD (DF x, MD &r, VS &rs);
 

@@ -15,23 +15,22 @@ remove start values
   Rcpp::List solve_ode_system(Rcpp::NumericVector integration_times,
                      SEXP ode_system, double relative_tolerance,
                      Rcpp::NumericVector absolute_tolerances,
-                      std::string start, std::string states,
-                     std::string where_to_save_output_states,std::string solvertype) {
+                     Rcpp::DataFrame start, Rcpp::DataFrame states,std::string solvertype) {
 
     // extract parameters
-    std::vector<int> params_cut_idx_vec;
-    std::vector<double> params_time_combi_vec;
-    std::vector<double> param_combi_start;
-    std::vector<std::string> header_parameter;
+    enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
+    VI params_cut_idx_vec;
+    VD params_time_combi_vec;
+    VD param_combi_start;
+    VS header_parameter;
 
-    Import_start_parameter(start, params_cut_idx_vec, params_time_combi_vec,  param_combi_start, header_parameter);
+    ip_start(start, params_cut_idx_vec, params_time_combi_vec, param_combi_start, header_parameter);
 
     // extract states
-    std::vector<int> hs_cut_idx_vec;
-    std::vector<double> hs_time_combi_vec;
-    std::vector<double> hs_harvest_state_combi_vec;
-    std::vector<std::string> header_states;
-
+    VI hs_cut_idx_vec;
+    VD hs_time_combi_vec;
+    VD hs_harvest_state_combi_vec;
+    VS header_states;
     Import_states(states, hs_cut_idx_vec, hs_time_combi_vec, hs_harvest_state_combi_vec, header_states);
 
     // extract initial values
@@ -176,19 +175,25 @@ remove start values
     param_model.absolute_tolerances = absolute_tolerances;
 
     double smsq;
-    // test integration
+    // integration
+    Rcpp::NumericMatrix DF(integration_times.size(),init_state.size());
     if(solvertype == "bdf") {
-      smsq = solver_bdf_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_bdf_save(param_combi_start, ode_system, param_model, DF);
     }
     else if(solvertype == "ADAMS") {
-      smsq = solver_adams_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_adams_save(param_combi_start, ode_system, param_model, DF);
     } else if(solvertype == "ERK") {
-      smsq = solver_erk_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_erk_save(param_combi_start, ode_system, param_model, DF);
     } else if(solvertype == "ARK") {
-      smsq = solver_ark_save(param_combi_start, ode_system, param_model, where_to_save_output_states, header_states);
+      solver_ark_save(param_combi_start, ode_system, param_model, DF);
     } else {
       Rcpp::stop("\nERROR: Unknown solvertyp");
     }
+    Rcpp::CharacterVector CV(header_states.size());
+    for(unsigned int i = 0; i < header_states.size(); i++) {
+      CV[i] = header_states[i];
+    }
+    colnames(DF) = CV;
 
     return Rcpp::List::create(Rcpp::Named("Error of input-parameters:") = smsq,
                        Rcpp::Named("Solver set by user:") = solvertype,
