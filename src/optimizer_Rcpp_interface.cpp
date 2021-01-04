@@ -66,18 +66,25 @@ std::mutex mtx;
 
 void helper_fct (arma::mat inp, arma::vec & errors, int index, int number_of_rows, const int nvals, OS odes, time_state_information_Rcpp_interface model,
                  fctptr2 fctptr){
+
+  assert(nvals > 0);
   std::vector<double> param_temp(nvals);
   double prop_objfn_val = 0.;
   for(int j = 0; j < number_of_rows; j++) {
-
+  mtx.lock();
     for(int i = 0; i < nvals; i++) {
       param_temp[i] = inp(j, i);
     }
-    prop_objfn_val = fctptr(param_temp, odes, model);
 
-    mtx.lock();
-    errors(index + j) = prop_objfn_val;
-    mtx.unlock();
+  OS ODE = odes;
+  time_state_information_Rcpp_interface MODEL = model;
+  mtx.unlock();
+
+  prop_objfn_val = fctptr(param_temp, ODE, MODEL);
+
+  mtx.lock();
+  errors(index + j) = prop_objfn_val;
+  mtx.unlock();
   }
 }
 
@@ -238,6 +245,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
   // begin loop
   // =============================
   while (err > err_tol && iter < static_cast<size_t>(n_gen)) {
+
     // Calculate neighberhood
     // =============================
     if(iter == 0 || convergence_check >= 1) { // 10
@@ -390,10 +398,9 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       }
 
     }
+
+
       // =============================
-
-
-      /*
       // population loop Nr.2
       for (int i=0; i < n_pop; i++)
       {
@@ -406,21 +413,36 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
         objfn_vals(i) = prop_objfn_val;
       }
       // =============================
-      */
 
+      /*
       // Parallel loop Nr.2
-      std::vector<std::thread> th(max_amount_of_threads);
+      //Rcpp::Rcerr << "Test1" << " " << iter << std::endl;
+      std::vector<std::thread> th(max_amount_of_threads); // create threads earlier
       for(int i = 0; i < sub_mats.size(); i++) {
         sub_mats[i] = P(arma::span(indices[i], indices[i] + sizes[i]-1), arma::span(0, n_vals-1)); // span(first row, last row), span(first column, last column)
       }
 
       for(int i = 0; i < max_amount_of_threads; i++) {
-        th[i] = std::thread(helper_fct, sub_mats[i], std::ref(objfn_vals), indices[i], sizes[i], n_vals, odes, model, fctptr);
+        try {
+            th[i] = std::thread(helper_fct, sub_mats[i], std::ref(objfn_vals), indices[i], sizes[i], n_vals, odes, model, fctptr);
+        } catch(...) {
+          for(int j = 0; j < max_amount_of_threads; j++) {
+            if(th[j].joinable()) {
+                th[j].join();
+            }
+          }
+          Rcpp::stop("\nError: something went wrong!");
+        }
       }
-
+      //Rcpp::Rcerr << "Test2" << " " << iter << std::endl;
+      // join the threads later
       for(int i = 0; i < max_amount_of_threads; i++) {
-        th[i].join();
+        if(th[i].joinable()) {
+            th[i].join();
+        }
       }
+      */
+
 
       // population loop Nr.3
       for (int i=0; i < n_pop; i++)

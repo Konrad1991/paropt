@@ -2,6 +2,9 @@
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <Rcpp.h>
+
+#include <cassert>
+
 #include <nvector/nvector_serial.h>
 #include <sundials/sundials_types.h>
 #include <cvode/cvode.h>
