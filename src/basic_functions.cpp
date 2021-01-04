@@ -1,26 +1,10 @@
 /* !!revision!!
 better structure
-
-Need more checks: last line empty etc.
 */
 
-
-//#pragma once
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <algorithm>
-#include <sstream>
-#include <iterator>
-#include <vector>
-#include <cctype>
-#include <cmath>
-#include <stdio.h>
+#include "header.hpp"
 #include "state.hpp"
 #include "params.hpp"
-
-#include <Rcpp.h>
 
 #define NA std::nan("l")
 

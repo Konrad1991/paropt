@@ -1,4 +1,6 @@
-//#pragma once
+#ifndef MODIFYDATAFRAME
+#define MODIFYDATAFRAME
+
 #include "header.hpp"
 
 typedef std::vector<double> VD;
@@ -72,3 +74,5 @@ VI &hs_cut_idx_vec,
 VD &hs_time_combi_vec,
 VD &hs_harvest_state_combi_vec,
       VS &headers);
+
+#endif // MODIFYDATAFRAME

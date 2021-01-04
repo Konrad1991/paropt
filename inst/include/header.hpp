@@ -1,7 +1,10 @@
-#pragma once
+#ifndef HEADERS
+#define HEADERS
+
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <Rcpp.h>
+// [[Rcpp::plugins(openmp)]]
 
 #include <cassert>
 
@@ -34,6 +37,9 @@
 #include <algorithm>
 #include <sstream>
 #include <cctype>
+
+#include <thread>
+#include <mutex>
 
 #define NA std::nan("l")
 
@@ -100,3 +106,6 @@ void pv(T const &s) {
     Rcpp::Rcout << Data << std::endl;
   }
 }
+
+
+#endif // HEADERS

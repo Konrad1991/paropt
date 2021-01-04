@@ -36,7 +36,9 @@ For details see: https://github.com/kthohr/optim
 // ===============================================================
 */
 
-#pragma once
+#ifndef OPTIMIZER
+#define OPTIMIZER
+
 #include "header.hpp"
 
 class Optimizer {
@@ -68,3 +70,5 @@ public:
         //return best_particle_objective_value;};
      void get_best_particle_param_values (std::vector<double> & temp);
 };
+
+#endif // OPTIMIZER

@@ -1,27 +1,7 @@
-/* !!revision!!
-Need:
-header File
-include in Makevar
-*/
-
-
-//#pragma once
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <algorithm>
-#include <sstream>
-#include <iterator>
-#include <vector>
-#include <cctype>
-#include <cmath>
-#include <stdio.h>
+#include "modify_dataframe.hpp"
 #include "state.hpp"
 #include "params.hpp"
-#include "header.hpp"
 
-#include <Rcpp.h>
 
 #define NA std::nan("l")
 

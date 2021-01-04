@@ -127,18 +127,15 @@ void Optimizer_Rcpp_interface::get_best_particle_param_values(std::vector<double
 double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
 
   // define parameters
-  // =============================
-  bool classical_pso = true;
+  // ============================
   const int n_vals = m_lb.size();
   const double err_tol = setpso.err_tol;
   const int n_pop = setpso.pso_n_pop;
   const int n_gen = setpso.pso_n_gen;
-  const int inertia_method = 1; //1 or 2
   double par_w = setpso.pso_par_initial_w;
   const double par_w_max = setpso.pso_par_w_max;
   const double par_w_min = setpso.pso_par_w_min;
   const double par_damp = setpso.pso_par_w_damp;
-  const int velocity_method = 2; //1 or 2
   double par_c_cog = 2.05; //2.0
   double par_c_soc = 2.05; //2.0
   const double par_initial_c_cog = 2.5; // 0.5
@@ -203,8 +200,6 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
 
   // initialize
   // =============================
-
-  if(classical_pso == true) {
     for (int i = 0; i < n_pop; i++){
       if(i == 0) {}
       GetRNGstate();
@@ -221,16 +216,6 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       prop_objfn_val = fctptr(param_temp, odes, model);;
       objfn_vals(i) = prop_objfn_val;
     }
-  } else {
-      for (int i = 0; i < n_pop; i++){
-      real_values = lower_start_bounds.t() + (upper_start_bounds.t() - lower_start_bounds.t())%P.row(i);
-        for(size_t k = 0; k < param_temp.size(); k++) {
-            param_temp[k] = real_values(k);
-        }
-      prop_objfn_val = fctptr(param_temp, odes, model);;
-      objfn_vals(i) = prop_objfn_val;
-      }
-  }
 
   arma::vec best_vals = objfn_vals; // best_vals = global best solutions
   arma::mat best_vecs = P;
@@ -320,20 +305,10 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
     iter++;
     // updating par_w_min, par_w_max, c_sog and par_c_cog
     // =============================
-    if (inertia_method == 1) {
-        //par_w = par_w_min + (par_w_max - par_w_min) * (iter + 1) / n_gen; //!
-        // par_w = par_w_max - (par_w_max - par_w_min) * (iter + 1) / n_gen; //!
-        par_w = par_w_max - iter*(par_w_max - par_w_min)/n_gen;
-        //par_w = 0.721; // Akman2018
-        //par_w = arma::randu(); //!
-    } else {
-        par_w *= par_damp;
-    }
-    if (velocity_method == 2)
-    {
-        par_c_cog = par_initial_c_cog - (par_initial_c_cog - par_final_c_cog) * (iter + 1) / n_gen;
-        par_c_soc = par_initial_c_soc - (par_initial_c_soc - par_final_c_soc) * (iter + 1) / n_gen;
-    }
+    par_w = par_w_max - iter*(par_w_max - par_w_min)/n_gen;
+    par_c_cog = par_initial_c_cog - (par_initial_c_cog - par_final_c_cog) * (iter + 1) / n_gen;
+    par_c_soc = par_initial_c_soc - (par_initial_c_soc - par_final_c_soc) * (iter + 1) / n_gen;
+
     // =============================
     // population loop Nr.1
     // =============================
@@ -348,38 +323,13 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       best_neighberhood_particel = neighberhood[i][temp_fittness_index];
       arma::vec local_best_vec = best_vecs.row(best_neighberhood_particel).t();
 
-      if(classical_pso == true) {
-            GetRNGstate();
-            V.row(i) = par_w*V.row(i) + par_c_cog*arma::randu(1,n_vals)%(best_vecs.row(i) - P.row(i)) + par_c_soc*arma::randu(1,n_vals)%(local_best_vec.t() - P.row(i));
-            PutRNGstate();
-            P.row(i) += V.row(i);
-      } else {
-        if(best_neighberhood_particel != i) {
-          //gravity = P.row(i) + c*(best_vecs.row(i) + local_best_vec.t() - 2.*P.row(i))/3.;
-          gravity = P.row(i) + c*(best_vecs.row(i) + local_best_vec.t() - 2.*P.row(i))/3.;
-        } else {
-          //gravity = P.row(i) + c*(best_vecs.row(i) - P.row(i))/2.;
-          gravity = P.row(i) + c*(best_vecs.row(i) + local_best_vec.t() - 2.*P.row(i))/3.;
-        }
-        GetRNGstate();
-        double radius = arma::norm(P.row(i) - gravity);
-        PutRNGstate();
-        GetRNGstate();
-        arma::rowvec temp_p = arma::randu(1,n_vals);
-        PutRNGstate();
-        GetRNGstate();
-        temp_p = arma::randu()*radius*temp_p/arma::norm(temp_p) + gravity;
-        PutRNGstate();
-        // Update velocity
-        V.row(i) = par_w*V.row(i) + (temp_p - P.row(i));
-        // Update position
-        //P.row(i) = P.row(i) + V.row(i);
-        P.row(i) = par_w*V.row(i) + temp_p;
-      }
+      GetRNGstate();
+      V.row(i) = par_w*V.row(i) + par_c_cog*arma::randu(1,n_vals)%(best_vecs.row(i) - P.row(i)) + par_c_soc*arma::randu(1,n_vals)%(local_best_vec.t() - P.row(i));
+      PutRNGstate();
+      P.row(i) += V.row(i);
 
       // check if boundaries are violated
       // =============================
-      if(classical_pso == true) {
         for(int k = 0; k < n_vals; k++){
           if(P(i,k) > upper_start_bounds(k)) {
             P(i,k) = upper_start_bounds(k);
@@ -387,19 +337,28 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
             P(i,k) = lower_start_bounds(k);
           }
         }
-      } else {
-        for(int k = 0; k < n_vals; k++) {
-          if(P(i,k) > 1.) {
-            P(i,k) = 1;
-          } else if(P(i,k) < 0.) {
-            P(i,k) = 0.;
-          }
-        }
-      }
+
 
     }
 
+    std::vector<std::vector<double> > parameter(n_pop);
 
+    for(int i = 0; i < n_pop; i++) {
+      parameter[i].resize(n_vals);
+      for(int l = 0; l < n_vals; l++) {
+        parameter[i][l] = P(i,l);
+      }
+    }
+
+    objfn_vals.zeros(); // delete!
+
+    #pragma omp parallel for shared(objfn_vals)
+      for(int i = 0; i < n_pop; i++) {
+        double current_val = fctptr(parameter[i], odes, model);
+        objfn_vals(i) = current_val;
+      }
+
+      /*
       // =============================
       // population loop Nr.2
       for (int i=0; i < n_pop; i++)
@@ -413,36 +372,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
         objfn_vals(i) = prop_objfn_val;
       }
       // =============================
-
-      /*
-      // Parallel loop Nr.2
-      //Rcpp::Rcerr << "Test1" << " " << iter << std::endl;
-      std::vector<std::thread> th(max_amount_of_threads); // create threads earlier
-      for(int i = 0; i < sub_mats.size(); i++) {
-        sub_mats[i] = P(arma::span(indices[i], indices[i] + sizes[i]-1), arma::span(0, n_vals-1)); // span(first row, last row), span(first column, last column)
-      }
-
-      for(int i = 0; i < max_amount_of_threads; i++) {
-        try {
-            th[i] = std::thread(helper_fct, sub_mats[i], std::ref(objfn_vals), indices[i], sizes[i], n_vals, odes, model, fctptr);
-        } catch(...) {
-          for(int j = 0; j < max_amount_of_threads; j++) {
-            if(th[j].joinable()) {
-                th[j].join();
-            }
-          }
-          Rcpp::stop("\nError: something went wrong!");
-        }
-      }
-      //Rcpp::Rcerr << "Test2" << " " << iter << std::endl;
-      // join the threads later
-      for(int i = 0; i < max_amount_of_threads; i++) {
-        if(th[i].joinable()) {
-            th[i].join();
-        }
-      }
       */
-
 
       // population loop Nr.3
       for (int i=0; i < n_pop; i++)

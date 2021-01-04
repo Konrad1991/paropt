@@ -36,7 +36,9 @@ For details see: https://github.com/kthohr/optim
 // ===============================================================
 */
 
-#pragma once
+#ifndef OPTIMIZERRCPP
+#define OPTIMIZERRCPP
+
 #include "header.hpp"
 #include "paropt_types.h"
 #include <thread>
@@ -71,3 +73,5 @@ public:
         //return best_particle_objective_value;};
      void get_best_particle_param_values (std::vector<double> & temp);
 };
+
+#endif // OPTIMIZERRCPP

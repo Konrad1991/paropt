@@ -1,3 +1,5 @@
+#ifndef INTERPOLATION
+#define INTERPOLATION
 //*********************************************************************
 //
 //  file: param_interpolation.hpp
@@ -20,3 +22,5 @@ double CatmullRomSpline(
   realtype &t, std::vector<double> &time_vec, std::vector<double> &par_vec
 );
 // ================================================================= //
+
+#endif // INTERPOLATION

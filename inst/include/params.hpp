@@ -1,3 +1,5 @@
+#ifndef PARAMS
+#define PARAMS
 //*********************************************************************
 //
 //  file: params.h
@@ -83,3 +85,5 @@ class ParamOrderClass {
     void get_lb_combi(std::vector<double> &t_lb_combi_vec);
     void get_up_combi(std::vector<double> &t_ub_combi_vec);
 };
+
+#endif // PARAMS

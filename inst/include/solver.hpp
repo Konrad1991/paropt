@@ -26,6 +26,9 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef SOLVER
+#define SOLVER
+
 #include "header.hpp"
 
 //static int check_retval(void *returnvalue, const char *funcname, int opt);
@@ -48,3 +51,5 @@ double solver_ark_save(std::vector<double> &param_combi_start, SEXP ode_system, 
 int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 
 bool double_diff(double x, double y);
+
+#endif // SOLVER

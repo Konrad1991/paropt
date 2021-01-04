@@ -3,7 +3,7 @@ improvements necessary:
 names for states: prey and predator;
 names for parameter: death_rate_prey etc.; Use readable names
 */
-#include <Rcpp.h>
+#include "header.hpp"
 
 // [[Rcpp::export]]
 Rcpp::NumericVector ode_example(double t, std::vector<double> params, Rcpp::NumericVector y) {

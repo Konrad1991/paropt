@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BASICFUNCTIONS
+#define BASICFUNCTIONS
+
 #include "header.hpp"
 
 // check wether file exists
@@ -43,3 +45,5 @@ std::vector<int> &hs_cut_idx_vec,
 std::vector<double> &hs_time_combi_vec,
 std::vector<double> &hs_harvest_state_combi_vec,
 std::vector<std::string> &test);
+
+#endif // BASICFUNCTIONS

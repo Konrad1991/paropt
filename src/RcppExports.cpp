@@ -10,9 +10,9 @@
 
 using namespace Rcpp;
 
-// function_access
-Rcpp::List function_access(std::vector<double> integration_times, Rcpp::XPtr<OS> fctptr, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame start, Rcpp::DataFrame states, std::string solvertype);
-RcppExport SEXP _paropt_function_access(SEXP integration_timesSEXP, SEXP fctptrSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP startSEXP, SEXP statesSEXP, SEXP solvertypeSEXP) {
+// solve_ode_system_pointer
+Rcpp::List solve_ode_system_pointer(std::vector<double> integration_times, Rcpp::XPtr<OS> fctptr, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame start, Rcpp::DataFrame states, std::string solvertype);
+RcppExport SEXP _paropt_solve_ode_system_pointer(SEXP integration_timesSEXP, SEXP fctptrSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP startSEXP, SEXP statesSEXP, SEXP solvertypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -23,13 +23,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::DataFrame >::type start(startSEXP);
     Rcpp::traits::input_parameter< Rcpp::DataFrame >::type states(statesSEXP);
     Rcpp::traits::input_parameter< std::string >::type solvertype(solvertypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(function_access(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype));
+    rcpp_result_gen = Rcpp::wrap(solve_ode_system_pointer(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype));
     return rcpp_result_gen;
 END_RCPP
 }
-// interface_function
-Rcpp::List interface_function(Rcpp::NumericVector integration_times, SEXP ode_system, double relative_tolerance, Rcpp::NumericVector absolute_tolerances, Rcpp::DataFrame lb, Rcpp::DataFrame ub, Rcpp::DataFrame states, int npop, int ngen, double error, std::string solvertype);
-RcppExport SEXP _paropt_interface_function(SEXP integration_timesSEXP, SEXP ode_systemSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP statesSEXP, SEXP npopSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP) {
+// optimizer
+Rcpp::List optimizer(Rcpp::NumericVector integration_times, SEXP ode_system, double relative_tolerance, Rcpp::NumericVector absolute_tolerances, Rcpp::DataFrame lb, Rcpp::DataFrame ub, Rcpp::DataFrame states, int npop, int ngen, double error, std::string solvertype);
+RcppExport SEXP _paropt_optimizer(SEXP integration_timesSEXP, SEXP ode_systemSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP lbSEXP, SEXP ubSEXP, SEXP statesSEXP, SEXP npopSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -44,7 +44,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ngen(ngenSEXP);
     Rcpp::traits::input_parameter< double >::type error(errorSEXP);
     Rcpp::traits::input_parameter< std::string >::type solvertype(solvertypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(interface_function(integration_times, ode_system, relative_tolerance, absolute_tolerances, lb, ub, states, npop, ngen, error, solvertype));
+    rcpp_result_gen = Rcpp::wrap(optimizer(integration_times, ode_system, relative_tolerance, absolute_tolerances, lb, ub, states, npop, ngen, error, solvertype));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -61,9 +61,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// optimizer_access_in_Rcpp
-Rcpp::List optimizer_access_in_Rcpp(std::vector<double> integration_times, Rcpp::XPtr<OS> ode_sys, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame lower, Rcpp::DataFrame upper, Rcpp::DataFrame states, int npop, int ngen, double error, std::string solvertype);
-RcppExport SEXP _paropt_optimizer_access_in_Rcpp(SEXP integration_timesSEXP, SEXP ode_sysSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP statesSEXP, SEXP npopSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP) {
+// optimizer_pointer
+Rcpp::List optimizer_pointer(std::vector<double> integration_times, Rcpp::XPtr<OS> ode_sys, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame lower, Rcpp::DataFrame upper, Rcpp::DataFrame states, int npop, int ngen, double error, std::string solvertype);
+RcppExport SEXP _paropt_optimizer_pointer(SEXP integration_timesSEXP, SEXP ode_sysSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP statesSEXP, SEXP npopSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -78,7 +78,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ngen(ngenSEXP);
     Rcpp::traits::input_parameter< double >::type error(errorSEXP);
     Rcpp::traits::input_parameter< std::string >::type solvertype(solvertypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(optimizer_access_in_Rcpp(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype));
+    rcpp_result_gen = Rcpp::wrap(optimizer_pointer(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -274,10 +274,10 @@ RcppExport SEXP _paropt_RcppExport_registerCCallable() {
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_paropt_function_access", (DL_FUNC) &_paropt_function_access, 7},
-    {"_paropt_interface_function", (DL_FUNC) &_paropt_interface_function, 11},
+    {"_paropt_solve_ode_system_pointer", (DL_FUNC) &_paropt_solve_ode_system_pointer, 7},
+    {"_paropt_optimizer", (DL_FUNC) &_paropt_optimizer, 11},
     {"_paropt_ode_example", (DL_FUNC) &_paropt_ode_example, 3},
-    {"_paropt_optimizer_access_in_Rcpp", (DL_FUNC) &_paropt_optimizer_access_in_Rcpp, 11},
+    {"_paropt_optimizer_pointer", (DL_FUNC) &_paropt_optimizer_pointer, 11},
     {"_paropt_solve_ode_system", (DL_FUNC) &_paropt_solve_ode_system, 7},
     {"_paropt_test_no_file_exist", (DL_FUNC) &_paropt_test_no_file_exist, 1},
     {"_paropt_test_count_cols_rows", (DL_FUNC) &_paropt_test_count_cols_rows, 1},

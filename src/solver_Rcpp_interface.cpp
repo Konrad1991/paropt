@@ -31,8 +31,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "header.hpp"
-#include "paropt_types.h"
+#include "solver_Rcpp_interface.hpp"
 
 typedef std::vector<double> VD;
 typedef std::vector<int> VI;
@@ -189,7 +188,7 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
                        if(std::isnan(temp_measured[n])) { }
                        else {
                        //sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) ); 
+                       sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
                        }
                    }
                    if(retval < 0) {
@@ -488,6 +487,7 @@ double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, 
                        break;}
 
            }
+           counter++;
        }
 
        N_VDestroy(y);
@@ -659,6 +659,7 @@ double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
                    if (check_retval_Rcpp_interface(&retval, "CVode", 1)) {
                        break;}
            }
+           counter++;
        }
 
        N_VDestroy(y);
@@ -860,6 +861,7 @@ double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
                    if (check_retval_Rcpp_interface(&retval, "CVode", 1)) {
                      break;}
            }
+           counter++;
        }
        N_VDestroy(y);
        N_VDestroy(abstol);

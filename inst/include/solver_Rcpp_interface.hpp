@@ -1,4 +1,3 @@
-
 /*
 BSD 3-Clause License
 
@@ -26,6 +25,9 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#ifndef SOLVERRCPP
+#define SOLVERRCPP
+
 #include "header.hpp"
 #include "paropt_types.h"
 
@@ -48,3 +50,5 @@ double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
 int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, void *user_data);
 
 bool double_diff_Rcpp_interface(double x, double y);
+
+#endif // SOLVERRCPP

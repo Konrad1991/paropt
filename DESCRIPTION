@@ -3,7 +3,7 @@ Type: Package
 Title: Parameter Optimizing of ODE-Systems 
 Version: 0.1
 Date: 2020-07-28 
-Author:  Krämer Konrad [aut, cre],
+Author: Krämer Konrad [aut, cre],
   Krämer Johannes [aut],
   Heyer Arnd [ths],
   University of Stuttgart [uvp],
@@ -17,7 +17,5 @@ Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp, RcppArmadillo
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Encoding: UTF-8
-
-
