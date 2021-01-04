@@ -6,7 +6,7 @@ The package *paropt* is build in order to optimize parameters of ode-systems. Th
 
 # Overview
 
-The package *paropt* uses a particle swarm optimizer ('https://github.com/kthohr/optim') in order to find a global best solution. Furthermore, in order to evaluate each particle during optimzation four different solvers can be used all derived from SUNDIALS ('https://computing.llnl.gov/projects/sundials'). For more details see vignette. 
+The package *paropt* uses a modified particle swarm optimizer ('https://github.com/kthohr/optim') in order to find a global best solution. Furthermore, in order to evaluate each particle during optimzation four different solvers can be used all derived from SUNDIALS ('https://computing.llnl.gov/projects/sundials'). For more details see vignette. 
 
 # Installation
 
@@ -24,7 +24,7 @@ remotes::install_github("Konrad1991/paropt", ref = "Rcpp-Interface") within R (b
 typedef int (*OS)(double &t, std::vector<double> &params, std::vector<double> &states);
 
 int ode_system(double &t, std::vector<double> &params, std::vector<double> & states) {
-
+  
   // do not use any R-Code or R-Objects if the optimzation should run in parallel.
   // Users have to guarantee that the function can be called by several threads in parallel
   // define parameters (vector params contain the parameter in the order as defined in the corresponding textfiles)
@@ -43,84 +43,36 @@ int ode_system(double &t, std::vector<double> &params, std::vector<double> & sta
   return 0;
 }
 
+
 // [[Rcpp::export]]
-Rcpp::List test_integration(std::vector<double> integration_times,
-                            std::string start,
-                            std::string lb,
-                            std::string ub,
-                            std::string states,
-                            std::string output,
-                            std::string output_parameter,
-                            std::string solvertype) {
-  std::vector<double> abs_tol = {1e-8, 1e-8};
-  
-  Rcpp::Environment pkg = Rcpp::Environment::namespace_env("paropt");
-  Rcpp::Function f = pkg["optimizer_access_in_Rcpp"];
-  
+Rcpp::XPtr<OS> test_optimization() {
   Rcpp::XPtr<OS> xpfun = Rcpp::XPtr<OS>(new OS(&ode_system));
   
-  return Rcpp::List::create(f(integration_times,
-                              xpfun, // pointer to ode system
-                              1e-6, // reltol
-                              abs_tol, // absolute tolerances
-                              start, // startvalues for parameter
-                              lb, // lower bounds
-                              ub, // upper bounds
-                              states, // states
-                              40, // particel
-                              1500, // number of generations
-                              0.001, // desired error
-                              output, // output states
-                              output_parameter, // output parameter
-                              solvertype) );
+  return xpfun;
 }
 
 
 
 /*** R
-# ===========================================================
-# Simple example optimizing parameter of predator-prey model:
+lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
+ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
 
-
-# Get state values of predator and prey and save it in working directory as textfile:
 path <- system.file("examples", package = "paropt")
-df <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
+states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
 
-setwd("~/Parallel")
-write.table(df, "states_LV.txt", quote = F, row.names = F)
-
-# Define startvalues, lower-bounds and upper-bounds for parameters:
-st <- data.frame(time = 0., a = 1.1, b = 0.4, c = 0.1, d = 0.4)
-write.table(st, "start.txt", quote = F, row.names = F)
-
-lb <- data.frame(time = 0., a = 0.8, b = 0.3, c = 0.09, d = 0.09)
-write.table(lb, "lb.txt", quote = F, row.names = F)
-
-ub <- data.frame(time = 0., a = 1.3, b = 0.7, c = 0.4, d = 0.7)
-write.table(ub, "ub.txt", quote = F, row.names = F)
-
-# Define variables containing names of textfiles:
-start <-  "start.txt"
-lb <-  "lb.txt"
-ub <-  "ub.txt"
-states <- "states_LV.txt"
-output <- "output.txt"
-output_par <- "output_par.txt"
-solvertyp <- "bdf"
-
-# Run simulation (parallel):
+library(paropt)
 set.seed(1)
-df <- read.table("states_LV.txt", header = T)
-test_integration(df$time, start, lb, ub, states, output, output_par, solvertyp)
+df <- optimizer_pointer(integration_times = states$time, ode_sys = test_optimization(),
+                  relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+                  lower = lb, upper = ub, states = states, 
+                  npop = 40, ngen = 30000, error = 0.0001, solvertype = "ADAMS")
 
-# Plot results of simulation:
-df <- read.table("states_LV.txt", header = T)
-is <- read.table("output.txt", header = T)
+par(mfrow = c(2,1))
+plot(states$time, df$States[,1], pch = 19)
+points(states$time, states$n1, pch = 19, col = "darkred")
+plot(states$time, df$States[,2], pch = 19)
+points(states$time, states$n2, pch = 19, col = "darkred")
 
-plot(df$time, df$n1)
-points(is$time, is$n1, pch = 19, col = "darkred")
-plot(df$time, df$n2)
-points(is$time, is$n2, pch = 19, col = "darkred")
 */
 ```
 # Further plans
