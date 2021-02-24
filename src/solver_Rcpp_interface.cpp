@@ -175,7 +175,6 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
    //int CVodetmpcount=0;
    double return_time;
    float return_steps=1.;
-
    std::vector<double> temp_measured(init_state.size());
    //int num_states = init_state.size();
 

@@ -265,7 +265,7 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
       for(size_t i = 0; i < params_export.size()+1; i++) {
 
         if(i == 0) {
-          PAROUT(rowcounter, i) = params_time_combi_vec[params_cut_idx_vec[idx_largest_parameter] + rowcounter];
+          PAROUT(rowcounter, i) = integration_times[rowcounter]; //params_time_combi_vec[params_cut_idx_vec[idx_largest_parameter] + rowcounter];
         } else {
         if(rowcounter < params_cut_idx_vec[i-1]) { // <=
           PAROUT(rowcounter, i) = params_export[i-1][rowcounter];

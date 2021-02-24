@@ -62,11 +62,11 @@ For details see: https://github.com/kthohr/optim
 
 
 typedef double (*fctptr2)(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc);
-std::mutex mtx;
+//std::mutex mtx;
 
 void helper_fct (arma::mat inp, arma::vec & errors, int index, int number_of_rows, const int nvals, OS odes, time_state_information_Rcpp_interface model,
                  fctptr2 fctptr){
-
+/*
   assert(nvals > 0);
   std::vector<double> param_temp(nvals);
   double prop_objfn_val = 0.;
@@ -86,6 +86,7 @@ void helper_fct (arma::mat inp, arma::vec & errors, int index, int number_of_row
   errors(index + j) = prop_objfn_val;
   mtx.unlock();
   }
+  */
 }
 
 
@@ -323,9 +324,23 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       best_neighberhood_particel = neighberhood[i][temp_fittness_index];
       arma::vec local_best_vec = best_vecs.row(best_neighberhood_particel).t();
 
+      double v = 0.9; 
+      double chi;
+      chi = 2*v;
+      GetRNGstate();
+      double omega = par_c_cog*arma::randu() + par_c_soc*arma::randu();
+      if(omega < 4.) {
+        omega = 4.;
+      }
+      PutRNGstate();
+      chi = chi/std::abs(2. - omega - std::sqrt(omega*(omega -4.) ));
+
+
       GetRNGstate();
       V.row(i) = par_w*V.row(i) + par_c_cog*arma::randu(1,n_vals)%(best_vecs.row(i) - P.row(i)) + par_c_soc*arma::randu(1,n_vals)%(local_best_vec.t() - P.row(i));
       PutRNGstate();
+      
+      V.row(i) = V.row(i)*chi;
       P.row(i) += V.row(i);
 
       // check if boundaries are violated
@@ -350,13 +365,22 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       }
     }
 
-    objfn_vals.zeros(); // delete!
+    
+    //objfn_vals.zeros(); // delete!
 
     #pragma omp parallel for shared(objfn_vals)
+      for(int o = 0; o < n_pop; o++) {
+        double current_val = fctptr(parameter[o], odes, model);
+        objfn_vals(o) = current_val;
+      }
+
+
+  /*
       for(int i = 0; i < n_pop; i++) {
         double current_val = fctptr(parameter[i], odes, model);
         objfn_vals(i) = current_val;
       }
+  */
 
       /*
       // =============================
