@@ -79,6 +79,7 @@ points(states$time, states$n2, pch = 19, col = "darkred")
 
 - Add different error calculations
 - Give users the possibility to use their own spline (at least for the Rcpp-Interface)
+- Update Documentation
 
 # Acknowledgment
 
