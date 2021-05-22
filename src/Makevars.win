@@ -2,9 +2,9 @@ $(info The compilation root directory is: $(ROOT_DIR))
 $(info The name of the shared library to be created is: $(SHLIB))
 
 CXX_STD=CXX11
-PKG_CPPFLAGS=-I../inst/include -I../inst
+PKG_CPPFLAGS=-fno-common -I../inst/include -I../inst
 PKG_CXXFLAGS= $(SHLIB_OPENMP_CXXFLAGS) -I../inst/include -I../inst
-PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -L../inst -lsundials -lpthread
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -L../inst -lsundials -lpthread -fopenmp
 PKG_LIB = -std = gnu++11
 LIBS=-L./ -L../inst 
 

@@ -25,11 +25,11 @@
 
 /* Define global linsol variables */
 
-SUNLinearSolver F2C_CVODE_linsol;
-SUNLinearSolver F2C_IDA_linsol;
-SUNLinearSolver F2C_KINSOL_linsol;
-SUNLinearSolver F2C_ARKODE_linsol;
-SUNLinearSolver F2C_ARKODE_mass_sol;
+extern SUNLinearSolver F2C_CVODE_linsol;
+extern SUNLinearSolver F2C_IDA_linsol;
+extern SUNLinearSolver F2C_KINSOL_linsol;
+extern SUNLinearSolver F2C_ARKODE_linsol;
+extern SUNLinearSolver F2C_ARKODE_mass_sol;
 
 /* Declarations of external global variables */
 

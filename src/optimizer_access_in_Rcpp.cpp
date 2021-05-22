@@ -13,6 +13,7 @@ Add feature to pass data.frame instead of string
 #include "optimizer_Rcpp_interface.hpp"
 #include "solver_Rcpp_interface.hpp"
 #include "paropt_types.h"
+#include "paropt_RcppExports.h"
 
 #define NA std::nan("l")
 
@@ -85,6 +86,11 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
                                 Rcpp::DataFrame lower, Rcpp::DataFrame upper, Rcpp::DataFrame states,
                                 int npop, int ngen, double error,
                                 std::string solvertype) {
+
+
+    // check function signature
+    //paropt::validateSignature
+
 
     // extract parameters
     enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;

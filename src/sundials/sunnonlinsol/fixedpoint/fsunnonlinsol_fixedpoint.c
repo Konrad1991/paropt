@@ -22,9 +22,9 @@
 
 /* Define global nonlinsol variables */
 
-SUNNonlinearSolver F2C_CVODE_nonlinsol;
-SUNNonlinearSolver F2C_IDA_nonlinsol;
-SUNNonlinearSolver F2C_ARKODE_nonlinsol;
+extern SUNNonlinearSolver F2C_CVODE_nonlinsol;
+extern SUNNonlinearSolver F2C_IDA_nonlinsol;
+extern SUNNonlinearSolver F2C_ARKODE_nonlinsol;
 
 /* Declarations of external global variables */
 
