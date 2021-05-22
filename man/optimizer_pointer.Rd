@@ -21,15 +21,17 @@ optimizer_pointer(
 \arguments{
 \item{integration_times}{a vector containing the time course to solve the ode-system (see Details for more Information)}
 
+\item{ode_sys}{the ode-system which will be integrated by the solver (see Details for more Information).}
+
 \item{relative_tolerance}{a number defining the relative tolerance used by the ode-solver.}
 
 \item{absolute_tolerances}{a vector containing the absolute tolerance(s) for each state used by the ode-solver.}
 
-\item{lower}{a data.frame containing the lower boundaries of the parameters (see Details for more Information)}
+\item{lower}{a data.frame containing the lower bounds for the parameters (see Details for more Information).}
 
-\item{upper}{a data.frame containing the upper boundaries of the parameters (see Details for more Information)}
+\item{upper}{a data.frame containing the upper bounds for the parameters (see Details for more Information).}
 
-\item{states}{a data.frame containing the stateinformation (see Details for more Information).}
+\item{states}{a data.frame containing the predetermined course of the states (see Details for more Information).}
 
 \item{npop}{a number defining the number of particles used by the Particle Swarm Optimizer.}
 
@@ -37,67 +39,45 @@ optimizer_pointer(
 
 \item{error}{a number defining a sufficient small error. When the PSO reach this value optimization is stopped.}
 
-\item{solvertype}{a string defines the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).}
-
-\item{ode_system}{the ode-system which will be integrated by the solver (see Details for more Information).}
+\item{solvertype}{a string defining the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).}
 }
 \description{
-Optimize parameters of ode-systems
-
-optimizer() finds parameters of an ode-system to match measured states.
+Optimize parameters used in an ode equation in order to match values defined in the state-data.frame
 }
 \details{
-The vector containing the time course to solve the ode-system should contain the same entries as the time vector in the text file containing the states (of course it can be also be a different variable instead of time). It is possible that the vector is shorter than the time vector defined in the state-file in order to optimize only a part of the problem.
+The vector containing the time course to solve the ode-system should contain
+the same entries as the time vector in the state-data.frame (it can be also be a different variable instead of time).
 
-The ode system should be a pointer to a C++-function with a specific signature. The name of the function is free to choose. The following parameters have to be passed: a double t, a std::vector<double> params, and a Rcpp::NumericVector y.
-
+The ode system should be of type Rcpp::XPtr<OS>. The OS is predefined in the package.
+The function should possess the following signature: int ode(double &time, std::vector<double> &parameter, std::vector<double> &states).
 The first entry defines the time point when the function is called.
-
-The second argument defines the parameter which should be optimized. There exist two different types of parameters. Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used. This vector contains the already splined parameters, in the same order as defined in the text-files containing the start-values and the lower- and upper-boundaries.
-
-The last argument is a vector containing the states in the same order as defined in the text-file containing the state-information. Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the text-file.
-
-Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states. Naturally, the vector should contain the right hand side of the ode-system.
-
-The files containing the start values (used to test integration) for the parameter, the lower- and upper-boundaries must have the following layout. In the first column the time is defined. In the following columns the parameters are defined. Consider that the parameter order is the same as used in the ode-system.
+The second argument defines the parameter which should be optimized. There exist two different types of parameters.
+Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used.
+This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
+The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
+Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
+Within the function the new states have to be saved in the states-vector. 
+Please be aware that when using the approach with the Rcpp::XPtr the optimization is run in parallel. Thus, the function has to be thread-safe (among other things don't use any R Code)!
 
 For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
 
-For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. .
+For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
 
-The three files start-values, lower and upper-boundaries need the parameter in the same order. The particles are randomly created within the lower and upper boundary.
+The two data.frames containg lower and upper-boundaries need the parameter in the same order.
 
-The file containing the state information should contain in the first column the time. The header-name time is compulsory. The following columns contain the states. Take care that the state order is the same as defined in the ode system. If a state is not available use “NA“. This is possible for every time points except the first one. The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
+The data.frame containing the state information should hold the time course in the first column.
+The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.
+If a state is not available use “NA“. This is possible for every time points except the first one.
+The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
 
-The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points. It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
+The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points.
+It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
 
-For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials). The last argument defines the solver-type which is used during optimization: “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta. All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points. The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
-}
-\examples{
-path <- system.file("examples", package = "paropt")
-library(paropt)
-#Rcpp::sourceCpp(paste(path,"/ode.cpp", sep = ""))
-#if you want compile ode-system on your system (already precompiled in package)
-df <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
-time <- df$time
-param_start <- paste(path, "/start.txt", sep = "")
-param_lb <- paste(path, "/lb.txt", sep = "")
-param_ub <- paste(path, "/ub.txt", sep = "")
-states <- paste(path, "/states_LV.txt", sep = "")
-state_output <- paste(tempdir(), "/final_stateoutput.txt", sep = "")
-par_output <- paste(tempdir(), "/optimized_params.txt", sep = "")
-set.seed(1)
-optimizer(time, paropt:::ode_example, 1e-6, c(1e-8, 1e-8),
-          param_start, param_lb, param_ub,
-          states, npop = 10, ngen = 200, error = 3,
-          state_output, par_output, "bdf")
-df_in_silico <- read.table(paste(tempdir(), "/final_stateoutput.txt", sep = ""), header = TRUE)
-plot(df$time, df$n1, pch = 19, main = "predator", ylab = "predator", xlab = "time")
-points(df_in_silico$time, df_in_silico$n1, pch = 19, col = "darkred")
-legend(1, 26, legend = c("measured", "in silico"),
-       col = c("black", "darkred"),lty = 1:2, cex = 0.8)
-plot(df$time, df$n2, pch = 19, main = "prey",ylab = "prey", xlab = "time")
-points(df_in_silico$time, df_in_silico$n2, pch = 19, col = "darkred")
-legend(1, 26, legend = c("measured", "in silico"),
-       col = c("black", "darkred"),lty = 1:2, cex = 0.8)
+For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials).
+The last argument defines the solver-type which is used during optimization:
+“bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta.
+All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
+The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
+
+Examples can be found in the vignette.
 }

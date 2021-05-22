@@ -280,6 +280,18 @@ double Optimizer::pso() { // (labled with ! need check)
       arma::vec local_best_vec = best_vecs.row(best_neighberhood_particel).t();
 
       if(classical_pso == true) {
+              double v = 0.9; 
+              double chi;
+              chi = 2*v;
+              GetRNGstate();
+              double omega = par_c_cog*arma::randu() + par_c_soc*arma::randu();
+              if(omega < 4.) {
+                omega = 4.;
+              }
+              PutRNGstate();
+              chi = chi/std::abs(2. - omega - std::sqrt(omega*(omega -4.) ));
+
+
             GetRNGstate();
             V.row(i) = par_w*V.row(i) + par_c_cog*arma::randu(1,n_vals)%(best_vecs.row(i) - P.row(i)) + par_c_soc*arma::randu(1,n_vals)%(local_best_vec.t() - P.row(i));
             PutRNGstate();

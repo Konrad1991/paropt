@@ -186,8 +186,8 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
                        temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
                        if(std::isnan(temp_measured[n])) { }
                        else {
-                       //sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
+                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+                       //sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
                        }
                    }
                    if(retval < 0) {
@@ -294,8 +294,8 @@ double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
                             temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
                             if(std::isnan(temp_measured[n])) { }
                             else {
-                            //sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                            sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
+                            sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+                            //sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
                             //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
                             }
                         }

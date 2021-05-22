@@ -2,11 +2,14 @@ CXX_STD=CXX11
 
 #PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 
-PKG_CFLAGS=-fno-common
-PKG_CPPFLAGS=$(SHLIB_OPENMP_CXXFLAGS) -fno-common -I../inst -I../inst/include
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -fno-common -I../inst -I../inst/include
-PKG_LIBS=  $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials -lpthread -fopenmp
-LIBS=-L./ -L../inst
+#CFLAGS = "-fno-common" -g -O -mtune=native
+
+CC=gcc-10 -std=gnu99 -E
+
+PKG_CPPFLAGS= -I../inst -I../inst/include
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
+PKG_LIBS=  $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials -lpthread -fopenmp 
+LIBS=-L./ -L../inst 
 
 .PHONY: all ../inst/libsundials.a
 

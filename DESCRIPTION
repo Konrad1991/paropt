@@ -1,7 +1,7 @@
 Package: paropt
 Type: Package
 Title: Parameter Optimizing of ODE-Systems 
-Version: 0.1
+Version: 0.2
 Date: 2020-07-28 
 Author: Krämer Konrad [aut, cre],
   Krämer Johannes [aut],
@@ -11,7 +11,8 @@ Author: Krämer Konrad [aut, cre],
   | file AUTHORS
 Maintainer: Krämer Konrad <Konrad_kraemer@yahoo.de>
 Copyright: file COPYRIGHTS
-Description: Enable optimization of parameters of ordinary differential equations. Therefore, using 'SUNDIALS' to solve the ODE-System (see Hindmarsh, Alan C., Peter N. Brown, Keith E. Grant, Steven L. Lee, Radu Serban, Dan E. Shumaker, and Carol S. Woodward. (2005) <doi:10.1145/1089014.1089020>). Furthermore, for optimization the particle swarm algorithm is used (see: Akman, Devin, Olcay Akman, and Elsa Schaefer. (2018) <doi:10.1155/2018/9160793> and Sengupta, Saptarshi, Sanchita Basak, and Richard Peters. (2018) <doi:10.3390/make1010010>). The ODE-System has to be passed as 'Rcpp'-function. The information for the parameter boundaries and states are conveyed using text-files.  
+BugReports: https://github.com/Konrad1991/paropt
+Description: Enable optimization of parameters of ordinary differential equations. Therefore, using 'SUNDIALS' to solve the ODE-System (see Hindmarsh, Alan C., Peter N. Brown, Keith E. Grant, Steven L. Lee, Radu Serban, Dan E. Shumaker, and Carol S. Woodward. (2005) <doi:10.1145/1089014.1089020>). Furthermore, for optimization the particle swarm algorithm is used (see: Akman, Devin, Olcay Akman, and Elsa Schaefer. (2018) <doi:10.1155/2018/9160793> and Sengupta, Saptarshi, Sanchita Basak, and Richard Peters. (2018) <doi:10.3390/make1010010>). The ODE-System has to be passed as 'Rcpp'-function. The information for the parameter boundaries and states are conveyed using data.frames.  
 License: GPL-3 | file LICENSE
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp, RcppArmadillo

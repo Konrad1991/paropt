@@ -6,29 +6,52 @@
 #' @useDynLib paropt, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @description Solves ode-system and compare result to measured states
+#'
 #' @param integration_times a vector containing the time course to solve the ode-system (see Details for more Information)
-#' @param ode_system the ode-system which will be integrated by the solver (see Details for more Information).
+#'
+#' @param fctptr is a pointer to the ode-system which will be integrated by the solver (see Details for more Information).
+#'
 #' @param relative_tolerance a number defining the relative tolerance used by the ode-solver.
+#'
 #' @param absolute_tolerances a vector containing the absolute tolerance(s) for each state used by the ode-solver.
-#' @param start a string-path to a tab seperated text-file containing values for the parameters (see Details for more Information).
-#' @param states a string-path to a tab seperated text-file containing the measured states (see Details for more Information).
-#' @param where_to_save_output_states a string-path defining a name for a textfile where the result of the integration of the states is saved. Using the previously optimized parameter in this integration.
-#' @param solvertype a string defines the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
-#' @description ode_solving solves ode system and calculates error between solved and measured values.
-#' @details The vector containing the time course to solve the ode-system should contain the same entries as the time vector in the text file containing the states (of course it can be also be a different variable instead of time). It is possible that the vector is shorter than the time vector defined in the state-file in order to optimize only a part of the problem.
-#' @details The ode system should be a Rcpp-function with a specific signature. The name of the function is free to choose. The following parameters have to be passed: a double t, a std::vector<double> params, and a Rcpp::NumericVector y.
-#' @details The first entry defines the time point when the function is called.
-#' @details The second argument defines the parameter which should be optimized. There exist two different types of parameters. Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used. This vector contains the already splined parameters, in the same order as defined in the text-files containing the start-values and the lower- and upper-boundaries.
-#' @details The last argument is a vector containing the states in the same order as defined in the text-file containing the state-information. Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the text-file.
-#' @details Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states. Naturally, the vector should contain the right hand side of the ode-system.
-#' @details The file containing the start values for the parameter must have the following layout. In the first column the time is defined. In the following columns the parameters are defined. Consider that the parameter order is the same as used in the ode-system.
+#'
+#' @param start a data.frame containing a parameter-set (see Details for more Information).
+#'
+#' @param states a data.frame containing the predetermined course of the states (see Details for more Information).
+#'
+#' @param solvertype a string defining the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
+#'
+#' @details The vector containing the time course to solve the ode-system should contain
+#' the same entries as the time vector in the state-data.frame (it can be also be a different variable instead of time).
+#'
+#' @details The ode system should be of type Rcpp::XPtr<OS>. The OS is predefined in the package.
+#' The function should possess the following signature: int ode(double &time, std::vector<double> &parameter, std::vector<double> &states).
+#' The first entry defines the time point when the function is called.
+#' The second argument defines the parameter which should be optimized. There exist two different types of parameters.
+#' Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used.
+#' This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
+#' The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
+#' Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
+#' Within the function the new states have to be saved in the states-vector. 
+#' 
 #' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
-#' @details Furthermore, it is notably that the time of the parameter should be within the time vector defined in the text-file containing the state information.
-#' @details The file containing the state information should contain in the first column the time. The header-name time is compulsory. The following columns contain the states. Take care that the state order is the same as defined in the ode system. If a state is not available use “NA“. This is possible for every time points except the first one. The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
-#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points. It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
-#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials). The last argument defines the solver-type which is used during optimization: “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta. All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points. The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
-#' @example /inst/examples/ode_solving_examples.r
+#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+#'
+#' @details The data.frame containing the state information should hold the time course in the first column.
+#' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.
+#' If a state is not available use “NA“. This is possible for every time points except the first one.
+#' The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
+#'
+#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points.
+#' It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
+#'
+#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials).
+#' The last argument defines the solver-type which is used during optimization:
+#' “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta.
+#' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
+#' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
+#'
+#' Examples can be found in the vignette.
 solve_ode_system_pointer <- function(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype) {
     .Call(`_paropt_solve_ode_system_pointer`, integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype)
 }
@@ -37,36 +60,63 @@ solve_ode_system_pointer <- function(integration_times, fctptr, relative_toleran
 #' @export
 #' @useDynLib paropt, .registration = TRUE
 #' @importFrom Rcpp evalCpp
-#' @description Optimize parameters of ode-systems
+#' @description Optimize parameters used in an ode equation in order to match values defined in the state-data.frame
+#'
 #' @param integration_times a vector containing the time course to solve the ode-system (see Details for more Information)
+#'
 #' @param ode_system the ode-system which will be integrated by the solver (see Details for more Information).
+#'
 #' @param relative_tolerance a number defining the relative tolerance used by the ode-solver.
+#'
 #' @param absolute_tolerances a vector containing the absolute tolerance(s) for each state used by the ode-solver.
-#' @param start a string-path to a tab seperated text-file containing startvalues for the parameters (see Details for more Information).
-#' @param lower a string-path to a tab seperated text-file containing the lower bounds for the parameters (see Details for more Information).
-#' @param upper a string-path to a tab seperated text-file containing the upper bounds for the parameters (see Details for more Information).
-#' @param states a string-path to a tab seperated text-file containing the measured states (see Details for more Information).
+#'
+#' @param lb a data.frame containing the lower bounds for the parameters (see Details for more Information).
+#'
+#' @param ub a data.frame containing the upper bounds for the parameters (see Details for more Information).
+#'
+#' @param states a data.frame containing the predetermined course of the states (see Details for more Information).
+#'
 #' @param npop a number defining the number of particles used by the Particle Swarm Optimizer.
+#'
 #' @param ngen a number defining the number of generations the Particle Swarm Optimizer (PSO) should run.
+#'
 #' @param error a number defining a sufficient small error. When the PSO reach this value optimization is stopped.
-#' @param where_to_save_output_states a string-path defining a name for a textfile where the result of the integration of the states is saved. Using the previously optimized parameter for this integration.
-#' @param where_to_save_output_parameter a string-path defining a name for a textfile where the optimized parameters are saved.
-#' @param solvertype a string defines the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
-#' @description optimizer() finds parameters of an ode-system to match measured states.
-#' @details The vector containing the time course to solve the ode-system should contain the same entries as the time vector in the text file containing the states (of course it can be also be a different variable instead of time). It is possible that the vector is shorter than the time vector defined in the state-file in order to optimize only a part of the problem.
-#' @details The ode system should be a Rcpp-function with a specific signature. The name of the function is free to choose. The following parameters have to be passed: a double t, a std::vector<double> params, and a Rcpp::NumericVector y.
-#' @details The first entry defines the time point when the function is called.
-#' @details The second argument defines the parameter which should be optimized. There exist two different types of parameters. Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used. This vector contains the already splined parameters, in the same order as defined in the text-files containing the start-values and the lower- and upper-boundaries.
-#' @details The last argument is a vector containing the states in the same order as defined in the text-file containing the state-information. Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the text-file.
-#' @details Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states. Naturally, the vector should contain the right hand side of the ode-system.
-#' @details The files containing the start values (used to test integration) for the parameter, the lower- and upper-boundaries must have the following layout. In the first column the time is defined. In the following columns the parameters are defined. Consider that the parameter order is the same as used in the ode-system.
+#'
+#' @param solvertype a string defining the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
+#'
+#' @details The vector containing the time course to solve the ode-system should contain
+#' the same entries as the time vector in the state-data.frame (it can be also be a different variable instead of time).
+#'
+#' @details The ode system should be a Rcpp-function with a specific signature Rcpp::NumericVector ode(double time, std::vector<double> parameter, Rcpp::NumericVector states).
+#' The first entry defines the time point when the function is called.
+#' The second argument defines the parameter which should be optimized. There exist two different types of parameters.
+#' Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used.
+#' This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
+#' The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
+#' Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
+#' Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states.
+#' The resulting vector has to contain the right hand side of the ode-system.
+#'
 #' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. .
-#' @details The three files start-values, lower and upper-boundaries need the parameter in the same order. The particles are randomly created within the lower and upper boundary.
-#' @details The file containing the state information should contain in the first column the time. The header-name time is compulsory. The following columns contain the states. Take care that the state order is the same as defined in the ode system. If a state is not available use “NA“. This is possible for every time points except the first one. The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
-#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points. It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
-#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials). The last argument defines the solver-type which is used during optimization: “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta. All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points. The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
-#' @example /inst/examples/optimizer_examples.r
+#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+#'
+#' @details The two data.frames containg lower and upper-boundaries need the parameter in the same order. 
+#'
+#' @details The data.frame containing the state information should hold the time course in the first column.
+#' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.
+#' If a state is not available use “NA“. This is possible for every time points except the first one.
+#' The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
+#'
+#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points.
+#' It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
+#'
+#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials).
+#' The last argument defines the solver-type which is used during optimization:
+#' “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta.
+#' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
+#' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
+#'
+#' Examples can be found in the vignette.
 optimizer <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, lb, ub, states, npop, ngen, error, solvertype) {
     .Call(`_paropt_optimizer`, integration_times, ode_system, relative_tolerance, absolute_tolerances, lb, ub, states, npop, ngen, error, solvertype)
 }
@@ -79,33 +129,64 @@ ode_example <- function(t, params, y) {
 #' @export
 #' @useDynLib paropt, .registration = TRUE
 #' @importFrom Rcpp evalCpp
-#' @description Optimize parameters of ode-systems
+#' @description Optimize parameters used in an ode equation in order to match values defined in the state-data.frame
+#'
 #' @param integration_times a vector containing the time course to solve the ode-system (see Details for more Information)
-#' @param ode_system the ode-system which will be integrated by the solver (see Details for more Information).
+#'
+#' @param ode_sys the ode-system which will be integrated by the solver (see Details for more Information).
+#'
 #' @param relative_tolerance a number defining the relative tolerance used by the ode-solver.
+#'
 #' @param absolute_tolerances a vector containing the absolute tolerance(s) for each state used by the ode-solver.
-#' @param lower a data.frame containing the lower boundaries of the parameters (see Details for more Information)
-#' @param upper a data.frame containing the upper boundaries of the parameters (see Details for more Information)
-#' @param states a data.frame containing the stateinformation (see Details for more Information).
+#'
+#' @param lower a data.frame containing the lower bounds for the parameters (see Details for more Information).
+#'
+#' @param upper a data.frame containing the upper bounds for the parameters (see Details for more Information).
+#'
+#' @param states a data.frame containing the predetermined course of the states (see Details for more Information).
+#'
 #' @param npop a number defining the number of particles used by the Particle Swarm Optimizer.
+#'
 #' @param ngen a number defining the number of generations the Particle Swarm Optimizer (PSO) should run.
+#'
 #' @param error a number defining a sufficient small error. When the PSO reach this value optimization is stopped.
-#' @param solvertype a string defines the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
-#' @description optimizer() finds parameters of an ode-system to match measured states.
-#' @details The vector containing the time course to solve the ode-system should contain the same entries as the time vector in the text file containing the states (of course it can be also be a different variable instead of time). It is possible that the vector is shorter than the time vector defined in the state-file in order to optimize only a part of the problem.
-#' @details The ode system should be a pointer to a C++-function with a specific signature. The name of the function is free to choose. The following parameters have to be passed: a double t, a std::vector<double> params, and a Rcpp::NumericVector y.
-#' @details The first entry defines the time point when the function is called.
-#' @details The second argument defines the parameter which should be optimized. There exist two different types of parameters. Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used. This vector contains the already splined parameters, in the same order as defined in the text-files containing the start-values and the lower- and upper-boundaries.
-#' @details The last argument is a vector containing the states in the same order as defined in the text-file containing the state-information. Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the text-file.
-#' @details Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states. Naturally, the vector should contain the right hand side of the ode-system.
-#' @details The files containing the start values (used to test integration) for the parameter, the lower- and upper-boundaries must have the following layout. In the first column the time is defined. In the following columns the parameters are defined. Consider that the parameter order is the same as used in the ode-system.
+#'
+#' @param solvertype a string defining the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
+#'
+#' @details The vector containing the time course to solve the ode-system should contain
+#' the same entries as the time vector in the state-data.frame (it can be also be a different variable instead of time).
+#'
+#' @details The ode system should be of type Rcpp::XPtr<OS>. The OS is predefined in the package.
+#' The function should possess the following signature: int ode(double &time, std::vector<double> &parameter, std::vector<double> &states).
+#' The first entry defines the time point when the function is called.
+#' The second argument defines the parameter which should be optimized. There exist two different types of parameters.
+#' Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used.
+#' This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
+#' The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
+#' Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
+#' Within the function the new states have to be saved in the states-vector. 
+#' Please be aware that when using the approach with the Rcpp::XPtr the optimization is run in parallel. Thus, the function has to be thread-safe (among other things don't use any R Code)!
+#'
 #' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. .
-#' @details The three files start-values, lower and upper-boundaries need the parameter in the same order. The particles are randomly created within the lower and upper boundary.
-#' @details The file containing the state information should contain in the first column the time. The header-name time is compulsory. The following columns contain the states. Take care that the state order is the same as defined in the ode system. If a state is not available use “NA“. This is possible for every time points except the first one. The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
-#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points. It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
-#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials). The last argument defines the solver-type which is used during optimization: “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta. All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points. The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
-#' @example /inst/examples/optimizer_examples.r
+#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+#'
+#' @details The two data.frames containg lower and upper-boundaries need the parameter in the same order. 
+#'
+#' @details The data.frame containing the state information should hold the time course in the first column.
+#' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.
+#' If a state is not available use “NA“. This is possible for every time points except the first one.
+#' The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
+#'
+#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points.
+#' It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
+#'
+#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials).
+#' The last argument defines the solver-type which is used during optimization:
+#' “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta.
+#' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
+#' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
+#'
+#' Examples can be found in the vignette.
 optimizer_pointer <- function(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype) {
     .Call(`_paropt_optimizer_pointer`, integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype)
 }
@@ -115,29 +196,52 @@ optimizer_pointer <- function(integration_times, ode_sys, relative_tolerance, ab
 #' @useDynLib paropt, .registration = TRUE
 #' @importFrom Rcpp evalCpp
 #' @description Solves ode-system and compare result to measured states
+#'
 #' @param integration_times a vector containing the time course to solve the ode-system (see Details for more Information)
+#'
 #' @param ode_system the ode-system which will be integrated by the solver (see Details for more Information).
+#'
 #' @param relative_tolerance a number defining the relative tolerance used by the ode-solver.
+#'
 #' @param absolute_tolerances a vector containing the absolute tolerance(s) for each state used by the ode-solver.
-#' @param start a string-path to a tab seperated text-file containing values for the parameters (see Details for more Information).
-#' @param states a string-path to a tab seperated text-file containing the measured states (see Details for more Information).
-#' @param where_to_save_output_states a string-path defining a name for a textfile where the result of the integration of the states is saved. Using the previously optimized parameter in this integration.
-#' @param solvertype a string defines the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
-#' @description ode_solving solves ode system and calculates error between solved and measured values.
-#' @details The vector containing the time course to solve the ode-system should contain the same entries as the time vector in the text file containing the states (of course it can be also be a different variable instead of time). It is possible that the vector is shorter than the time vector defined in the state-file in order to optimize only a part of the problem.
-#' @details The ode system should be a Rcpp-function with a specific signature. The name of the function is free to choose. The following parameters have to be passed: a double t, a std::vector<double> params, and a Rcpp::NumericVector y.
-#' @details The first entry defines the time point when the function is called.
-#' @details The second argument defines the parameter which should be optimized. There exist two different types of parameters. Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used. This vector contains the already splined parameters, in the same order as defined in the text-files containing the start-values and the lower- and upper-boundaries.
-#' @details The last argument is a vector containing the states in the same order as defined in the text-file containing the state-information. Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the text-file.
-#' @details Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states. Naturally, the vector should contain the right hand side of the ode-system.
-#' @details The file containing the start values for the parameter must have the following layout. In the first column the time is defined. In the following columns the parameters are defined. Consider that the parameter order is the same as used in the ode-system.
+#'
+#' @param start a data.frame containing a parameter-set (see Details for more Information).
+#'
+#' @param states a data.frame containing the predetermined course of the states (see Details for more Information).
+#'
+#' @param solvertype a string defining the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
+#'
+#' @details The vector containing the time course to solve the ode-system should contain
+#' the same entries as the time vector in the state-data.frame (it can be also be a different variable instead of time).
+#'
+#' @details The ode system should be a Rcpp-function with a specific signature Rcpp::NumericVector ode(double time, std::vector<double> parameter, Rcpp::NumericVector states).
+#' The first entry defines the time point when the function is called.
+#' The second argument defines the parameter which should be optimized. There exist two different types of parameters.
+#' Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used.
+#' This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
+#' The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
+#' Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
+#' Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states.
+#' The resulting vector has to contain the right hand side of the ode-system.
+#'
 #' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
-#' @details Furthermore, it is notably that the time of the parameter should be within the time vector defined in the text-file containing the state information.
-#' @details The file containing the state information should contain in the first column the time. The header-name time is compulsory. The following columns contain the states. Take care that the state order is the same as defined in the ode system. If a state is not available use “NA“. This is possible for every time points except the first one. The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
-#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points. It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
-#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials). The last argument defines the solver-type which is used during optimization: “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta. All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points. The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
-#' @example /inst/examples/ode_solving_examples.r
+#' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+#'
+#' @details The data.frame containing the state information should hold the time course in the first column.
+#' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.
+#' If a state is not available use “NA“. This is possible for every time points except the first one.
+#' The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
+#'
+#' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points.
+#' It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
+#'
+#' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials).
+#' The last argument defines the solver-type which is used during optimization:
+#' “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta.
+#' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
+#' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
+#'
+#' Examples can be found in the vignette.
 solve_ode_system <- function(integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, solvertype) {
     .Call(`_paropt_solve_ode_system`, integration_times, ode_system, relative_tolerance, absolute_tolerances, start, states, solvertype)
 }
