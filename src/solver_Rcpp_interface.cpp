@@ -288,13 +288,14 @@ double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
             for ( int ti = 1; ti < integration_times.size(); ti++) {
                 for (int j = 1; j <= return_steps; j++) {
                     return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-                    retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
+                    retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL); //
                         for (int n = 0; n < NV_LENGTH_S(y); n++) {
                           DF(counter, n) = NV_Ith_S(y,n);
                             temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
                             if(std::isnan(temp_measured[n])) { }
                             else {
-                            sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+                            //sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+                            sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
                             //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
                             }
                         }

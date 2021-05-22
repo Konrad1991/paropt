@@ -155,25 +155,27 @@ Rcpp::List solve_ode_system_pointer(
 
   Rcpp::NumericMatrix DF(integration_times.size(),init_state.size());
   if(solvertype == "bdf") {
-    solver_bdf_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
+    smsq = solver_bdf_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
   }
   else if(solvertype == "ADAMS") {
-    solver_adams_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
+    smsq = solver_adams_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
   } else if(solvertype == "ERK") {
-    solver_erk_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
+    smsq = solver_erk_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
   } else if(solvertype == "ARK") {
-    solver_ark_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
+    smsq = solver_ark_save_Rcpp_interface(param_combi_start, ode_system, param_model, DF);
   } else {
     Rcpp::stop("\nERROR: Unknown solvertyp");
   }
-  Rcpp::CharacterVector CV(header_states.size());
-  for(unsigned int i = 0; i < header_states.size(); i++) {
-    CV[i] = header_states[i];
-  }
-  colnames(DF) = CV;
+
+  Rcpp::CharacterVector CV(header_states.size()-1);
+    for(unsigned int i = 1; i < header_states.size(); i++) {
+      CV[i-1] = header_states[i];
+    }
+    colnames(DF) = CV;
 
   return Rcpp::List::create(Rcpp::Named("Error of input-parameters:") = smsq,
                      Rcpp::Named("Solver set by user:") = solvertype,
+                     Rcpp::Named("in silico states") = DF,
                      Rcpp::Named("relative tolerance:") = relative_tolerance,
                      Rcpp::Named("absolute tolerance(s):") = absolute_tolerances);
 }
