@@ -4,7 +4,7 @@ CXX_STD=CXX11
 
 #CFLAGS = "-fno-common" -g -O -mtune=native
 
-CC=gcc-10 -std=gnu99 -E
+#CC=gcc-10 -std=gnu99 -E
 
 PKG_CPPFLAGS= -I../inst -I../inst/include
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
