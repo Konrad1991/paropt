@@ -113,7 +113,9 @@ output_solver
 
 ## Using an external pointer to a C++ function
 
-If using an external pointer to a C++ function the following signature is mandatory: int ode(double &t, std::vector<double>& params,std::vector<double>& states). The arguments are in principal the same as in the Rcpp-function approach. However, the right-hand side has to be stored in the input vector states. For instance one could first extract the content of the state vector storing it in suitable variables. Afterwards the vector states can be filled with the right hand side information which is defined by using the before defined variables. **It is crucial that the function is thread-safe!**
+If using an external pointer to a C++ function the following signature is mandatory: int ode(double &t, std::vector<double>& params,std::vector<double>& states). The arguments are in principal the same as in the Rcpp-function approach. However, the right-hand side has to be stored in the input vector states. For instance one could first extract the content of the state vector storing it in suitable variables. Afterwards the vector states can be filled with the right hand side information which is defined by using the before defined variables. The order of the states and parameters has to be the same as in the data.frames in order to calculate the error correctly and use the correct parameters.
+
+**It is crucial that the function is thread-safe!**
 
 
 ```{Rcpp, odesystem_cpp, echo = T, eval = F}
@@ -210,7 +212,7 @@ knitr::kable(states, "html", caption = "Example for states")
 
 # Parameter-input
 
-Constant parameters do not change their value during the integration of the ode-system. The boundaries for these parameters have to be defined in the first row. Notably, the first column of the data.frames containing the lower or upper boundaries is the time column. The name 'time' is mandatory for this column. If a parameter is not constant at least four different time-points are needed. The information for the parameter at the time-points are feeded in an interpolation-function in order to calculate values at each time-point the ode-system is called. The interpolation is conducted in a wrapper-function around the actual ode-system. Thus, the parameter passed to the ode-system is the already splined value for the specific time-point.
+Constant parameters do not change their value during the integration of the ode-system. The boundaries for these parameters have to be defined in the first row. Notably, the first column of the data.frames containing the lower or upper boundaries is the time column. The name 'time' is mandatory for this column. If a parameter is not constant at least four different time-points are needed. The information for the parameter at the time-points are feeded in an interpolation-function in order to calculate values at each time-point the ode-system is called. The interpolation is conducted in a wrapper-function around the actual ode-system. Thus, the parameter passed to the ode-system are the already splined values for the specific time-point. For instance if the ode-system is called at t = 3.5 the parameter 'variable' is not defined. In this case the parameters have to be interpolated. This is conducted using a Catmull-Rom-Spline. The parameter-vector passed to the ode-system contains already the splined parameters at timepoint t.
 
 
 ```{r, echo = FALSE}
@@ -224,11 +226,9 @@ knitr::kable(ub, "html", caption = "Example for the upper boundaries")
 
 \newpage 
 
-# What happens during one evaluation of a parameterset 
-During the optimization the optimizer creates a bunch of possible solutions which consists of the four different values for a, b, c and d. Each solution is passed to the ode-solver which integrate along the time and return the states at the time-points specified in the text-file containing the state-information. The *in silico* solution is compared to the measured states in order to evaluate the parameterset. The error used is the sum of the absolute differences, between *in silico* and measured states, divided by the number of timepoints. 
+# What happens during one evaluation of a parameterset
 
-During the integration the ode-solver can reach a timepoint t where no information for the parameter is measured. For instance in table 2 the timepoint 1.5 is not defined for the parameters p1, p2 and p3. 
-In this case the parameters have to be interpolated. This is conducted using a Catmull-Rom-Spline. The parameter-vector passed to the ode-system contains already the splined parameters at timepoint t. Thus, using the table above (see Table2) the parametervector could contain for instance at timepoint t = 1.5 (p1 = 1.11, p2 = 1.99, p3 = 0.66, p4 = 0.38) (for the start-values). Due to that, the parameters passed to the ode-system are in the same order as defined in the text-files but already interpolated. 
+During the optimization the optimizer creates a bunch of possible solutions within the parameter boundaries. Each solution is passed to the ode-solver which integrate along the time and return the states at the time-points specified in the data.frame containing the state-information. The *in silico* solution is compared to the measured states in order to evaluate the parameterset. The error used is the sum of the absolute differences, between *in silico* and measured states, divided by the number of timepoints. 
 
 \newpage 
 
@@ -238,41 +238,43 @@ In this case the parameters have to be interpolated. This is conducted using a C
 path <- system.file("examples", package = "paropt")
 df <- read.table(paste(path, "/final_stateoutput.txt", sep = ""), header = T)
 states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
-plot(states$time, df[,1], pch = 19, type = 'p', ylab = "predator", xlab = "time")
-points(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
+plot(states$time, df[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time")
+points(states$time, states$n1, pch = 19, col = "darkred", type = 'l')
 ```
 
 ```{r, results of optimization2, fig.cap = "Result for the prey data. In black the in silico values and in red the measured values", eval = T, echo = F, out.width = "\\textwidth", out.height = "\\textheight", ,fig.width=7, fig.height=5}
 path <- system.file("examples", package = "paropt")
 df <- read.table(paste(path, "/final_stateoutput.txt", sep = ""), header = T)
 states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
-plot(states$time, df[,2], pch = 19, type = 'p', ylab = "prey", xlab = "time")
-points(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
+plot(states$time, df[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time")
+points(states$time, states$n2, pch = 19, col = "darkred", type = 'l')
 ```
 
 \newpage 
 
-## The arguments for function optimizer()
+## The arguments for function optimizer and optimizer_pointer
 
 ```{r, optimizer, eval = F, echo = T}
-optimizer(time, ode, 1e-6, c(1e-8, 1e-8),
-          param_start, param_lb, param_ub,
-          states, npop = 40, ngen = 200, error = 1,
-          state_output, par_output, "bdf")
+optimizer(integration_times, ode_system, 
+          relative_tolerance, absolute_tolerances,
+          lb, ub, states,
+          npop, ngen, error, solvertype)
 ```
 
-The first argument is the time-vector containing either the same information as in the time-column defined in the text-file containing the states (see Table1) or only a *subset* (it can only be shorted at the end).  
+The first argument is the time-vector containing either the same information as in the time-column defined in the data.frame containing the states (see Table1) or only a *subset* (it can only be shorted at the end).  
 It is mandatory to start with the first entry of the time-column, however it is possible to stop at a certain time-point before the last one. Thus, it is possible to optimize only a part of the problem. 
-Next argument is the compiled ode-system (e.g. see code above which is compiled using the Rcpp::sourceCpp('odesystem.cpp') code in R). 
-The relative tolerance and the absolute tolerances are used by the ode-solver. 
-Next the textfiles for the start-values for the parameters (used for test-integration), the lower- and upper-bounds and the states are defined. 
-In order to optimize the parameters a particle swarm optimizer (PSO) is used. Therefore, the number of particles (npop = 40 is a good starting point for many problems) and the number of generations (ngen) have to be passed to the function. The number of generations defines the maximum number of generations the PSO should run. However, if the PSO finds a suitable parameterset which posess an error below or equal a threshold defined by the user it stops. This threshold is defined by the error-argument. 
-Next two names of (probably best non-exisiting) textfiles are passed. Using this names the function creates two textfiles. The first one containing the state-output of the integration using the optimized parameters and the second one contains the optimized parameters itself. 
-The last argument defines the typ of solver to be used. There exists four different solver: 'bdf', 'ADAMS', 'ERK' and 'ARK. All solvers are part of the SUNDIALS projexct. For details see 'https://computing.llnl.gov/projects/sundials' and @Hindmarsh2005. The bdf solver is the backward differential formular solver of CVODE and is best used for stiff problems. It uses a dense matrix module (SUNDense_Matrix) and the corresponding nonlinear solver (SUNLinsol_Dense).  The ADAMS solver is the ADAMS-MOULTON solver of CVODE and is most suitable for non-stiff problems. The 'ERK' solver is an explicite Runge-Kutta solver which is also as the ADAMS-MOULTON solver used for non-stiff-problems. The 'ARK' solver is a fully implicte Runge-Kutta-solver which uses the same matrix and nonlinear solver module as 'bdf'. The integration itself occures for all four solvers in a for-loop using the 'CV_NORMAL' step-function. If integration for a specific parameterset is not possible the error is set to 1.79769e+308 (which is the maximum of a double). 
 
+Next argument is the compiled ode-system followed by the relative tolerance and the absolute tolerances are used by the ode-solver. Followed by the data.frames defining the lower and upper boundaries of the parameter. Next the data.frame containing the state information is passed to the function. 
+
+In order to optimize the parameters a particle swarm optimizer (PSO) is used. Therefore, the number of particles (npop = 40 is a good starting point for many problems) and the number of generations (ngen) have to be passed to the function. The number of generations defines the maximum number of generations the PSO should run. However, if the PSO finds a suitable parameterset which posess an error below or equal a threshold defined by the user it stops. This threshold is defined by the error-argument. 
+
+The last argument defines the typ of solver to be used. There exists four different solver: 'bdf', 'ADAMS', 'ERK' and 'ARK. All solvers are part of the SUNDIALS project. For details see 'https://computing.llnl.gov/projects/sundials' and @Hindmarsh2005. The bdf solver is the backward differential formular solver of CVODE and is best suited for stiff problems. It uses a dense matrix module (SUNDense_Matrix) and the corresponding nonlinear solver (SUNLinsol_Dense).  The ADAMS solver is the ADAMS-MOULTON solver of CVODE and is most suitable for non-stiff problems. The 'ERK' solver is an explicite Runge-Kutta solver which is also as the ADAMS-MOULTON solver used for non-stiff-problems. The 'ARK' solver is a fully implicte Runge-Kutta-solver which uses the same matrix and nonlinear solver module as 'bdf'. The integration itself occures for all four solvers in a for-loop using the 'CV_NORMAL' step-function. If integration for a specific parameterset is not possible the error is set to 1.79769e+308 (which is the maximum of a double). 
 If you want to test a specific parameterset just call the function ode_solving. The function requires the same parameter as optimizer. Naturally, the arguments for the PSO, the error-threshold as well as the parameter lower- and upper-bounds are not needed. 
 
+In principal the optimizer_pointer and solve_ode_system_pointer do the same as the functions optimizer and solve_ode_system. However, they use an external pointer to a C++ function. Thus, they show a better performance. Notably, it was necessary to change the PSO function for optimizer_pointer in order to permit parallelisation. Therefore even with the same seed the results differ between optimizer and optimizer_pointer. 
+
 ## Particle swarm optimizer (PSO)
+
 This PSO-implementation is a modified version of 'https://github.com/kthohr/optim' (for a general overview see @Sengupta2018).
 The PSO has several key features. First of all a bunch (number of particles defined by user) of possible parametersets is created within the boundaries defined by the user. Each parameterset is called a particle. All particles together are called the swarm. Each possible parameterset is passed to the solver which integrates the system. The result is used to calculate the error. Thus, each particle has a current solution and a current personal best value. Furthermore, each particle possess a neighberhood which consists of 0-3 other particles (for details see @Akman2018). The PSO uses a combination of its history (personal best value) and the information of the best particle of the neighberhood to change its current value. Notably, in this package a randomly adaptive topology is used. This means, that the neighberhood is recalculated each time when the global best solution (best solution of the entire swarm) has not improved within one generation. 
 

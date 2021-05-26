@@ -86,7 +86,7 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
 
   // current state values ( = y)
   std::vector<double> current_states(NV_LENGTH_S(y));
-  for(int i = 0; i < current_states.size(); i++) {
+  for(unsigned int i = 0; i < current_states.size(); i++) {
     current_states[i] = NV_Ith_S(y,i);
   }
 
@@ -99,7 +99,7 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
 
   odes(time, parameter_input, current_states);
 
-  for(int i = 0; i < current_states.size(); i++) {
+  for(unsigned int i = 0; i < current_states.size(); i++) {
     NV_Ith_S(ydot, i) = current_states[i];
   }
 
@@ -178,7 +178,7 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
    std::vector<double> temp_measured(init_state.size());
    //int num_states = init_state.size();
 
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
+       for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
            for (int j = 1; j <= return_steps; j++) {
                return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
@@ -285,7 +285,7 @@ double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
           }
 
           int counter = 1;
-            for ( int ti = 1; ti < integration_times.size(); ti++) {
+            for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
                 for (int j = 1; j <= return_steps; j++) {
                     return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                     retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL); //
@@ -377,7 +377,7 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, OS od
      std::vector<double> temp_measured(init_state.size());
      //int num_states = init_state.size();
 
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
+       for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
            for (int j = 1; j <= return_steps; j++) {
                return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
@@ -470,7 +470,7 @@ double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, 
      }
 
      int counter = 1;
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
+       for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
            for (int j = 1; j <= return_steps; j++) {
                return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
@@ -554,7 +554,7 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
      std::vector<double> temp_measured(init_state.size());
      //int num_states = init_state.size();
 
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
+       for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
            for (int j = 1; j <= return_steps; j++) {
                return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                retval = ERKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);
@@ -643,7 +643,7 @@ double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
 
      int counter = 1;
 
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
+       for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
            for (int j = 1; j <= return_steps; j++) {
                return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                retval = ERKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);
@@ -742,7 +742,7 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
      std::vector<double> temp_measured(init_state.size());
      //int num_states = init_state.size();
 
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
+       for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
            for (int j = 1; j <= return_steps; j++) {
                return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                retval = ARKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);
@@ -845,7 +845,7 @@ double solver_ark_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
 
      int counter = 1;
 
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
+       for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
            for (int j = 1; j <= return_steps; j++) {
                return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
                retval = ARKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);

@@ -167,7 +167,7 @@ enum EC2 CHECK2 (VS L, VS U, int &LINE) {
 
   enum EC2 res = EC2::UNDEFINED;
 
-  for(int i = 0; i < L.size(); i++) {
+  for(unsigned int i = 0; i < L.size(); i++) {
 
     if (L[i] != U[i]) {
       LINE = i;
@@ -190,7 +190,7 @@ enum EC3 CHECK3 (MI T_L, MI T_U, VI L, VI U) {
     Rcpp::stop("\nError: Different number of time_points between startvalues, lower bounds and upper bounds");
   }
 
-  for(int i = 0; i < T_L.size(); i++) {
+  for(unsigned int i = 0; i < T_L.size(); i++) {
 
     if(T_L[i].size() != T_U[i].size()) {
       Rcpp::Rcerr << "In column:  " << i << std::endl;
@@ -199,7 +199,7 @@ enum EC3 CHECK3 (MI T_L, MI T_U, VI L, VI U) {
 
   }
 
-  for(int i = 0; i < L.size(); i++) {
+  for(unsigned int i = 0; i < L.size(); i++) {
 
     if(L[i] != U[i]) {
       Rcpp::Rcerr << "In column:  " << i << std::endl;
@@ -229,7 +229,7 @@ enum IMPORT_PARAMETER ip (DF lb, DF ub,
   DF_to_MD(ub, U, Us);
 
   header_parameter.resize(L.size());
-  for(int i = 0; i < L.size(); i++) {
+  for(unsigned int i = 0; i < L.size(); i++) {
     header_parameter[i] = Ls[i];
   }
 
@@ -352,7 +352,7 @@ enum IMPORT_PARAMETER ip_start (DF Start,
   DF_to_MD(Start, D, N);
 
   header_parameter.resize(Start.size());
-  for(int i = 0; i < N.size(); i++) {
+  for(unsigned int i = 0; i < N.size(); i++) {
     header_parameter[i] = N[i];
   }
 
@@ -433,12 +433,12 @@ VD &hs_harvest_state_combi_vec,
   DF_to_MD(Start, Df, N);
 
   headers.resize(N.size());
-  for(int i = 0; i < N.size(); i++) {
+  for(unsigned int i = 0; i < N.size(); i++) {
     headers[i] = N[i];
   }
 
   int ncol = Start.size();
-  int nrwo = Start.nrows();
+  //int nrwo = Start.nrows();
 
   for(int i = 1; i < (ncol); i++) {
     if(std::isnan(Df[i][0])) {

@@ -136,14 +136,14 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
   double par_w = setpso.pso_par_initial_w;
   const double par_w_max = setpso.pso_par_w_max;
   const double par_w_min = setpso.pso_par_w_min;
-  const double par_damp = setpso.pso_par_w_damp;
+  //const double par_damp = setpso.pso_par_w_damp;
   double par_c_cog = 2.05; //2.0
   double par_c_soc = 2.05; //2.0
   const double par_initial_c_cog = 2.5; // 0.5
   const double par_final_c_cog = 0.5; // 2.5
   const double par_initial_c_soc = 0.5; // 2.5
   const double par_final_c_soc = 2.5; // 0.5
-  const double c = 1.193; // value from Akman2018: 1.193
+  //const double c = 1.193; // value from Akman2018: 1.193
   double prop_objfn_val;
   arma::vec objfn_vals(n_pop); // personal best fitness vector
   GetRNGstate();
@@ -185,7 +185,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
     }
   }
   indices[0] = 0;
-  for(int i = 1; i < indices.size(); i++) {
+  for(unsigned int i = 1; i < indices.size(); i++) {
     indices[i] = indices[i-1] + sizes[i-1];
   }
   std::vector<arma::Mat<double> > sub_mats(max_amount_of_threads);

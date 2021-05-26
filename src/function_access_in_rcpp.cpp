@@ -70,7 +70,7 @@ Rcpp::List solve_ode_system_pointer(
 
   // extract parameters
   // extract parameters
-  enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
+  //enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
   VI params_cut_idx_vec;
   VD params_time_combi_vec;
   VD param_combi_start;
@@ -95,12 +95,12 @@ Rcpp::List solve_ode_system_pointer(
   }
 
   // check absolute_tolerances
-  if(static_cast<int>(init_state.size()) > absolute_tolerances.size()) {
+  if(static_cast<unsigned int>(init_state.size()) > absolute_tolerances.size()) {
     Rcpp::stop("\nERROR: absolute tolerances not defined for each state");
     //exit (EXIT_FAILURE);
   }
 
-  if(static_cast<int>(init_state.size()) < absolute_tolerances.size()) {
+  if(static_cast<unsigned int>(init_state.size()) < absolute_tolerances.size()) {
     Rcpp::stop("\nERROR: dimension error for absolute tolerances");
     //exit (EXIT_FAILURE);
   }
@@ -132,13 +132,13 @@ Rcpp::List solve_ode_system_pointer(
   for(int i = 0; i < hs_cut_idx_vec[0];i++) {
     integration_time_assumption[i] = hs_time_combi_vec[i];
   }
-  if(integration_times.size() > static_cast<int>(integration_time_assumption.size())) {
+  if(integration_times.size() > static_cast<unsigned int>(integration_time_assumption.size())) {
     Rcpp::stop("\nERROR: integration_times must not be larger than time of state input");
     //exit (EXIT_FAILURE);
   }
 
   bool check_entries_time;
-  for(int i = 0; i < integration_times.size(); i++) {
+  for(unsigned int i = 0; i < integration_times.size(); i++) {
     check_entries_time = double_diff_Rcpp_interface(integration_times[i],integration_time_assumption[i]);
     if(!check_entries_time) {
       Rcpp::warning("\nERROR: integration_times has not the same entries as the time vector of state input");

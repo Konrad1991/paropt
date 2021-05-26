@@ -105,7 +105,7 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
 
     // create randomly param_combi_start vector
     VD param_combi_start(param_combi_lb.size());
-    for(int i = 0; i < param_combi_lb.size(); i++) {
+    for(unsigned int i = 0; i < param_combi_lb.size(); i++) {
       double rd = arma::randu();
      param_combi_start[i] = param_combi_lb[i] + (param_combi_ub[i] - param_combi_lb[i])*rd;
     }
@@ -131,12 +131,12 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
     }
 
     // check absolute_tolerances
-    if(static_cast<int>(init_state.size()) > absolute_tolerances.size()) {
+    if(static_cast<unsigned int>(init_state.size()) > absolute_tolerances.size()) {
       Rcpp::stop("\nERROR: absolute tolerances not defined for each state");
       //exit (EXIT_FAILURE);
     }
 
-    if(static_cast<int>(init_state.size()) < absolute_tolerances.size()) {
+    if(static_cast<unsigned int>(init_state.size()) < absolute_tolerances.size()) {
       Rcpp::stop("\nERROR: dimension error for absolute tolerances");
       //exit (EXIT_FAILURE);
     }
@@ -175,7 +175,7 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
     }
 
     bool check_entries_time = false;
-    for(int i = 0; i < integration_times.size(); i++) {
+    for(unsigned int i = 0; i < integration_times.size(); i++) {
       check_entries_time = double_diff_Rcpp_interface(integration_times[i],integration_time_assumption[i]);
       if(!check_entries_time) {
         Rcpp::warning("\nERROR: integration_times has not the same entries as the time vector of state input");
@@ -294,7 +294,7 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
     }
 
     std::vector<int>::iterator max_cut_vector = std::max_element(params_cut_idx_vec.begin(), params_cut_idx_vec.end());
-    int idx_largest_parameter = std::max_element(params_cut_idx_vec.begin(), params_cut_idx_vec.end()) - params_cut_idx_vec.begin();
+    //int idx_largest_parameter = std::max_element(params_cut_idx_vec.begin(), params_cut_idx_vec.end()) - params_cut_idx_vec.begin();
 
     Rcpp::NumericMatrix PAROUT(*max_cut_vector, params_export.size()+1);
     int rowcounter = 0;

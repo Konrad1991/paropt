@@ -64,7 +64,7 @@ remove start values
                      Rcpp::DataFrame start, Rcpp::DataFrame states,std::string solvertype) {
 
     // extract parameters
-    enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
+    //enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
     VI params_cut_idx_vec;
     VD params_time_combi_vec;
     VD param_combi_start;
