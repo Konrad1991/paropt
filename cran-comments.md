@@ -1,9 +1,19 @@
+## Resubmission
+This is a resubmission. In this version I have:
+
+* fixed the installation on MacOS
+
 ## Test environments
-* local Manjaro Linux, R 4.0.5
+* local Manjaro Linux, R 4.1.0
 * win-builder (devel and release)
+* MacOS BigSur 11.3.1, R 4.0.2
 
 ## R CMD check results
-There were no ERRORs, WARNINGs or NOTEs.
+There were no ERRORs or NOTEs.
+
+1 Warning:
+
+Insufficient package version (submitted: 0.2, existing: 0.2)
 
 ## Downstream dependencies
 

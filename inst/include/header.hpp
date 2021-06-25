@@ -41,6 +41,10 @@
 #include <thread>
 #include <mutex>
 
+#if _OPENMP
+#include <omp.h>
+#endif
+
 #define NA std::nan("l")
 
 struct settingsPSO {

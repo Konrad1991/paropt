@@ -93,14 +93,14 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
 
 
     // extract parameters
-    enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
+    //enum IMPORT_PARAMETER ret = IMPORT_PARAMETER::UNDEFINED;
     VI params_cut_idx_vec;
     VD params_time_combi_vec;
     VD param_combi_lb;
     VD param_combi_ub;
     VS header_parameter;
 
-    ret = ip (lower, upper, params_cut_idx_vec, params_time_combi_vec,
+    ip (lower, upper, params_cut_idx_vec, params_time_combi_vec,
                      param_combi_lb, param_combi_ub, header_parameter);
 
     // create randomly param_combi_start vector

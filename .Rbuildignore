@@ -1,4 +1,6 @@
 ^README\.Rmd$
 ^cran-comments\.md$
 ^README\.md$
-^TODO\.docx$
+^autom4te.cache
+^config.log
+^config.status

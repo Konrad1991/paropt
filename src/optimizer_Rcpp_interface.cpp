@@ -368,7 +368,9 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
     
     //objfn_vals.zeros(); // delete!
 
+    #ifdef _OPENMP
     #pragma omp parallel for shared(objfn_vals)
+    #endif
       for(int o = 0; o < n_pop; o++) {
         double current_val = fctptr(parameter[o], odes, model);
         objfn_vals(o) = current_val;
