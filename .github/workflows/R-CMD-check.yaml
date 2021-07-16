@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-      - master
+      - Rcpp-Interface
   pull_request:
     branches:
       - main
-      - master
+      - Rcpp-Interface
 
 name: R-CMD-check
 
