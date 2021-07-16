@@ -1,3 +1,7 @@
+<!-- badges: start -->
+[![Travis build status](https://travis-ci.com/Konrad1991/paropt.svg?branch=Rcpp-Interface)](https://travis-ci.com/Konrad1991/paropt)
+<!-- badges: end -->
+
 # paropt
 
 Parameter Optimizing of ODEs
