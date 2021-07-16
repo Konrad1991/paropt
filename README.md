@@ -1,6 +1,8 @@
 <!-- badges: start -->
 [![Travis build status](https://travis-ci.com/Konrad1991/paropt.svg?branch=Rcpp-Interface)](https://travis-ci.com/Konrad1991/paropt)
 [![R-CMD-check](https://github.com/Konrad1991/paropt/workflows/R-CMD-check/badge.svg)](https://github.com/Konrad1991/paropt/actions)
+https://img.shields.io/cran/l/paropt
+https://img.shields.io/cran/l/paropt
 <!-- badges: end -->
 
 # paropt
