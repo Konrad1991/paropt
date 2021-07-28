@@ -24,7 +24,7 @@ remotes::install_github("Konrad1991/paropt", ref = "Rcpp-Interface") within R (b
 
 # Example
 
-```
+```Cpp
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 // [[Rcpp::depends(paropt)]]
@@ -42,7 +42,7 @@ int ode_system(double &t, std::vector<double> &params, std::vector<double> & sta
   double c = params[2];
   double d = params[3];
 
-  // states have to be in the same order as specified in the textfile "states_LV.txt" (Otherwise the error-calculation does not work)
+  // states in the same order as in the state data.frame!
   double n1 = states[0];
   double n2 = states[1];
 
@@ -62,7 +62,7 @@ Rcpp::XPtr<OS> test_optimization() {
 ```
 
 
-```
+```R
 lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
 ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
 
