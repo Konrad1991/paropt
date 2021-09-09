@@ -1,25 +1,3 @@
-/* !!revision!!
-completly set up a new PSO.
-
-1. classical pso
-2. pso as clerc propose it
-3. Initialisation in own fct
-4. calculation of neighberhood in own fct
-
-5. implement TPO
-
-6. preparation of multithreading have to be improved.
-   Maybe it is sometimes better not to use all threads. Due to large overhead.
-   Especially a problem if solving is fast.
-   Thus, it is necessary to test how fast solving is and based on this choose number of threads.
-   Give user possibility to define number of threads which should be used
-Maybe it is possible to have only one PSO; not well arranged though
-
-
-*/
-
-
-
 /*################################################################################
   ##
   ##   Copyright (C) 2016-2018 Keith O'Hara
@@ -201,6 +179,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
 
   // initialize
   // =============================
+  /*
     for (int i = 0; i < n_pop; i++){
       if(i == 0) {}
       GetRNGstate();
@@ -217,6 +196,38 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       prop_objfn_val = fctptr(param_temp, odes, model);;
       objfn_vals(i) = prop_objfn_val;
     }
+
+  */
+  int index1;
+  int index2;
+  double swap;
+
+  for(int i = 0; i < param_temp.size(); i++) {
+      double temp = (upper_start_bounds(i) - lower_start_bounds(i)) / static_cast<double>(n_pop);
+      // discrete value distribution
+      for(int j = 0; j < n_pop; j++) {
+        P(j, i) = lower_start_bounds(i) + static_cast<double>(j)*temp;
+      }
+
+      // shuffle
+      for(int k = 0; k < 1000; k++) {
+        GetRNGstate();
+        index1 = arma::randi<int>(arma::distr_param(0, n_pop-1));
+        index2 = arma::randi<int>(arma::distr_param(0, n_pop-1));
+        PutRNGstate();
+        swap = P(index1, i);
+        P(index1, i) = P(index2, i);
+        P(index2, i) = swap;
+     }
+  }
+
+  //P.print();
+
+  for(int i = 0; i < n_pop; i++) {
+    prop_objfn_val = fctptr(param_temp, odes, model);
+    objfn_vals(i) = prop_objfn_val;
+  }
+
 
   arma::vec best_vals = objfn_vals; // best_vals = global best solutions
   arma::mat best_vecs = P;
@@ -324,7 +335,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       best_neighberhood_particel = neighberhood[i][temp_fittness_index];
       arma::vec local_best_vec = best_vecs.row(best_neighberhood_particel).t();
 
-      double v = 0.9; 
+      double v = 0.9;
       double chi;
       chi = 2*v;
       GetRNGstate();
@@ -339,7 +350,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       GetRNGstate();
       V.row(i) = par_w*V.row(i) + par_c_cog*arma::randu(1,n_vals)%(best_vecs.row(i) - P.row(i)) + par_c_soc*arma::randu(1,n_vals)%(local_best_vec.t() - P.row(i));
       PutRNGstate();
-      
+
       V.row(i) = V.row(i)*chi;
       P.row(i) += V.row(i);
 
@@ -365,7 +376,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       }
     }
 
-    
+
     //objfn_vals.zeros(); // delete!
 
     #ifdef _OPENMP

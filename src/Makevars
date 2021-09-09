@@ -1,15 +1,10 @@
 CXX_STD=CXX11
 
-#PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
-
-#CFLAGS = "-fno-common" -g -O -mtune=native
-
-#CC=gcc-10 -std=gnu99 -E
-
 PKG_CPPFLAGS= -I../inst -I../inst/include
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
-PKG_LIBS=  $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials -lpthread -fopenmp 
+PKG_CXXFLAGS= $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
+PKG_LIBS=  $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials -lpthread 
 LIBS=-L./ -L../inst 
+
 
 .PHONY: all ../inst/libsundials.a
 
@@ -56,9 +51,7 @@ SOURCES_ARKODE = ./sundials/arkode/arkode.c \
 ./sundials/arkode/arkode_bbdpre.c \
 ./sundials/arkode/arkode_butcher.c \
 ./sundials/arkode/arkode_butcher_dirk.c \
-./sundials/arkode/arkode_butcher_erk.c \
-./sundials/arkode/arkode_erkstep.c \
-./sundials/arkode/arkode_erkstep_io.c \
+./sundials/arkode/arkode_butcher_erk.c ./sundials/arkode/arkode_erkstep.c ./sundials/arkode/arkode_erkstep_io.c \
 ./sundials/arkode/arkode_interp.c \
 ./sundials/arkode/arkode_io.c \
 ./sundials/arkode/arkode_ls.c \
@@ -74,8 +67,6 @@ OBJECTS = $(SOURCES:.cpp=.o)
 SOURCES_SUNDIALS_ALL= $(SOURCES_NVECSERIAL) $(SOURCES_SUNDIALS) $(SOURCES_SUNMAT) $(SOURCES_SUNLINSOL_DENSE) $(SOURCES_SUNLINSOL_BAND) $(SOURCES_SUNNONLINSOL) $(SOURCES_CVODE) $(SOURCES_ARKODE)
 
 OBJECTS_SUNDIALS_ALL = $(SOURCES_SUNDIALS_ALL:.c=.o)
-
-#OBJECTS= interface_fct.o solver.o basic_functions.o param_interpolation.o params.o state.o RcppExports.o optimizer.o tests.o test_solver.o test_paramsort_spline.o #solve_ode_system.o twostage.o comparison_fct.o $(SOURCES_SUNDIALS_ALL:.c=.o)
 
 all: $(SHLIB)
 
