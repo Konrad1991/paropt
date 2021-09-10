@@ -167,6 +167,10 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
     indices[i] = indices[i-1] + sizes[i-1];
   }
   std::vector<arma::Mat<double> > sub_mats(max_amount_of_threads);
+
+
+  RcppThread::ThreadPool pool;
+  std::vector<std::future<double> > futures(n_pop);
   // =============================
 
   // define borders for start values
@@ -179,7 +183,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
 
   // initialize
   // =============================
-  /*
+
     for (int i = 0; i < n_pop; i++){
       if(i == 0) {}
       GetRNGstate();
@@ -197,7 +201,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
       objfn_vals(i) = prop_objfn_val;
     }
 
-  */
+  /*
   int index1;
   int index2;
   double swap;
@@ -220,8 +224,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
         P(index2, i) = swap;
      }
   }
-
-  //P.print();
+  */
 
   for(int i = 0; i < n_pop; i++) {
     prop_objfn_val = fctptr(param_temp, odes, model);
@@ -378,7 +381,7 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
 
 
     //objfn_vals.zeros(); // delete!
-
+/*
     #ifdef _OPENMP
     #pragma omp parallel for shared(objfn_vals)
     #endif
@@ -386,6 +389,16 @@ double Optimizer_Rcpp_interface::pso() { // (labled with ! need check)
         double current_val = fctptr(parameter[o], odes, model);
         objfn_vals(o) = current_val;
       }
+*/
+
+
+for(int o = 0; o < n_pop; o++) {
+  futures[o] = pool.pushReturn(fctptr, std::ref(parameter[o]), odes, std::ref(model) );
+}
+for(int o = 0; o < n_pop; o++) {
+  objfn_vals(o) = futures[o].get();
+}
+
 
 
   /*

@@ -106,8 +106,12 @@ int wrapper_ode_system_Rcpp_interface(realtype t, N_Vector y, N_Vector ydot, voi
   return 0;
 }
 
+std::mutex mtx;
+
 double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
+
+  mtx.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
@@ -115,6 +119,7 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
   std::vector<double> integration_times = solv_param_struc.integration_times;
+  mtx.unlock();
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -135,12 +140,14 @@ double solver_bdf_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
    abstol = N_VNew_Serial(NEQ);
    if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
+   mtx.lock();
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
      NV_Ith_S(y, i) = solv_param_struc.init_state[i];
    }
 
    reltol = solv_param_struc.reltol;
+   mtx.unlock();
 
    cvode_mem = CVodeCreate(CV_BDF);
    if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeCreate", 0)) return(1);
@@ -316,6 +323,7 @@ double solver_bdf_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
 
 double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
+  mtx.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
@@ -323,6 +331,7 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, OS od
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
   std::vector<double> integration_times = solv_param_struc.integration_times;
+  mtx.unlock();
 
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
@@ -339,13 +348,14 @@ double solver_adams_Rcpp_interface(std::vector<double> &param_combi_start, OS od
    abstol = N_VNew_Serial(NEQ);
    if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
+   mtx.lock();
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
      NV_Ith_S(y, i) = solv_param_struc.init_state[i];
    }
 
    reltol = solv_param_struc.reltol;
-
+   mtx.unlock();
    cvode_mem = CVodeCreate(CV_ADAMS);
    if (check_retval_Rcpp_interface((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
@@ -499,6 +509,7 @@ double solver_adams_save_Rcpp_interface(std::vector<double> &param_combi_start, 
 
 double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
+  mtx.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
@@ -506,7 +517,7 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
   std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
   std::vector<double> integration_times = solv_param_struc.integration_times;
-
+  mtx.unlock();
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
    realtype reltol, t; // tout;
@@ -522,12 +533,14 @@ double solver_erk_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
    abstol = N_VNew_Serial(NEQ);
    if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
+   mtx.lock();
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
      NV_Ith_S(y, i) = solv_param_struc.init_state[i];
    }
 
    reltol = solv_param_struc.reltol;
+   mtx.unlock();
 
    arkode_mem = ERKStepCreate(wrapper_ode_system_Rcpp_interface, integration_times[0], y);
    if (check_retval_Rcpp_interface((void *)arkode_mem, "ERKCreate", 0)) return(1);
@@ -671,6 +684,7 @@ double solver_erk_save_Rcpp_interface(std::vector<double> &param_combi_start, OS
 
 double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc) {
 
+  mtx.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
@@ -679,6 +693,7 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
   std::vector<double> integration_times = solv_param_struc.integration_times;
 
+  mtx.unlock();
     // Begin Solver
    int NEQ = hs_cut_idx_vec.size();
    realtype reltol, t; // tout;
@@ -696,13 +711,14 @@ double solver_ark_Rcpp_interface(std::vector<double> &param_combi_start, OS ode_
    abstol = N_VNew_Serial(NEQ);
    if (check_retval_Rcpp_interface((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
+   mtx.lock();
    for (int i = 0; i < NEQ; ++i) {
      NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
      NV_Ith_S(y, i) = solv_param_struc.init_state[i];
    }
 
    reltol = solv_param_struc.reltol;
-
+   mtx.unlock();
    A = SUNDenseMatrix(NEQ, NEQ);
    if (check_retval_Rcpp_interface((void *)A, "SUNDenseMatrix", 0)) return 1;
    LS = SUNLinSol_Dense(y, A);

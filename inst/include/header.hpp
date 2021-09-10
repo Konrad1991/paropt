@@ -5,6 +5,8 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <Rcpp.h>
 // [[Rcpp::plugins(openmp)]]
+// [[Rcpp::depends(RcppThread)]]
+#include <RcppThread.h>
 
 #include <cassert>
 
@@ -40,6 +42,7 @@
 
 #include <thread>
 #include <mutex>
+#include <future>
 
 #if _OPENMP
 #include <omp.h>
