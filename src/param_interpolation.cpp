@@ -49,9 +49,9 @@ void params_sort (
         tmp_time_vec[j] = time_vec[idx_count];
         ++idx_count;
       }
-      tk::spline s(tmp_time_vec, tmp_par_vec);
-      double t_tmp = static_cast<double>(t);
-      params[i] = s(t_tmp); //CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);
+      //tk::spline s(tmp_time_vec, tmp_par_vec);
+      //double t_tmp = static_cast<double>(t);
+      params[i] = CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);//s(t_tmp);
     }
   }
 }
