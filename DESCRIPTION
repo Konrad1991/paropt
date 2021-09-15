@@ -12,7 +12,7 @@ Author: Krämer Konrad [aut, cre],
 Maintainer: Krämer Konrad <Konrad_kraemer@yahoo.de>
 Copyright: file COPYRIGHTS
 BugReports: https://github.com/Konrad1991/paropt
-Description: Enable optimization of parameters of ordinary differential equations. Therefore, using 'SUNDIALS' to solve the ODE-System (see Hindmarsh, Alan C., Peter N. Brown, Keith E. Grant, Steven L. Lee, Radu Serban, Dan E. Shumaker, and Carol S. Woodward. (2005) <doi:10.1145/1089014.1089020>). Furthermore, for optimization the particle swarm algorithm is used (see: Akman, Devin, Olcay Akman, and Elsa Schaefer. (2018) <doi:10.1155/2018/9160793> and Sengupta, Saptarshi, Sanchita Basak, and Richard Peters. (2018) <doi:10.3390/make1010010>). The ODE-System has to be passed as 'Rcpp'-function. The information for the parameter boundaries and states are conveyed using data.frames. Spline interpolation during simulation is conducted according to <https://kluge.in-chemnitz.de/opensource/spline/>. 
+Description: Enable optimization of parameters of ordinary differential equations. Therefore, using 'SUNDIALS' to solve the ODE-System (see Hindmarsh, Alan C., Peter N. Brown, Keith E. Grant, Steven L. Lee, Radu Serban, Dan E. Shumaker, and Carol S. Woodward. (2005) <doi:10.1145/1089014.1089020>). Furthermore, for optimization the particle swarm algorithm is used (see: Akman, Devin, Olcay Akman, and Elsa Schaefer. (2018) <doi:10.1155/2018/9160793> and Sengupta, Saptarshi, Sanchita Basak, and Richard Peters. (2018) <doi:10.3390/make1010010>). The ODE-System has to be passed as 'Rcpp'-function. The information for the parameter boundaries and states are conveyed using data.frames.
 License: GPL-3 | file LICENSE
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp, RcppArmadillo, RcppThread, testthat
