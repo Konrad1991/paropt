@@ -399,6 +399,11 @@ for(int o = 0; o < n_pop; o++) {
   objfn_vals(o) = futures[o].get();
 }
 
+/*
+for(int o = 0; o < n_pop; o++) {
+  objfn_vals(o) = fctptr(parameter[o], odes, model);
+}
+*/
 
 
   /*

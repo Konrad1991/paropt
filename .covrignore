@@ -1,0 +1,13 @@
+src/sundials/
+src/sundials/sundials
+src/sundials/cvode
+src/sundials/sunmatrix
+src/sundials/nvector
+src/sundials/arkode
+src/sundials/kinsol
+src/sundials/sunlinsol
+src/sundials/sunnonlinsol
+src/sundials/sunnonlinsol/fixedpoint/fsunnonlinsol_fixedpoint.c
+src/sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c
+src/sundials/sunnonlinsol/newton/fsunnonlinsol_newton.c
+src/sundials/sunnonlinsol/newton/sunnonlinsol_newton.c

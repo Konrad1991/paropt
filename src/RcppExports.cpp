@@ -8,6 +8,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // solve_ode_system_pointer
 Rcpp::List solve_ode_system_pointer(std::vector<double> integration_times, Rcpp::XPtr<OS> fctptr, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame start, Rcpp::DataFrame states, std::string solvertype);
 RcppExport SEXP _paropt_solve_ode_system_pointer(SEXP integration_timesSEXP, SEXP fctptrSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP startSEXP, SEXP statesSEXP, SEXP solvertypeSEXP) {
@@ -98,12 +103,15 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP run_testthat_tests(SEXP);
+
 static const R_CallMethodDef CallEntries[] = {
     {"_paropt_solve_ode_system_pointer", (DL_FUNC) &_paropt_solve_ode_system_pointer, 7},
     {"_paropt_optimizer", (DL_FUNC) &_paropt_optimizer, 11},
     {"_paropt_ode_example", (DL_FUNC) &_paropt_ode_example, 3},
     {"_paropt_optimizer_pointer", (DL_FUNC) &_paropt_optimizer_pointer, 11},
     {"_paropt_solve_ode_system", (DL_FUNC) &_paropt_solve_ode_system, 7},
+    {"run_testthat_tests", (DL_FUNC) &run_testthat_tests, 1},
     {NULL, NULL, 0}
 };
 

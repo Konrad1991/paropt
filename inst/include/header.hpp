@@ -104,6 +104,11 @@ struct time_state_information_Rcpp_interface {
   std::vector<double> absolute_tolerances;
 };
 
+struct result_pso {
+  double final_error;
+  std::vector<double> best_particle;
+};
+
 /*
 print std vector
 */

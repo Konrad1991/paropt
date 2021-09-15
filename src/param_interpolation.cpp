@@ -96,8 +96,8 @@ double CatmullRomSpline( // (labled with ! need check)
       break;
     }else if (t>=time_vec[i] && t<time_vec[i+1]){
       if (i==0) {
-        idx0 = time_vec.size()-1;
-        t0 = time_vec[idx0]-time_vec.back();
+        idx0 = time_vec.size(); //-1;
+        t0 = time_vec[idx0]; //-time_vec.back();
       } else {
         idx0 = i-1;
         t0 = time_vec[idx0];
@@ -116,7 +116,7 @@ double CatmullRomSpline( // (labled with ! need check)
       y2 = par_vec[idx2];
       if ( i == time_vec.size()-2 ) {
         idx3 = 0;
-        t3 = time_vec[idx3]+time_vec.back();
+        t3 = time_vec[idx3] + time_vec.back();
       } else if ( i == time_vec.size()-1 ) {
         idx3 = 1;
         t3 = time_vec[idx3]+time_vec.back();
