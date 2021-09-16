@@ -16,10 +16,40 @@ void pop_loop() {
 }
 
 /*
-shuffles rows of SWARM, VELOCITIES, GLOBAL_BEST_ERRORS, GLOBAL_BEST_PARAMETERS
+shuffles rows of SWARM, VELOCITIES, GLOBAL_BEST_ERRORS, GLOBAL_BEST_PARAMETERS, BEST_PARAMETERS
 */
-void shuffling() {
+void shuffling(MD& sw, MD& velo, VD& errors, VD& params) {
 
+  Rcpp::IntegerVector pop_num( (sw.size() - 1) );
+  for(int i = 0; i < pop_num.size(); i++) {
+    pop_num[i] = i;
+  }
+
+  int idx1;
+  int idx2;
+  double swap;
+
+  for(size_t z = 0; z < 1000; z++) { // z = number of switches
+    GetRNGstate();
+    idx1 = Rcpp::sample(pop_num, 1);
+    PutRNGstate();
+    GetRNGstate();
+    idx2 = Rcpp::sample(pop_num, 1);
+    PutRNGstate();
+
+    for(size_t i = 0; i < sw[0].size(); i++) {
+      swap = sw[idx1][i];
+      sw[idx1][i] = sw[idx2][i];
+      sw[idx2][i] = swap;
+
+      swap = velo[idx1][i];
+      velo[idx1][i] = velo[idx2][i];
+      velo[idx2][i] = swap;
+
+
+    }
+
+  }
 }
 
 
@@ -83,7 +113,7 @@ result_pso particle_swarm(VD lb, VD ub, settingsPSO_Rcpp_interface set_pso, time
       }
     }
   }
-  
+
   MI neighberhood(SIZE_SWARM);
 
   RcppThread::ThreadPool pool;

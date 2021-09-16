@@ -58,8 +58,7 @@ SOURCES_ARKODE = ./sundials/arkode/arkode.c \
 ./sundials/arkode/arkode_mristep_io.c \
 ./sundials/arkode/arkode_root.c
 
-#SOURCES =  interface_fct.cpp solver.cpp basic_functions.cpp param_interpolation.cpp params.cpp state.cpp RcppExports.cpp optimizer.cpp solve_ode_system.cpp ode_example.cpp tests.cpp test_solver.cpp test_paramsort_spline.cpp function_access_in_rcpp.cpp solver_Rcpp_interface.cpp optimizer_access_in_Rcpp.cpp optimizer_Rcpp_interface.cpp modify_dataframe.cpp
-SOURCES =  interface_fct.cpp solver.cpp basic_functions.cpp param_interpolation.cpp params.cpp state.cpp RcppExports.cpp optimizer.cpp solve_ode_system.cpp ode_example.cpp function_access_in_rcpp.cpp solver_Rcpp_interface.cpp optimizer_access_in_Rcpp.cpp optimizer_Rcpp_interface.cpp modify_dataframe.cpp tests.cpp  test-runner.cpp test_spline.cpp spline_as_in_stats.cpp
+SOURCES =  interface_fct.cpp solver.cpp param_interpolation.cpp params.cpp state.cpp RcppExports.cpp optimizer.cpp solve_ode_system.cpp ode_example.cpp function_access_in_rcpp.cpp solver_Rcpp_interface.cpp optimizer_access_in_Rcpp.cpp optimizer_Rcpp_interface.cpp modify_dataframe.cpp tests.cpp  test-runner.cpp test_spline.cpp spline_as_in_stats.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 

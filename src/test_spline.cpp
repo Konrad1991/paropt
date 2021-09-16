@@ -22,7 +22,7 @@ If not see: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html#SEC4
 #include <testthat.h>
 #include "header.hpp"
 
-/*
+
 context("spline") {
 
   std::vector<double> parameter = {2., 4., 8., 16., 32.};
@@ -152,16 +152,16 @@ context("spline5") {
   std::vector<double> time_output = {0.0,  2., 4., 6., 8., 10., 12., 14., 16., 18., 20., 22., 24.};
 
 
-  std::vector<double> true_res = { 15.042140,  12.4000,  7.556236,  9.857146,
-     12.508205, 11.399553, 9.3, 7.3,  6.637941,  7.7,  9.9,  12.6, 15.042140};
+  std::vector<double> true_res = { 15.042140,  9.9,  7.556236,  9.857146,
+     12.508205, 12.8, 11.0, 8.4,  6.637941,  6.8,  8.6,  11.5, 15.042140};
   test_that("spline5") {
     for(int i = 0; i < time_output.size(); i++) {
       double temp_time = static_cast<realtype>(time_output[i]);
       double temp0 = wrapper_spline(temp_time, time, parameter);
-      //std::cout << temp0 << std::endl;
-        expect_true(1 == 1);
+      double temp1 = round(true_res[i]*10)/10;
+      temp0 = round(temp0*10)/10;
+      double diff = std::abs(temp0 - temp1);
+        expect_true(diff <= 1);
     }
   }
 }
-
-*/
