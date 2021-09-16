@@ -53,7 +53,7 @@ void params_sort (
       }
       //tk::spline s(tmp_time_vec, tmp_par_vec);
       //double t_tmp = static_cast<double>(t);
-      params[i] = wrapper_spline(, tmp_time_vec, tmp_par_vec); //CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);//s(t_tmp); // linear_interpolation(t, tmp_time_vec, tmp_par_vec);
+      params[i] = wrapper_spline(t, tmp_time_vec, tmp_par_vec); //CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);//s(t_tmp); // linear_interpolation(t, tmp_time_vec, tmp_par_vec);
     }
   }
 }
