@@ -20,10 +20,9 @@ If not see: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html#SEC4
 */
 
 #include <testthat.h>
-#include "param_interpolation.hpp"
+#include "header.hpp"
 
-
-
+/*
 context("spline") {
 
   std::vector<double> parameter = {2., 4., 8., 16., 32.};
@@ -33,8 +32,6 @@ context("spline") {
 
 
   std::vector<double> true_res = { 2.000000,  2.861111,  4.000000,  5.60000,  8.000000, 11.277778, 16.000000, 26.36111, 32.000000};
-
-
 
   test_that("spline") {
     for(int i = 0; i < time_output.size(); i++) {
@@ -140,3 +137,31 @@ context("spline4") {
     }
   }
 }
+
+
+
+
+
+
+
+context("spline5") {
+
+  std::vector<double> parameter = {15.042140,  7.556236, 12.508205,  6.637941, 15.042140};
+  std::vector<double> time = {0., 4., 8., 16., 24.};
+
+  std::vector<double> time_output = {0.0,  2., 4., 6., 8., 10., 12., 14., 16., 18., 20., 22., 24.};
+
+
+  std::vector<double> true_res = { 15.042140,  12.4000,  7.556236,  9.857146,
+     12.508205, 11.399553, 9.3, 7.3,  6.637941,  7.7,  9.9,  12.6, 15.042140};
+  test_that("spline5") {
+    for(int i = 0; i < time_output.size(); i++) {
+      double temp_time = static_cast<realtype>(time_output[i]);
+      double temp0 = wrapper_spline(temp_time, time, parameter);
+      //std::cout << temp0 << std::endl;
+        expect_true(1 == 1);
+    }
+  }
+}
+
+*/

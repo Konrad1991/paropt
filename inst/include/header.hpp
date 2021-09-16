@@ -21,6 +21,7 @@
 #include <arkode/arkode_arkstep.h> // for fully implicit systems
 #include "modify_dataframe.hpp"
 #include "param_interpolation.hpp"
+#include "spline_as_in_stats.hpp"
 
 #include <cmath>
 #include <complex>

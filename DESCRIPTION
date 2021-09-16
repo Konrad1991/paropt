@@ -16,7 +16,7 @@ Description: Enable optimization of parameters of ordinary differential equation
 License: GPL-3 | file LICENSE
 Imports: Rcpp (>= 1.0.4)
 LinkingTo: Rcpp, RcppArmadillo, RcppThread, testthat
-Suggests: knitr, rmarkdown
+Suggests: knitr, rmarkdown, xml2
 VignetteBuilder: knitr
 RoxygenNote: 7.1.1
 Encoding: UTF-8

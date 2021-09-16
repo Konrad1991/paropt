@@ -19,6 +19,8 @@ If NA, INf, etc. --> error
 *********************************************************************/
 
 #include "param_interpolation.hpp"
+#include "spline_as_in_stats.hpp"
+
 
 void params_sort (realtype &t, std::vector<double> &params, std::vector<double> &par_vec, std::vector<double> &time_vec, std::vector<int> &param_idx_cuts);
 double CatmullRomSpline(realtype &t, std::vector<double> &time_vec,
@@ -51,7 +53,7 @@ void params_sort (
       }
       //tk::spline s(tmp_time_vec, tmp_par_vec);
       //double t_tmp = static_cast<double>(t);
-      params[i] = CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);//s(t_tmp); // linear_interpolation(t, tmp_time_vec, tmp_par_vec);
+      params[i] = wrapper_spline(, tmp_time_vec, tmp_par_vec); //CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);//s(t_tmp); // linear_interpolation(t, tmp_time_vec, tmp_par_vec);
     }
   }
 }
