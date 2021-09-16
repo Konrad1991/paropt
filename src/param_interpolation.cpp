@@ -51,7 +51,7 @@ void params_sort (
       }
       //tk::spline s(tmp_time_vec, tmp_par_vec);
       //double t_tmp = static_cast<double>(t);
-      params[i] = CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);//s(t_tmp);
+      params[i] = CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);//s(t_tmp); // linear_interpolation(t, tmp_time_vec, tmp_par_vec);
     }
   }
 }
@@ -59,6 +59,38 @@ void params_sort (
 // ========================================================================
 // ========================================================================
 // ========================================================================
+
+double linear_interpolation(realtype &t, std::vector<double> &time_vec, std::vector<double> &par_vec) {
+  double t0, t1;
+  double y0, y1, delta_par, delta_t, m;
+  double ret;
+
+
+  // not in boundaries
+  if(t >= time_vec[time_vec.size()]) {
+    ret = par_vec[par_vec.size()];
+    return ret;
+  } else if(t <= time_vec[0]) {
+    ret = par_vec[0];
+    return ret;
+  }
+
+  // in boundaries
+  for(size_t i = 0; i < time_vec.size(); i++) {
+      if(t>=time_vec[i] && t<time_vec[i+1]) {
+        t0 = time_vec[i];
+        t1 = time_vec[i + 1];
+        y0 = par_vec[i];
+        y1 = par_vec[i + 1];
+        delta_par = y1 - y0;
+        delta_t = t1 - t0;
+        ret = m*(t - t0) + y0;
+      }
+  }
+
+  return(ret);
+}
+
 
 double CatmullRomSpline( // (labled with ! need check)
     realtype &t, std::vector<double> &time_vec, std::vector<double> &par_vec

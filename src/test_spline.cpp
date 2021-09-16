@@ -114,3 +114,29 @@ context("spline3") {
     }
   }
 }
+
+
+
+
+
+context("spline4") {
+
+  std::vector<double> parameter = {15.042140,  7.556236, 12.508205,  6.637941, 15.042140};
+  std::vector<double> time = {0., 4., 8., 16., 24.};
+
+  std::vector<double> time_output = {0.0,  2., 4., 6., 8., 10., 12., 14., 16., 18., 20., 22., 24.};
+
+
+  std::vector<double> true_res = { 15.042140,  12.4000,  7.556236,  9.857146,
+     12.508205, 11.399553, 9.3, 7.3,  6.637941,  7.7,  9.9,  12.6, 15.042140};
+  test_that("spline4") {
+    for(int i = 0; i < time_output.size(); i++) {
+      double temp_time = static_cast<realtype>(time_output[i]);
+      double temp0 = CatmullRomSpline(temp_time, time, parameter);
+      double temp1 = round(true_res[i]*10)/10;
+      temp0 = round(temp0*10)/10;
+      double diff = std::abs(temp0 - temp1);
+        expect_true(diff <= 1);
+    }
+  }
+}

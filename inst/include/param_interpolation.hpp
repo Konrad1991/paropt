@@ -22,5 +22,9 @@ double CatmullRomSpline(
   realtype &t, std::vector<double> &time_vec, std::vector<double> &par_vec
 );
 // ================================================================= //
+double linear_interpolation(
+  realtype &t, std::vector<double> &time_vec, std::vector<double> &par_vec
+);
+// ================================================================= //
 
 #endif // INTERPOLATION
