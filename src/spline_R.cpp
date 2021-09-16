@@ -399,6 +399,11 @@ SEXP SplineCoef(SEXP method, SEXP x, SEXP y)
     return ans;
 }
 
+
+/*
+param_interpolation call spline_eval ???
+When are functions called???
+*/
 static void
 spline_eval(int method, R_xlen_t nu, double *u, double *v, // v is the result
 	    R_xlen_t n, double *x, double *y, double *b, double *c, double *d)
