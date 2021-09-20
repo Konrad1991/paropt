@@ -86,3 +86,37 @@ void init_fct(SwarmStruct sw, int n_swarm,  Rcpp::NumericVector lb, Rcpp::Numeri
   sw.global_best_error = sw.best_errors(sw.best_particle);
 
 }
+
+struct neighbours {
+  Rcpp::IntegerVector neigh;
+};
+
+struct neighbour {
+  int num_particle;
+  std::vector<neighbours> N;
+  Rcpp::IntegerVector K;
+};
+
+
+void generate_random_int(Rcpp::IntegerVector& inp, int number_neighbours,
+                         Rcpp::IntegerVector& res, int position_in_res) {
+
+   res(position_in_res) = Rcpp::sample(inp, 1);
+}
+
+void calc_neighbours(neighbour NE, int num_particle) {
+  int K_lower = 0;
+  int K_upper = 3;
+  double temp1;
+  double temp2;
+  int i, j;
+  neighbours temp3;
+  neighbours temp4;
+  neighbours temp5;
+  neighbours temp6;
+  Rcpp::IntegerVector temp_neigh;
+
+  NE.num_particle = num_particle;
+  NE.N.resize(NE.num_particle);
+  NE.K.resize(NE.num_particle);
+}
