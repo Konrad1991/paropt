@@ -14,6 +14,7 @@ Add feature to pass data.frame instead of string
 #include "solver_Rcpp_interface.hpp"
 #include "paropt_types.h"
 #include "paropt_RcppExports.h"
+#include "optimizer_new.hpp"
 
 #define NA std::nan("l")
 
@@ -56,13 +57,13 @@ Add feature to pass data.frame instead of string
 //' This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
 //' The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
 //' Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
-//' Within the function the new states have to be saved in the states-vector. 
+//' Within the function the new states have to be saved in the states-vector.
 //' Please be aware that when using the approach with the Rcpp::XPtr the optimization is run in parallel. Thus, the function has to be thread-safe (among other things don't use any R Code)!
 //'
 //' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
 //'
-//' @details The two data.frames containg lower and upper-boundaries need the parameter in the same order. 
+//' @details The two data.frames containg lower and upper-boundaries need the parameter in the same order.
 //'
 //' @details The data.frame containing the state information should hold the time course in the first column.
 //' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.
@@ -250,7 +251,11 @@ Rcpp::List optimizer_pointer(std::vector<double> integration_times,
       Rcpp::stop("\nERROR: Unknown solvertyp");
     }
 
-    Optimizer_Rcpp_interface optimizing(param_combi_lb,param_combi_ub,param_pso,param_model, fctptr_to_solver ,ode_system);
+    //Rcpp::List tempo = optimizer_pointer_new(param_combi_lb, param_combi_ub,
+      //param_pso, param_model, fctptr_to_solver, ode_system);
+
+    Optimizer_Rcpp_interface optimizing(param_combi_lb,param_combi_ub,
+                      param_pso, param_model, fctptr_to_solver ,ode_system);
 
     double smsq;
     smsq = optimizing.pso();

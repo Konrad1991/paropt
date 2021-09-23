@@ -1,18 +1,4 @@
-//#include "header.hpp"
-
-#include <Rcpp.h>
-
-struct time_state_information_Rcpp_interface {
-  std::vector<double> init_state;
-  std::vector<double> par_times;
-  std::vector<int> param_idx_cuts;
-  std::vector<double> state_measured;
-  std::vector<double> state_times;
-  std::vector<int> state_idx_cut;
-  std::vector<double> integration_times;
-  double reltol;
-  std::vector<double> absolute_tolerances;
-};
+#include "optimizer_new.hpp"
 
 typedef int (*OS)(double &t, std::vector<double> &params, std::vector<double> &states);
 typedef double (*fctptr)(std::vector<double> &param_combi_start, OS ode_system, time_state_information_Rcpp_interface &solv_param_struc);
@@ -34,16 +20,6 @@ struct SwarmStruct {
   OS userode;
 };
 
-struct settingsPSO_Rcpp_interface {
-  double err_tol;
-  int pso_n_pop;
-  int pso_n_gen;
-  double pso_par_initial_w;
-  double pso_par_w_max;
-  double pso_par_w_min;
-  double pso_par_w_damp;
-};
-
 void calculate_errors_init(SwarmStruct& inp) {
   using namespace Rcpp;
   std::vector<double> temp(inp.n_params);
@@ -60,13 +36,16 @@ void calculate_errors_init(SwarmStruct& inp) {
 
 void random_num_vec(Rcpp::NumericVector& inp) {
   for(int i = 0; i < inp.size(); i++) {
+    GetRNGstate();
     inp[i] = R::runif(0, 1);
+    PutRNGstate();
   }
 
 }
 
 
-void init_fct(SwarmStruct sw, int n_swarm,  Rcpp::NumericVector lb, Rcpp::NumericVector ub, OS ode_system, fctptr solver) {
+void init_fct(SwarmStruct& sw, int n_swarm,  Rcpp::NumericVector& lb, Rcpp::NumericVector& ub, OS ode_system, fctptr solver,
+              time_state_information_Rcpp_interface& solv_param_struc) {
 
   Rcpp::RNGScope scope;
   sw.n_swarm = n_swarm;
@@ -79,6 +58,7 @@ void init_fct(SwarmStruct sw, int n_swarm,  Rcpp::NumericVector lb, Rcpp::Numeri
   sw.parameter_of_best_particle = Rcpp::NumericVector(lb.size());
   sw.userode = ode_system;
   sw.lossfct = solver;
+  sw.model = solv_param_struc;
 
   Rcpp::NumericVector temp(lb.size());
 
@@ -112,18 +92,22 @@ void generate_random_int(Rcpp::IntegerVector& inp, std::vector<int>& res) {
 
   Rcpp::Vector<INTSXP> temp(1);
   for(int i = 0; i < res.size(); i++) {
+    GetRNGstate();
     temp =  Rcpp::sample(inp, 1);
+    PutRNGstate();
     res[i] = temp[0];
   }
 }
 
 int generate_random_int(Rcpp::IntegerVector& inp) {
+  GetRNGstate();
   Rcpp::Vector<INTSXP> temp = Rcpp::sample(inp, 1);
+  PutRNGstate();
    return temp[0];
 }
 
 
-void calc_neighbours(neighbour NE, int num_particle) {
+void calc_neighbours(neighbour& NE, int num_particle) {
   Rcpp::IntegerVector K = {0, 1, 2, 3};
 
   Rcpp::IntegerVector range(num_particle);
@@ -131,55 +115,48 @@ void calc_neighbours(neighbour NE, int num_particle) {
     range[i] = i;
   }
 
-  if(NE.N.size() != num_particle) {
-      NE.num_particle = num_particle;
-      NE.N.resize(NE.num_particle);
-      NE.K.resize(NE.num_particle);
-  }
+  NE.num_particle = num_particle;
+  NE.N.resize(NE.num_particle);
+  NE.K.resize(NE.num_particle);
 
-  neighbours K0; K0.neigh = {0};
-  neighbours K1; K1.neigh = {0, 1};
-  neighbours K2; K2.neigh = {0, 1, 2};
-  neighbours K3; K3.neigh = {0, 1, 2, 3};
+  neighbours K0;
+  K0.neigh.resize(1);
+  neighbours K1;
+  K1.neigh.resize(2);
+  neighbours K2;
+  K2.neigh.resize(3);
+  neighbours K3;
+  K3.neigh.resize(4);
 
 
   for(int i = 0; i < num_particle; i++) {
     NE.K[i] = generate_random_int(K);
 
-    switch (NE.K[i]) {
-      case 0:
-        K0.neigh[0] = i;
-        NE.N[i].neigh = K0.neigh;
-        break;
-      case 1:
-        generate_random_int(range, K1.neigh);
-        NE.N[i].neigh = K1.neigh;
-        break;
-      case 2:
-        generate_random_int(range, K2.neigh);
-        NE.N[i].neigh = K2.neigh;
-        break;
-      case 3:
-        generate_random_int(range, K3.neigh);
-        NE.N[i].neigh = K3.neigh;
-        break;
+    if(NE.K[i] == 0) {
+      K0.neigh[0] = i;
+      NE.N[i].neigh.resize(1);
+      NE.N[i].neigh = K0.neigh;
+    } else if(NE.K[i] == 1) {
+      generate_random_int(range, K1.neigh);
+      NE.N[i].neigh.resize(2);
+      NE.N[i].neigh = K1.neigh;
+    } else if(NE.K[i] == 2) {
+      generate_random_int(range, K2.neigh);
+      NE.N[i].neigh.resize(3);
+      NE.N[i].neigh = K2.neigh;
+    } else if(NE.K[i] == 3) {
+      generate_random_int(range, K3.neigh);
+      NE.N[i].neigh.resize(4);
+      NE.N[i].neigh = K3.neigh;
     }
+
   }
 
 }
 
-void calculate_errors(SwarmStruct inp) {
-  std::vector<double> temp(inp.n_params);
-  for(int i = 0; i < inp.n_swarm; i++) {
-    for(int j = 0; j < inp.n_params; j++) {
-      temp[j] = inp.S(i, j);
-    }
-    inp.current_errors[i] = inp.lossfct(temp, inp.userode, inp.model);
-  }
-}
 
-void check_boundaries(SwarmStruct inp, int n_params,
-                      Rcpp::NumericVector lb, Rcpp::NumericVector ub, int index) {
+void check_boundaries(SwarmStruct& inp, int n_params,
+                      Rcpp::NumericVector& lb, Rcpp::NumericVector& ub, int index) {
 
     for(int i = 0; i < n_params; i++) {
       if(inp.S(index, i) > ub[i]) {
@@ -220,8 +197,8 @@ OS t_odes)
   neighbour hood;
   std::vector<double> current_erros_of_hood;
   SwarmStruct SW;
-  init_fct(SW, n_swarm, lb, ub, ode_system, solver);
 
+  init_fct(SW, n_swarm, lb, ub, ode_system, solver, model);
   int position_local_best;
   int position_global_best;
   double global_best;
@@ -240,6 +217,13 @@ OS t_odes)
   double par_w_min = 0.4;
 
   int i = 0;
+  RcppThread::ThreadPool pool;
+  std::vector<std::future<double> > futures(n_swarm);
+  std::vector<std::vector<double> > temp(n_swarm);
+  for(int i = 0; i < n_swarm; i++) {
+    temp[i].resize(n_params);
+  }
+
   while(i < n_generations) {
 
     calc_neighbours(hood, n_swarm);
@@ -249,16 +233,23 @@ OS t_odes)
     soc = initial_soc - (initial_soc - final_soc) * (i + 1) / n_generations;
 
     for(int j = 0; j < n_swarm; j++) {
+
       current_erros_of_hood.resize(hood.K[j]);
-      for(int k = 0; k < hood.K[j]; k++) {
+
+
+      for(int k = 0; k < current_erros_of_hood.size(); k++) {
         current_erros_of_hood[k] = SW.best_errors[hood.N[j].neigh[k]];
       }
        position_local_best = std::min_element(current_erros_of_hood.begin(),
                                     current_erros_of_hood.end()) - current_erros_of_hood.begin();
 
-      local_best_parameters = SW.S(position_local_best, Rcpp::_);
+      std::cout << hood.K[position_local_best] << std::endl;
+      local_best_parameters = SW.S(hood.K[position_local_best], Rcpp::_);
+
+      GetRNGstate();
       rand1 = Rcpp::runif(n_params)*cog;
       rand2 = Rcpp::runif(n_params)*soc;
+      PutRNGstate();
 
       SW.velocities(j, Rcpp::_) = par_w*SW.velocities(j, Rcpp::_) +
                     rand1*(SW.personal_best_parameters(j, Rcpp::_) - SW.S(j, Rcpp::_)) +
@@ -268,7 +259,13 @@ OS t_odes)
 
       check_boundaries(SW, n_params, lb, ub, j);
 
-      calculate_errors(SW);
+      for(int k = 0; k < n_params; k++) {
+        temp[j][k] = SW.S(j, k);
+      }
+
+      futures[j] = pool.pushReturn(SW.lossfct, std::ref(temp[j]), SW.userode, std::ref(SW.model) );
+
+      SW.current_errors[j] = futures[j].get();
 
       if(SW.current_errors[j] < SW.best_errors[j]) {
         SW.best_errors[j] = SW.current_errors[j];
@@ -291,6 +288,10 @@ OS t_odes)
     }
 
     i++;
+
+    Rcpp::Rcout << "generation is: " << i << "\t" << "global best error is:  " << SW.global_best_error << std::endl;
+
+    Rcpp::checkUserInterrupt();
   }
 
   return Rcpp::List::create(Rcpp::Named("global best error") = SW.global_best_error,
