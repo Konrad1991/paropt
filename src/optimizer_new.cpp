@@ -177,7 +177,6 @@ void calc_neighbours(neighbour& NE, int num_particle) {
       NE.N[i].neigh = K0.neigh;
     } else if(NE.K[i] == 1) {
       generate_random_int(range, K1.neigh);
-      K1.neigh = informants;
       NE.N[i].neigh.resize(2);
       NE.N[i].neigh = K1.neigh;
     } else if(NE.K[i] == 2) {
