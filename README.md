@@ -2,7 +2,7 @@
 [![Travis build status](https://travis-ci.com/Konrad1991/paropt.svg?branch=Rcpp-Interface)](https://travis-ci.com/Konrad1991/paropt)
 ![License](https://img.shields.io/cran/l/paropt)
 ![Version](https://img.shields.io/cran/v/paropt)
-"[![](http://cranlogs.r-pkg.org/badges/last-month/paropt?color=green)](https://cran.r-project.org/package=paropt)"
+[![](http://cranlogs.r-pkg.org/badges/last-month/paropt?color=green)](https://cran.r-project.org/package=paropt)
 <!-- badges: end -->
 
 
