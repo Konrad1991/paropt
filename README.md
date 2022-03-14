@@ -2,9 +2,10 @@
 [![Travis build status](https://travis-ci.com/Konrad1991/paropt.svg?branch=Rcpp-Interface)](https://travis-ci.com/Konrad1991/paropt)
 ![License](https://img.shields.io/cran/l/paropt)
 ![Version](https://img.shields.io/cran/v/paropt)
+<!-- badges: end -->
+
 `r badge_cran("paropt", "green")`
 `r badge_cran_download("paropt", "grand-total", "blue")`
-<!-- badges: end -->
 
 
 
