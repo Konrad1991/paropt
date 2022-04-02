@@ -22,7 +22,7 @@ The package *paropt* uses a modified particle swarm optimizer ('https://github.c
 # Installation
 
 *paropt* can be installed in R using install.packages("paropt") in order to use the version which is on CRAN. If you want to use the github-version (which can be used in parallel) use
-remotes::install_github("Konrad1991/paropt", ref = "Rcpp-Interface") within R (below you can see an example showing a parallized version of the parameter optimization of the predator-prey model).
+remotes::install_github("Konrad1991/paropt") within R (below you can see an example showing a parallized version of the parameter optimization of the predator-prey model).
 
 # Example
 
