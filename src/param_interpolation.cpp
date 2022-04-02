@@ -19,8 +19,6 @@ If NA, INf, etc. --> error
 *********************************************************************/
 
 #include "param_interpolation.hpp"
-#include "spline_as_in_stats.hpp"
-
 
 void params_sort (realtype &t, std::vector<double> &params, std::vector<double> &par_vec, std::vector<double> &time_vec, std::vector<int> &param_idx_cuts);
 double CatmullRomSpline(realtype &t, std::vector<double> &time_vec,
