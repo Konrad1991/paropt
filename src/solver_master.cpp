@@ -59,6 +59,7 @@ void own_error_handler_a2a(int error_code, const char *module, const char *funct
 }
 
 
+
 struct usr_data_a2a{
   OS2 ode_system; //Rcpp::XPtr<OS2> ode_system;
   std::vector<double> parameter;

@@ -9,6 +9,7 @@ improve error handling: try; catch
 #include "solver_master.hpp"
 #include "paropt_types.h"
 
+
 //' Solves ode-system and compare result to measured states
 //' @export
 //' @useDynLib paropt, .registration = TRUE
