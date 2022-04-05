@@ -10,6 +10,7 @@ improve error handling: try; catch
 #include "paropt_types.h"
 
 //' Solves ode-system and compare result to measured states
+//' `r lifecycle::badge("deprecated")`
 //' @export
 //' @useDynLib paropt, .registration = TRUE
 //' @importFrom Rcpp evalCpp
@@ -40,10 +41,10 @@ improve error handling: try; catch
 //' This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
 //' The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
 //' Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
-//' Within the function the new states have to be saved in the states-vector. 
-//' 
+//' Within the function the new states have to be saved in the states-vector.
+//'
 //' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
 //'
 //' @details The data.frame containing the state information should hold the time course in the first column.
 //' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.

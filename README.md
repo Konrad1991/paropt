@@ -13,11 +13,13 @@
 
 Parameter Optimizing of ODEs
 
-The package *paropt* is build in order to optimize parameters of ode-systems. Thus, the aim is that the output of the integration matches previously measured states. The user has to supply an ode-system in the form of a Rcpp-function. The information about states and parameters are passed via text-files. Additional information such as e.g. the relative tolerance are passed in R.
+The package *paropt* is build in order to optimize parameters of ode-systems. Thus, the aim is that the output of the integration matches previously measured states. The user has to supply an ode-system in the form of an R or Rcpp function. In case it is an R function the code is translated into C++ code (example can be seen below). 
+
+The information about states and parameters are passed as data.frames. Additional information such as e.g. the relative tolerance are passed in R.
 
 # Overview
 
-The package *paropt* uses a modified particle swarm optimizer ('https://github.com/kthohr/optim') in order to find a global best solution. Furthermore, in order to evaluate each particle during optimzation four different solvers can be used all derived from SUNDIALS ('https://computing.llnl.gov/projects/sundials'). For more details see vignette.
+The package *paropt* uses a modified particle swarm optimizer ('https://github.com/kthohr/optim') in order to find a global best solution. Furthermore, in order to evaluate each particle during optimzation four different solvers can be used all derived from SUNDIALS ('https://computing.llnl.gov/projects/sundials'). For more details see vignette. 
 
 # Installation
 
@@ -26,69 +28,69 @@ remotes::install_github("Konrad1991/paropt") within R (below you can see an exam
 
 # Example
 
-```Cpp
-// [[Rcpp::depends(RcppArmadillo)]]
-#include <RcppArmadillo.h>
-// [[Rcpp::depends(paropt)]]
-// [[Rcpp::plugins(cpp11)]]
-
-typedef int (*OS)(double &t, std::vector<double> &params, std::vector<double> &states);
-
-int ode_system(double &t, std::vector<double> &params, std::vector<double> & states) {
-
-  // do not use any R-Code or R-Objects if the optimzation should run in parallel.
-  // Users have to guarantee that the function can be called by several threads in parallel
-  // define parameters (vector params contain the parameter in the order as defined in the corresponding textfiles)
-  double a = params[0];
-  double b = params[1];
-  double c = params[2];
-  double d = params[3];
-
-  // states in the same order as in the state data.frame!
-  double n1 = states[0];
-  double n2 = states[1];
-
-  states[0] = n1*c*n2 - n1*d;
-  states[1] = n2*a - n2*b*n1;
-
-  return 0;
-}
-
-
-// [[Rcpp::export]]
-Rcpp::XPtr<OS> test_optimization() {
-  Rcpp::XPtr<OS> xpfun = Rcpp::XPtr<OS>(new OS(&ode_system));
-
-  return xpfun;
-}
-```
-
-
 ```R
+remotes::install_github("Konrad1991/paropt", force = TRUE)
+
+library(paropt)
+
+ode <- function(t, parameter, y, ydot) {
+  
+  a_db = at(parameter, 1)
+  b_db = at(parameter, 2)
+  c_db = at(parameter, 3)
+  d_db = at(parameter, 4)
+  
+  predator_db = at(y,1)
+  prey_db = at(y, 2)
+  
+  ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
+  ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+}
+
+# compile
+r <- paropt::convert(ode, verbose = TRUE)
+
+path <- system.file("examples", package = "paropt")
+states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
+
+# parameter
 lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
 ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
 
-path <- system.file("examples", package = "paropt")
-states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
-
-library(paropt)
+# Optimizing
 set.seed(1)
-df <- optimizer_pointer(integration_times = states$time, ode_sys = test_optimization(),
-                  relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
-                  lower = lb, upper = ub, states = states,
-                  npop = 40, ngen = 30000, error = 0.0001, solvertype = "ADAMS")
+
+start_time <- Sys.time()
+df <- paropt::master(integration_times = states$time, ode_sys = r(),
+                     relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+                     lower = lb, upper = ub, states = states, 
+                     npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
+end_time <- Sys.time()
+end_time - start_time
+
+
+start <- data.frame(df[[8]])
+names(start) <- names(lb)
+df2 <- paropt::master_solving(integration_times = states$time, fctptr = r(),
+                              relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+                              start = start, states = states, solvertype = "bdf")
 
 par(mfrow = c(2,1))
-plot(states$time, df$States[,1], pch = 19)
-points(states$time, states$n1, pch = 19, col = "darkred")
-plot(states$time, df$States[,2], pch = 19)
-points(states$time, states$n2, pch = 19, col = "darkred")
+plot(states$time, df$States[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
+points(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
+points(states$time, df2$`in silico states`[,1], pch = 12, col = "darkgreen", type = 'p')
+legend(80, 30, legend=c("in silico", "measured"),
+       col=c("black", "darkred"), lty=1, cex=0.8)
+plot(states$time, df$States[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time", ylim = c(0, 65))
+points(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
+points(states$time, df2$`in silico states`[,2], pch = 12, col = "darkgreen", type = 'p')
+legend(80, 60, legend=c("in silico", "measured"),
+       col=c("black", "darkred"), lty=1, cex=0.8)
 ```
 # Further plans
 
 - Add different error calculations
-- Give users the possibility to use their own spline (at least for the Rcpp-Interface)
-- Update Documentation
+- Give users the possibility to use different interpolation functions. 
 
 # Acknowledgment
 

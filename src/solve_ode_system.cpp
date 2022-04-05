@@ -7,6 +7,7 @@ remove start values
 #include "solver.hpp"
 
 //' Solves ode-system and compare result to measured states
+//' `r lifecycle::badge("deprecated")`
 //' @export
 //' @useDynLib paropt, .registration = TRUE
 //' @importFrom Rcpp evalCpp
@@ -40,7 +41,7 @@ remove start values
 //' The resulting vector has to contain the right hand side of the ode-system.
 //'
 //' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
 //'
 //' @details The data.frame containing the state information should hold the time course in the first column.
 //' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.

@@ -17,6 +17,7 @@ Add feature to pass data.frame instead of string
 #define NA std::nan("l")
 
 //' Optimize parameters of ode-systems
+//' `r lifecycle::badge("deprecated")`
 //' @export
 //' @useDynLib paropt, .registration = TRUE
 //' @importFrom Rcpp evalCpp

@@ -17,6 +17,7 @@ typedef std::vector<std::string> VS;
 typedef Rcpp::DataFrame DF;
 
 //' Optimize parameters of ode-systems
+//' `r lifecycle::badge("deprecated")`
 //' @export
 //' @useDynLib paropt, .registration = TRUE
 //' @importFrom Rcpp evalCpp
@@ -58,9 +59,9 @@ typedef Rcpp::DataFrame DF;
 //' The resulting vector has to contain the right hand side of the ode-system.
 //'
 //' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
-//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead. 
+//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
 //'
-//' @details The two data.frames containg lower and upper-boundaries need the parameter in the same order. 
+//' @details The two data.frames containg lower and upper-boundaries need the parameter in the same order.
 //'
 //' @details The data.frame containing the state information should hold the time course in the first column.
 //' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.

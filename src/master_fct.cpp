@@ -16,6 +16,137 @@ Add feature to pass data.frame instead of string
 
 #define NA std::nan("l")
 
+//' Optimize parameters of ode-systems
+//' @export
+//' @useDynLib paropt, .registration = TRUE
+//' @importFrom Rcpp evalCpp
+//' @description Optimize parameters used in an ode equation in order to match values defined in the state-data.frame
+//'
+//' @param integration_times a vector containing the time course to solve the ode-system (see Details for more Information)
+//'
+//' @param ode_sys the ode-system which will be integrated by the solver (see Details for more Information). Currently the ode system has to be converted using the function 'convert'.
+//'
+//' @param relative_tolerance a number defining the relative tolerance used by the ode-solver.
+//'
+//' @param absolute_tolerances a vector containing the absolute tolerance(s) for each state used by the ode-solver.
+//'
+//' @param lower a data.frame containing the lower bounds for the parameters (see Details for more Information).
+//'
+//' @param upper a data.frame containing the upper bounds for the parameters (see Details for more Information).
+//'
+//' @param states a data.frame containing the predetermined course of the states (see Details for more Information).
+//'
+//' @param npop a number defining the number of particles used by the Particle Swarm Optimizer.
+//'
+//' @param ngen a number defining the number of generations the Particle Swarm Optimizer (PSO) should run.
+//'
+//' @param error a number defining a sufficient small error. When the PSO reach this value optimization is stopped.
+//'
+//' @param solvertype a string defining the type of solver which should be used (bdf, ADAMS, ERK or ARK. see Details for more Information).
+//'
+//' @details The vector containing the time course to solve the ode-system should contain
+//' the same entries as the time vector in the state-data.frame (it can be also be a different variable instead of time).
+//'
+//' @details The ode system should be of type Rcpp::XPtr<OS>. The OS is predefined in the package.
+//' The function should possess the following signature: int ode(double &time, std::vector<double> &parameter, std::vector<double> &states).
+//' The first entry defines the time point when the function is called.
+//' The second argument defines the parameter which should be optimized. There exist two different types of parameters.
+//' Parameters can be either constant or variabel. In order to calculate a variable parameter at a specific timepoint the Catmull-Rom-Spline is used.
+//' This vector contains the already interpolated parameters at the specific time-point, in the same order as defined in the data.frames containing the lower- and upper-boundaries.
+//' The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information.
+//' Thus, it is obligatory that the state-derivates in the ode-system are in the same order defined as in the data.frame.
+//' Within the function the new states have to be saved in the states-vector.
+//' Please be aware that when using the approach with the Rcpp::XPtr the optimization is run in parallel. Thus, the function has to be thread-safe (among other things don't use any R Code)!
+//'
+//' @details For constant parameters use only the first row (below the headers) if other parameters are variable use “NA“ in the following rows for the constant parameters.
+//' @details For variable parameters at least four points are needed. If a variable parameter is not available at every time point use “NA“ instead.
+//'
+//' @details The two data.frames containg lower and upper-boundaries need the parameter in the same order.
+//'
+//' @details The data.frame containing the state information should hold the time course in the first column.
+//' The header-name time is compulsory. The following columns contain the states. Take care that the states are in the same order defined in the ode system.
+//' If a state is not available use “NA“. This is possible for every time points except the first one.
+//' The ode solver need a start value for each state which is extracted from the first row of this file (below the headers).
+//'
+//' @details The error between the solver output and the measured states is the sum of the absolute differences divided by the number of time points.
+//' It is crucial that the states are in the same order in the text file cointaining the state-information and in the ode-system to compare the states correctly!
+//'
+//' @details For solving the ode system the SUNDIALS Software is used (https://computing.llnl.gov/projects/sundials).
+//' The last argument defines the solver-type which is used during optimization:
+//' “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta.
+//' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
+//' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
+//'
+//' @Examples library(paropt)
+//' @Examples # slow
+//' @Examples ode <- function(t, parameter, y, ydot) {
+//' @Examples
+//' @Examples   a = parameter[1]
+//' @Examples   b = parameter[2]
+//' @Examples   c = parameter[3]
+//' @Examples   d = parameter[4]
+//' @Examples
+//' @Examples   predator = y[1]
+//' @Examples   prey = y[2]
+//' @Examples
+//' @Examples   ydot[1] = predator*prey*c - predator*d
+//' @Examples   ydot[2] = prey*a - prey*predator*b
+//' @Examples }
+//' @Examples
+//' @Examples # fast (but use it carefully)
+//' @Examples ode <- function(t, parameter, y, ydot) {
+//' @Examples
+//' @Examples   a_db = at(parameter, 1)
+//' @Examples   b_db = at(parameter, 2)
+//' @Examples   c_db = at(parameter, 3)
+//' @Examples   d_db = at(parameter, 4)
+//' @Examples
+//' @Examples   predator_db = at(y,1)
+//' @Examples   prey_db = at(y, 2)
+//' @Examples
+//' @Examples   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
+//' @Examples   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+//' @Examples }
+//' @Examples
+//' @Examples # compile
+//' @Examples r <- paropt::convert(ode, verbose = TRUE)
+//' @Examples
+//' @Examples path <- system.file("examples", package = "paropt")
+//' @Examples states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
+//' @Examples
+//' @Examples # parameter
+//' @Examples lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
+//' @Examples ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
+//' @Examples
+//' @Examples # Optimizing
+//' @Examples set.seed(1)
+//' @Examples
+//' @Examples start_time <- Sys.time()
+//' @Examples df <- paropt::master(integration_times = states$time, ode_sys = r(),
+//' @Examples                      relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+//' @Examples                      lower = lb, upper = ub, states = states,
+//' @Examples                      npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
+//' @Examples end_time <- Sys.time()
+//' @Examples end_time - start_time
+//' @Examples
+//' @Examples
+//' @Examples start <- data.frame(df[[8]])
+//' @Examples names(start) <- names(lb)
+//' @Examples df2 <- paropt::master_solving(integration_times = states$time, fctptr = r(),
+//' @Examples                               relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+//' @Examples                               start = start, states = states, solvertype = "bdf")
+//' @Examples
+//' @Examples par(mfrow = c(2,1))
+//' @Examples plot(states$time, df$States[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
+//' @Examples points(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
+//' @Examples points(states$time, df2$`in silico states`[,1], pch = 12, col = "darkgreen", type = 'p')
+//' @Examples legend(80, 30, legend=c("in silico", "measured"),
+//' @Examples        col=c("black", "darkred"), lty=1, cex=0.8)
+//' @Examples plot(states$time, df$States[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time", ylim = c(0, 65))
+//' @Examples points(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
+//' @Examples points(states$time, df2$`in silico states`[,2], pch = 12, col = "darkgreen", type = 'p')
+//' @Examples legend(80, 60, legend=c("in silico", "measured"),
+//' @Examples        col=c("black", "darkred"), lty=1, cex=0.8)
 // [[Rcpp::export]]
 Rcpp::List master(std::vector<double> integration_times,
                                 Rcpp::XPtr<OS2> ode_sys, double relative_tolerance,

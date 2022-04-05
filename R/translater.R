@@ -39,7 +39,7 @@ MA2 <- R6::R6Class("MA2",
 
 
 
-#' Main function of paropt
+#' Translation of R function into C++ code. See R package 'ast2ast' for details
 #' @export
 #' @param f The function which should be translated from R to C++.
 #' @param verbose If set to TRUE the output of RcppXPtrUtils::cppXPtr is printed.
