@@ -61,7 +61,7 @@ ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
 set.seed(1)
 
 start_time <- Sys.time()
-df <- paropt::master(integration_times = states$time, ode_sys = r(),
+df <- paropt::po(integration_times = states$time, ode_sys = r(),
                      relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
                      lower = lb, upper = ub, states = states, 
                      npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
@@ -71,7 +71,7 @@ end_time - start_time
 
 start <- data.frame(df[[8]])
 names(start) <- names(lb)
-df2 <- paropt::master_solving(integration_times = states$time, fctptr = r(),
+df2 <- paropt::so(integration_times = states$time, fctptr = r(),
                               relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
                               start = start, states = states, solvertype = "bdf")
 

@@ -183,79 +183,66 @@ optimizer <- function(integration_times, ode_system, relative_tolerance, absolut
 #' “bdf“,  “ADAMS“, “ERK“ or “ARK“. bdf = Backward Differentiation Formulas, ADAMS = Adams-Moulton, ERK = explicite Runge-Kutta and ARK = implicite Runge-Kutta.
 #' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
 #' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
+#' @examples
+#' library(paropt)
+#' # slow
+#' ode <- function(t, parameter, y, ydot) {
 #'
-#' @Examples library(paropt)
-#' @Examples # slow
-#' @Examples ode <- function(t, parameter, y, ydot) {
-#' @Examples
-#' @Examples   a = parameter[1]
-#' @Examples   b = parameter[2]
-#' @Examples   c = parameter[3]
-#' @Examples   d = parameter[4]
-#' @Examples
-#' @Examples   predator = y[1]
-#' @Examples   prey = y[2]
-#' @Examples
-#' @Examples   ydot[1] = predator*prey*c - predator*d
-#' @Examples   ydot[2] = prey*a - prey*predator*b
-#' @Examples }
-#' @Examples
-#' @Examples # fast (but use it carefully)
-#' @Examples ode <- function(t, parameter, y, ydot) {
-#' @Examples
-#' @Examples   a_db = at(parameter, 1)
-#' @Examples   b_db = at(parameter, 2)
-#' @Examples   c_db = at(parameter, 3)
-#' @Examples   d_db = at(parameter, 4)
-#' @Examples
-#' @Examples   predator_db = at(y,1)
-#' @Examples   prey_db = at(y, 2)
-#' @Examples
-#' @Examples   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
-#' @Examples   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
-#' @Examples }
-#' @Examples
-#' @Examples # compile
-#' @Examples r <- paropt::convert(ode, verbose = TRUE)
-#' @Examples
-#' @Examples path <- system.file("examples", package = "paropt")
-#' @Examples states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
-#' @Examples
-#' @Examples # parameter
-#' @Examples lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
-#' @Examples ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
-#' @Examples
-#' @Examples # Optimizing
-#' @Examples set.seed(1)
-#' @Examples
-#' @Examples start_time <- Sys.time()
-#' @Examples df <- paropt::master(integration_times = states$time, ode_sys = r(),
-#' @Examples                      relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
-#' @Examples                      lower = lb, upper = ub, states = states,
-#' @Examples                      npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
-#' @Examples end_time <- Sys.time()
-#' @Examples end_time - start_time
-#' @Examples
-#' @Examples
-#' @Examples start <- data.frame(df[[8]])
-#' @Examples names(start) <- names(lb)
-#' @Examples df2 <- paropt::master_solving(integration_times = states$time, fctptr = r(),
-#' @Examples                               relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
-#' @Examples                               start = start, states = states, solvertype = "bdf")
-#' @Examples
-#' @Examples par(mfrow = c(2,1))
-#' @Examples plot(states$time, df$States[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
-#' @Examples points(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
-#' @Examples points(states$time, df2$`in silico states`[,1], pch = 12, col = "darkgreen", type = 'p')
-#' @Examples legend(80, 30, legend=c("in silico", "measured"),
-#' @Examples        col=c("black", "darkred"), lty=1, cex=0.8)
-#' @Examples plot(states$time, df$States[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time", ylim = c(0, 65))
-#' @Examples points(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
-#' @Examples points(states$time, df2$`in silico states`[,2], pch = 12, col = "darkgreen", type = 'p')
-#' @Examples legend(80, 60, legend=c("in silico", "measured"),
-#' @Examples        col=c("black", "darkred"), lty=1, cex=0.8)
-master <- function(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype) {
-    .Call(`_paropt_master`, integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype)
+#'   a = parameter[1]
+#'   b = parameter[2]
+#'   c = parameter[3]
+#'   d = parameter[4]
+#'
+#'   predator = y[1]
+#'   prey = y[2]
+#'
+#'   ydot[1] = predator*prey*c - predator*d
+#'   ydot[2] = prey*a - prey*predator*b
+#' }
+#'
+#' # fast (but use it carefully)
+#' ode <- function(t, parameter, y, ydot) {
+#'
+#'   a_db = at(parameter, 1)
+#'   b_db = at(parameter, 2)
+#'   c_db = at(parameter, 3)
+#'   d_db = at(parameter, 4)
+#'
+#'   predator_db = at(y,1)
+#'   prey_db = at(y, 2)
+#'
+#'   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
+#'   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+#' }
+#'
+#' # compile
+#' r <- paropt::convert(ode, verbose = TRUE)
+#'
+#' path <- system.file("examples", package = "paropt")
+#' states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
+#'
+#' # parameter
+#' lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
+#' ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
+#'
+#' # Optimizing
+#' set.seed(1)
+#' df <- paropt::po(integration_times = states$time, ode_sys = r(),
+#'                      relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+#'                      lower = lb, upper = ub, states = states,
+#'                      npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
+#'
+#' par(mfrow = c(2,1))
+#' plot(states$time, df$States[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
+#' points(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
+#' legend(80, 30, legend=c("in silico", "measured"),
+#'        col=c("black", "darkred"), lty=1, cex=0.8)
+#' plot(states$time, df$States[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time", ylim = c(0, 65))
+#' points(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
+#' legend(80, 60, legend=c("in silico", "measured"),
+#'        col=c("black", "darkred"), lty=1, cex=0.8)
+po <- function(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype) {
+    .Call(`_paropt_po`, integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype)
 }
 
 #' Solves ode-system and compare result to measured states
@@ -308,9 +295,61 @@ master <- function(integration_times, ode_sys, relative_tolerance, absolute_tole
 #' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
 #' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
 #'
-#' Examples can be found in the vignette.
-master_solving <- function(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype) {
-    .Call(`_paropt_master_solving`, integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype)
+#' @examples
+#' library(paropt)
+#' # slow
+#' ode <- function(t, parameter, y, ydot) {
+#'
+#'   a = parameter[1]
+#'   b = parameter[2]
+#'   c = parameter[3]
+#'   d = parameter[4]
+#'
+#'   predator = y[1]
+#'   prey = y[2]
+#'
+#'   ydot[1] = predator*prey*c - predator*d
+#'   ydot[2] = prey*a - prey*predator*b
+#' }
+#'
+#' # fast (but use it carefully)
+#' ode <- function(t, parameter, y, ydot) {
+#'
+#'   a_db = at(parameter, 1)
+#'   b_db = at(parameter, 2)
+#'   c_db = at(parameter, 3)
+#'   d_db = at(parameter, 4)
+#'
+#'   predator_db = at(y,1)
+#'   prey_db = at(y, 2)
+#'
+#'   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
+#'   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+#' }
+#'
+#' # compile
+#' r <- paropt::convert(ode, verbose = TRUE)
+#'
+#' path <- system.file("examples", package = "paropt")
+#' states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
+#'
+#' # Solve ode-system
+#' start <- data.frame(time = 0, a = 1.1, b = 0.4, c = 0.1, d = 0.4)
+#' df <- paropt::so(integration_times = states$time, fctptr = r(),
+#'                               relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+#'                               start = start, states = states, solvertype = "bdf")
+#'
+#' par(mfrow = c(2,1))
+#' plot(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
+#' points(states$time, df$`in silico states`[,1], pch = 12, col = "black", type = 'l')
+#' legend(80, 30, legend=c("in silico", "measured"),
+#'        col=c("black", "darkred"), lty=1, cex=0.8)
+#' plot(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
+#' points(states$time, df$`in silico states`[,2], pch = 12, col = "black", type = 'l')
+#' legend(80, 60, legend=c("in silico", "measured"),
+#'        col=c("black", "darkred"), lty=1, cex=0.8)
+so <- function(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype) {
+    .Call(`_paropt_so`, integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype)
 }
 
 ode_example <- function(t, params, y) {

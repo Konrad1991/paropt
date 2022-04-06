@@ -51,9 +51,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// master
-Rcpp::List master(std::vector<double> integration_times, Rcpp::XPtr<OS2> ode_sys, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame lower, Rcpp::DataFrame upper, Rcpp::DataFrame states, int npop, int ngen, double error, std::string solvertype);
-RcppExport SEXP _paropt_master(SEXP integration_timesSEXP, SEXP ode_sysSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP statesSEXP, SEXP npopSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP) {
+// po
+Rcpp::List po(std::vector<double> integration_times, Rcpp::XPtr<OS2> ode_sys, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame lower, Rcpp::DataFrame upper, Rcpp::DataFrame states, int npop, int ngen, double error, std::string solvertype);
+RcppExport SEXP _paropt_po(SEXP integration_timesSEXP, SEXP ode_sysSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP statesSEXP, SEXP npopSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -68,13 +68,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ngen(ngenSEXP);
     Rcpp::traits::input_parameter< double >::type error(errorSEXP);
     Rcpp::traits::input_parameter< std::string >::type solvertype(solvertypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(master(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype));
+    rcpp_result_gen = Rcpp::wrap(po(integration_times, ode_sys, relative_tolerance, absolute_tolerances, lower, upper, states, npop, ngen, error, solvertype));
     return rcpp_result_gen;
 END_RCPP
 }
-// master_solving
-Rcpp::List master_solving(std::vector<double> integration_times, Rcpp::XPtr<OS2> fctptr, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame start, Rcpp::DataFrame states, std::string solvertype);
-RcppExport SEXP _paropt_master_solving(SEXP integration_timesSEXP, SEXP fctptrSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP startSEXP, SEXP statesSEXP, SEXP solvertypeSEXP) {
+// so
+Rcpp::List so(std::vector<double> integration_times, Rcpp::XPtr<OS2> fctptr, double relative_tolerance, std::vector<double> absolute_tolerances, Rcpp::DataFrame start, Rcpp::DataFrame states, std::string solvertype);
+RcppExport SEXP _paropt_so(SEXP integration_timesSEXP, SEXP fctptrSEXP, SEXP relative_toleranceSEXP, SEXP absolute_tolerancesSEXP, SEXP startSEXP, SEXP statesSEXP, SEXP solvertypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -85,7 +85,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::DataFrame >::type start(startSEXP);
     Rcpp::traits::input_parameter< Rcpp::DataFrame >::type states(statesSEXP);
     Rcpp::traits::input_parameter< std::string >::type solvertype(solvertypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(master_solving(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype));
+    rcpp_result_gen = Rcpp::wrap(so(integration_times, fctptr, relative_tolerance, absolute_tolerances, start, states, solvertype));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -146,8 +146,8 @@ RcppExport SEXP run_testthat_tests(SEXP);
 static const R_CallMethodDef CallEntries[] = {
     {"_paropt_solve_ode_system_pointer", (DL_FUNC) &_paropt_solve_ode_system_pointer, 7},
     {"_paropt_optimizer", (DL_FUNC) &_paropt_optimizer, 11},
-    {"_paropt_master", (DL_FUNC) &_paropt_master, 11},
-    {"_paropt_master_solving", (DL_FUNC) &_paropt_master_solving, 7},
+    {"_paropt_po", (DL_FUNC) &_paropt_po, 11},
+    {"_paropt_so", (DL_FUNC) &_paropt_so, 7},
     {"_paropt_ode_example", (DL_FUNC) &_paropt_ode_example, 3},
     {"_paropt_optimizer_pointer", (DL_FUNC) &_paropt_optimizer_pointer, 11},
     {"_paropt_solve_ode_system", (DL_FUNC) &_paropt_solve_ode_system, 7},

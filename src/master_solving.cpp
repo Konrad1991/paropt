@@ -60,9 +60,61 @@ improve error handling: try; catch
 //' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
 //' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
 //'
-//' Examples can be found in the vignette.
+//' @examples
+//' library(paropt)
+//' # slow
+//' ode <- function(t, parameter, y, ydot) {
+//'
+//'   a = parameter[1]
+//'   b = parameter[2]
+//'   c = parameter[3]
+//'   d = parameter[4]
+//'
+//'   predator = y[1]
+//'   prey = y[2]
+//'
+//'   ydot[1] = predator*prey*c - predator*d
+//'   ydot[2] = prey*a - prey*predator*b
+//' }
+//'
+//' # fast (but use it carefully)
+//' ode <- function(t, parameter, y, ydot) {
+//'
+//'   a_db = at(parameter, 1)
+//'   b_db = at(parameter, 2)
+//'   c_db = at(parameter, 3)
+//'   d_db = at(parameter, 4)
+//'
+//'   predator_db = at(y,1)
+//'   prey_db = at(y, 2)
+//'
+//'   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
+//'   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+//' }
+//'
+//' # compile
+//' r <- paropt::convert(ode, verbose = TRUE)
+//'
+//' path <- system.file("examples", package = "paropt")
+//' states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
+//'
+//' # Solve ode-system
+//' start <- data.frame(time = 0, a = 1.1, b = 0.4, c = 0.1, d = 0.4)
+//' df <- paropt::so(integration_times = states$time, fctptr = r(),
+//'                               relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
+//'                               start = start, states = states, solvertype = "bdf")
+//'
+//' par(mfrow = c(2,1))
+//' plot(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
+//' points(states$time, df$`in silico states`[,1], pch = 12, col = "black", type = 'l')
+//' legend(80, 30, legend=c("in silico", "measured"),
+//'        col=c("black", "darkred"), lty=1, cex=0.8)
+//' plot(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
+//' points(states$time, df$`in silico states`[,2], pch = 12, col = "black", type = 'l')
+//' legend(80, 60, legend=c("in silico", "measured"),
+//'        col=c("black", "darkred"), lty=1, cex=0.8)
 // [[Rcpp::export]]
-Rcpp::List master_solving(
+Rcpp::List so(
   std::vector<double> integration_times,
   Rcpp::XPtr<OS2> fctptr, double relative_tolerance,
   std::vector<double> absolute_tolerances,
