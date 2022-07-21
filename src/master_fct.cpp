@@ -77,6 +77,7 @@ Add feature to pass data.frame instead of string
 //' All solvers are used in the NORMAL-Step method in a for-loop using the time-points defined in the text-file containing the states as output-points.
 //' The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
 //' @examples
+//' \dontrun{
 //' library(paropt)
 //' # slow
 //' ode <- function(t, parameter, y, ydot) {
@@ -126,14 +127,17 @@ Add feature to pass data.frame instead of string
 //'                      npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
 //'
 //' par(mfrow = c(2,1))
-//' plot(states$time, df$States[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
+//' plot(states$time, df$States[,1], pch = 19,
+//' type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
 //' points(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
 //' legend(80, 30, legend=c("in silico", "measured"),
 //'        col=c("black", "darkred"), lty=1, cex=0.8)
-//' plot(states$time, df$States[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time", ylim = c(0, 65))
+//' plot(states$time, df$States[,2], pch = 19, type = 'l',
+//' ylab = "prey", xlab = "time", ylim = c(0, 65))
 //' points(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
 //' legend(80, 60, legend=c("in silico", "measured"),
 //'        col=c("black", "darkred"), lty=1, cex=0.8)
+//' }
 // [[Rcpp::export]]
 Rcpp::List po(std::vector<double> integration_times,
                                 Rcpp::XPtr<OS2> ode_sys, double relative_tolerance,

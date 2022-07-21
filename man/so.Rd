@@ -65,6 +65,7 @@ All solvers are used in the NORMAL-Step method in a for-loop using the time-poin
 The bdf- and ARK-Solver use the SUNLinSol_Dense as linear solver. Notably here is that for the ARK-Solver the ode system is fully implicit solved (not only part of it).
 }
 \examples{
+\dontrun{
 library(paropt)
 # slow
 ode <- function(t, parameter, y, ydot) {
@@ -117,4 +118,5 @@ plot(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
 points(states$time, df$`in silico states`[,2], pch = 12, col = "black", type = 'l')
 legend(80, 60, legend=c("in silico", "measured"),
        col=c("black", "darkred"), lty=1, cex=0.8)
+}
 }
