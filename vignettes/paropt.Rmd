@@ -1,7 +1,7 @@
 ---
 title: "paropt"
 author: "Konrad Krämer"
-output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
 bibliography: REFERENCES.bib
 vignette: >
   %\VignetteIndexEntry{paropt}
@@ -32,250 +32,81 @@ p:first-of-type {
 
 ## How to use paropt
 
-The package paropt is built in order to optimize parameters of ode-systems. The aim is to match the output of the **in silico** solution to previously measured states. The user has to supply an ode-system in the form of a Rcpp-function or as an external pointer to a C++ function. The information about states and parameters are passed on as data.frames. In this vignette a predator-prey system is used as example to demonstrate how the functions of 'paropt' can be used.
+The package paropt is built in order to optimize parameters of ode-systems. The aim is to match the output of the **in silico** solution to previously measured states. The user has to supply an ode-system in the form of an R-function. The information about states and parameters are passed on as data.frames. In this vignette a predator-prey system is used as example to demonstrate how the functions of 'paropt' can be used.
 
-## Using a Rcpp-function
-
-If using a Rcpp-function the following signature has to be fulfilled: 'Rcpp::NumericVector ode(double t, std::vector<double> params, Rcpp::NumericVector y)'.
-The first entry defines the time point on which the function is called.
-The second argument defines the parameter which will be optimized. Notably, the parameters are in the same order as in the data.frames containing the information about the boundaries. 
-The last argument is a vector containing the states in the same order as defined in the data.frame containing the state-information. Thus, it is obligatory that the state-derivates in the ode-system are defined in the same order as in the data.frame. 
-Furthermore, it is mandatory that the function return a Rcpp::NumericVector with the same dimension as the input vector containing the states. The vector should contain the right hand side of the ode-system. \
-
-```{Rcpp, odesystem, echo = T, eval = F}
-#include <Rcpp.h>
-
-// [[Rcpp::export]]
-Rcpp::NumericVector ode_system(double t, std::vector<double> params,
-                               Rcpp::NumericVector states) {
-  
-  // set dimension of vector which should be returned
-  Rcpp::NumericVector states_deriv(2); //two states in the example above (prey and predator)
-  
-  // store parameters in variables
-  double a = params[0];
-  double b = params[1];
-  double c = params[2];
-  double d = params[3];
-  
-  // store states in variables
-  double predator = states[0]; 
-  double prey = states[1]; 
-  
-  // the actual ode-system            
-  double ddtpredator = states_deriv[0] = predator*c*prey - predator*d;
-  double ddtprey = states_deriv[1] = prey*a - prey*b*predator;
-  
-  return states_deriv;
+```{r, eval = FALSE, echo = TRUE}
+# Optimize (all parameters are constant)
+ode <- function(t, y, ydot, parameter) {
+  a_db = at(parameter, 1)
+  b_db = at(parameter, 2)
+  c_db = at(parameter, 3)
+  d_db = at(parameter, 4)
+  predator_db = at(y,1)
+  prey_db = at(y, 2)
+  ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
+  ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
 }
-
-/*** R
 path <- system.file("examples", package = "paropt")
-
-# states
-df <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
-
-# parameter
+states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
 lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
 ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
-
-# Optimizing
-library(paropt)
 set.seed(1)
-output <- optimizer(integration_times = df$time, ode_system = ode_system,
-                          relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
-                          lb = lb, ub = ub, states = df,
-                          npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
-output
+res <- paropt::optimize(ode,
+                        lb = lb, ub = ub,
+                        reltol = 1e-06, abstol = c(1e-08, 1e-08),
+                        error = 0.0001,
+                        npop = 40, ngen = 1000,
+                        states = states)
 
-# Plots
-par(mfrow = c(2,1))
-plot(df$time, output$States[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
-points(df$time, states$n1, pch = 19, col = "darkred", type = 'p')
-legend(80, 30, legend=c("in silico", "measured"),
-       col=c("black", "darkred"), lty=1, cex=0.8)
-plot(df$time, output$States[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time", ylim = c(0, 65))
-points(df$time, states$n2, pch = 19, col = "darkred", type = 'p')
-legend(80, 60, legend=c("in silico", "measured"),
-       col=c("black", "darkred"), lty=1, cex=0.8)
+insilico <- res[[3]]
+par(mfrow = c(2, 1))
+plot(states$time, states$n1, type = "l")
+points(insilico$time, insilico$n1, type = "l", col = "darkred")
 
-# Solving
-optimized_parameter <- as.data.frame(output$Parameter)
-names(optimized_parameter) <- c("time", "a", "b", "c", "d")
-output_solver <- solve_ode_system(integration_times = df$time, ode_system = ode_system, 
-                                  relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
-                                  start = optimized_parameter, states = df, solvertype = "bdf")
-output_solver
-*/
+plot(states$time, states$n2, type = "l")
+points(insilico$time, insilico$n2, type = "l", col = "darkred")
 ```
 
-\newpage 
 
-## Using an external pointer to a C++ function
-
-If using an external pointer to a C++ function, the following signature is mandatory: int ode(double &t, std::vector<double>& params,std::vector<double>& states). The arguments are in principal the same as in the Rcpp-function approach. However, the right-hand side has to be stored in the input vector states. For instance one could first extract the content of the state vector by storing it in suitable variables. Afterwards the vector states can be filled with the right hand side information which is defined by using the previously defined variables. The order of the states and parameters has to be the same as in the data.frames in order to calculate the error correctly and use the correct parameters.
-
-**It is crucial that the function is thread-safe!**
-
-
-```{Rcpp, odesystem_cpp, echo = T, eval = F}
-// [[Rcpp::depends(RcppArmadillo)]]
-#include <RcppArmadillo.h>
-// [[Rcpp::depends(paropt)]]
-// [[Rcpp::plugins(cpp11)]]
-
-typedef int (*OS)(double &t, std::vector<double> &params, std::vector<double> &states);
-
-int ode_system(double &t, std::vector<double> &params, std::vector<double> & states) {
-  
-  // do not use any R-Code or R-Objects if the optimzation should run in parallel.
-  // Users have to guarantee that the function can be called by several threads in parallel
-  // define parameters (vector params contain the parameter in the order as defined in the corresponding textfiles)
-  double a = params[0];
-  double b = params[1];
-  double c = params[2];
-  double d = params[3];
-  
-  // states have to be in the same order as specified in the textfile "states_LV.txt" (Otherwise the error-calculation does not work) 
-  double n1 = states[0];
-  double n2 = states[1];
-  
-  states[0] = n1*c*n2 - n1*d;
-  states[1] = n2*a - n2*b*n1;
-  
-  return 0;
+```{r, eval = FALSE}
+# Optimize (parameter a,b and c are constant. d is variable!)
+r <- function(a) {
+  c(a, rep(NA, 3))
 }
 
-
-// [[Rcpp::export]]
-Rcpp::XPtr<OS> test_optimization() {
-  Rcpp::XPtr<OS> xpfun = Rcpp::XPtr<OS>(new OS(&ode_system));
-  
-  return xpfun;
-}
-
-
-
-/*** R
-#states
-path <- system.file("examples", package = "paropt")
-states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
-
-# parameter
-lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
-ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
-
-# Optimizing
-library(paropt)
+lb <- data.frame(time = c(0, 20, 60, 80),
+                 a = r(0.8), b = r(0.3), c = r(0.09), d = 0.1)
+ub <- data.frame(time = c(0, 20, 60, 80),
+                 a = r(1.3), b = r(0.7), c = r(0.4), d = 0.6)
 set.seed(1)
-df <- optimizer_pointer(integration_times = states$time, ode_sys = test_optimization(),
-                        relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
-                       lower = lb, upper = ub, states = states, 
-                       npop = 40, ngen = 1000, error = 0.0001, solvertype = "bdf")
+res <- paropt::optimize(ode,
+                        lb = lb, ub = ub,
+                        reltol = 1e-06, abstol = c(1e-08, 1e-08),
+                        error = 0.0001,
+                        npop = 40, ngen = 10000,
+                        states = states)
 
-df
-# Plots
-par(mfrow = c(2,1))
-plot(states$time, df$States[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time", ylim = c(0, 30))
-points(states$time, states$n1, pch = 19, col = "darkred", type = 'p')
-legend(80, 30, legend=c("in silico", "measured"),
-       col=c("black", "darkred"), lty=1, cex=0.8)
-plot(states$time, df$States[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time", ylim = c(0, 65))
-points(states$time, states$n2, pch = 19, col = "darkred", type = 'p')
-legend(80, 60, legend=c("in silico", "measured"),
-       col=c("black", "darkred"), lty=1, cex=0.8)
+insilico <- res[[3]]
+par(mfrow = c(2, 1))
+plot(states$time, states$n1, type = "l")
+points(insilico$time, insilico$n1, type = "l", col = "darkred")
 
-# Solving
-optimized_parameter <- as.data.frame(df$Parameter)
-names(optimized_parameter) <- c("time", "a", "b", "c", "d")
-
-output_solver <- solve_ode_system_pointer(integration_times = states$time, fctptr = test_optimization(), 
-                                  relative_tolerance = 1e-6, absolute_tolerances = c(1e-8, 1e-8),
-                                  start = optimized_parameter, states = states, solvertype = "bdf")
-
-output_solver
-*/
+plot(states$time, states$n2, type = "l")
+points(insilico$time, insilico$n2, type = "l", col = "darkred")
 ```
 
-\newpage 
-
-# State-input
-
-The information of the states has to be supplied as a data.frame. It is compulsory that the first column includes the name time. This column contains the independent variable across which the solver integrates (it does not have to be the time. In this document it is always called time). It is followed by the information of the states at the specific time points. Notably, the order of the states is the same as in the ode-system in order to correctly calculate the error. 
-If a state is not available at all time points use 'NA' in order to ignore this state for error calculation at the specified time point. However, the first line below the header cannot contain 'NA' as it contains the start values for the ode-solver. 
-
-```{r, echo = FALSE}
-states <- data.frame(time = seq(0, 24, 2), predator = c(10, runif(12) ), prey = c(10, runif(5), NA, runif(6)) ) 
-knitr::kable(states, "html", caption = "Example for states")
-```
-
-
-# Parameter-input
-
-Constant parameters do not change their value during the integration of the ode-system. The boundaries for these parameters have to be defined in the first row. Notably, the first column of the data.frames containing the lower or upper boundaries is the time column. The name 'time' is mandatory for this column. If a parameter is not constant, at least four different time-points are needed. The information for the parameter at the time-points are fed into an interpolation-function in order to calculate values at each time-point the ode-system is called. The interpolation is conducted in a wrapper-function around the actual ode-system. Thus, the parameters passed on to the ode-system are the previously splined values for the specific time-point. For instance if the ode-system is called at t = 3.5 the parameter 'variable' is not defined. In this case the parameters have to be interpolated. This is conducted using a Catmull-Rom-Spline. The parameter-vector passed to the ode-system already contains the splined parameters at timepoint t.
-
-
-```{r, echo = FALSE}
-lb <- data.frame(time = seq(0, 24, 2), const = c(1, rep(NA, 12)), variable = 1:13)
-ub <- data.frame(time = seq(0, 24, 2), const = c(2, rep(NA, 12)), variable = 20)
-
-
-knitr::kable(lb, "html", caption = "Example for the lower boundaries")
-knitr::kable(ub, "html", caption = "Example for the upper boundaries")
-```
-
-\newpage 
 
 # What happens during an evaluation of a parameterset
 
-During the optimization the optimizer creates a bunch of possible solutions within the parameter boundaries. Each solution is passed to the ode-solver which integrates along the time and returns the states at the time-points specified in the data.frame containing the state-information. The *in silico* solution is compared to the measured states in order to evaluate the parameterset. The error used is the sum of the absolute differences between *in silico* and measured states, divided by the number of timepoints. 
-
-\newpage 
-
-# Result of simulations
-
-```{r, results of optimization1, fig.cap = "Result for the predator data. Black: in silico values, Red: measured values", eval = T, echo = F, out.width = "\\textwidth", out.height = "\\textheight", ,fig.width=7, fig.height=5}
-path <- system.file("examples", package = "paropt")
-df <- read.table(paste(path, "/final_stateoutput.txt", sep = ""), header = T)
-states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
-plot(states$time, df[,1], pch = 19, type = 'l', ylab = "predator", xlab = "time")
-points(states$time, states$n1, pch = 19, col = "darkred", type = 'l')
-```
-
-```{r, results of optimization2, fig.cap = "Result for the prey data. Black: in silico values, Red: measured values", eval = T, echo = F, out.width = "\\textwidth", out.height = "\\textheight", ,fig.width=7, fig.height=5}
-path <- system.file("examples", package = "paropt")
-df <- read.table(paste(path, "/final_stateoutput.txt", sep = ""), header = T)
-states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = T)
-plot(states$time, df[,2], pch = 19, type = 'l', ylab = "prey", xlab = "time")
-points(states$time, states$n2, pch = 19, col = "darkred", type = 'l')
-```
-
-\newpage 
-
-## The arguments for function optimizer and optimizer_pointer
-
-```{r, optimizer, eval = F, echo = T}
-optimizer(integration_times, ode_system, 
-          relative_tolerance, absolute_tolerances,
-          lb, ub, states,
-          npop, ngen, error, solvertype)
-```
-
-The first argument is the time-vector containing either the same information as defined in the time-column defined in the data.frame containing the states (see Table1) or only a *subset* (it can only be shortened at the end).  
-It is mandatory to start with the first entry of the time-column, however it is possible to stop at a certain time-point before the last one. Thus, it is possible to optimize only a part of the problem. 
-
-The next argument is the compiled ode-system followed by the relative tolerance and the absolute tolerances that are used by the ode-solver. These are followed by the data.frames defining the lower and upper boundaries of the parameter. Next the data.frame containing the state information is passed to the function. 
-
-In order to optimize the parameters a particle swarm optimizer (PSO) is used. Therefore, the number of particles (npop = 40 is a good starting point for many problems) and the number of generations (ngen) have to be passed to the function. The number of generations defines the maximum number of generations the PSO should run. However, if the PSO finds a suitable parameter set which has an error below or equal a threshold defined by the user it stops. This threshold is defined by the error-argument. 
-
-The last argument defines the type of solver to be used. Four different solver exist: 'bdf', 'ADAMS', 'ERK' and 'ARK. All solvers are part of the SUNDIALS project. For details see 'https://computing.llnl.gov/projects/sundials' and @Hindmarsh2005. The bdf solver is the backward differential formular solver of CVODE and is best suited for stiff problems. It uses a dense matrix module (SUNDense_Matrix) and the corresponding nonlinear solver (SUNLinsol_Dense).  The ADAMS solver is the ADAMS-MOULTON solver of CVODE and is most suitable for non-stiff problems. The 'ERK' solver is an explicite Runge-Kutta solver which is like the ADAMS-MOULTON solver used for non-stiff-problems. The 'ARK' solver is a fully implicte Runge-Kutta-solver which uses the same matrix and nonlinear solver module as 'bdf'. The integration itself occurs in a for-loop using the 'CV_NORMAL' step-function for all four solvers. If integration for a specific parameter set is not possible the error is set to 1.79769e+308 (which is the maximum of a double). 
-If you want to test a specific parameterset just call the function ode_solving. The function requires the same parameter as the optimizer. Naturally, the arguments for the PSO, the error-threshold as well as the parameter lower- and upper-bounds are not needed. 
-
-In principal, the optimizer_pointer and solve_ode_system_pointer do the same as the functions optimizer and solve_ode_system. However, they use an external pointer to a C++ function. Thus, they show a better performance. Notably, it was necessary to change the PSO function for optimizer_pointer in order to permit parallelisation. Therefore even with the same seed the results differ between optimizer and optimizer_pointer. 
+1. optimizer creates a bunch of random possible solutions within the parameter boundaries
+2. Each solution is passed to the ode-solver which integrates along the time and returns the states at the time-points specified in the data.frame containing the state-information
+3. For each parameter set an error is calculated
+4. The velocity and subsequently the parameter-sets of the swarm are updated based on the errors
 
 ## Particle swarm optimizer (PSO)
 
-This PSO-implementation is a modified version of 'https://github.com/kthohr/optim' (for a general overview see @Sengupta2018).
-The PSO has several key features. First of all, a bunch (number of particles defined by user) of possible parameter sets is created within the boundaries defined by the user. Each parameter set is called a particle. All particles together are called the swarm. Each possible parameter set is passed to the solver which integrates the system. The result is used to calculate the error. Thus, each particle has a current solution and a current personal best value. Furthermore, each particle possesses a neighborhood which consists of 0-3 other particles (for details see @Akman2018). The PSO uses a combination of its history (personal best value) and the information of the best particle of the neighborhood to change its current value. Notably, in this package a randomly adaptive topology is used. This means, that the neighborhood is recalculated each time when the global best solution (best solution of the entire swarm) has not improved within one generation. 
+The PSO implementation used here has several key features. First of all, a bunch (number of particles defined by user) of possible parameter sets is created within the boundaries defined by the user. Each parameter set is called a particle. All particles together are called the swarm. Each possible parameter set is passed to the solver which integrates the system. The result is used to calculate the error. Thus, each particle has a current solution and a current personal best value. Furthermore, each particle possesses a neighborhood which consists of 0-3 other particles (for details see @Akman2018). The PSO uses a combination of its history (personal best value) and the information of the best particle of the neighborhood to change its current value. Notably, in this package a randomly adaptive topology is used. This means, that the neighborhood is recalculated each time when the global best solution (best solution of the entire swarm) has not improved within one generation. 
+\
+Using this approach it is possible to optimize quite large parameter spaces. For instance, check the following publications @Kramer2022 and @Kramer2022a.
 
 ## References

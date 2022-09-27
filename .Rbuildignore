@@ -6,3 +6,7 @@
 ^config.status
 ^\.travis\.yml$
 ^\.github$
+^doc$
+^Meta$
+^vignette.pdf
+^docu.pdf

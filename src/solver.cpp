@@ -1,39 +1,26 @@
-/* !!revision!!
-// remove RKs ?
-// do not print error --> instead store it and export file later
-
-error check if error is inf, NA etc.
-*/
-
-
 /*
-BSD 3-Clause License
+ BSD 3-Clause License
+ Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
+ Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ The names of its contributors may not be used to endorse or promote products
+ derived from this software without specific prior written permission.
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-
-Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
-
-Redistributions in binary form must reproduce the above copyright notice,
-this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-
-The names of its contributors may not be used to endorse or promote products
-derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-“AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-#include "solver.hpp"
+#include "header.hpp"
 
 typedef std::vector<double> VD;
 typedef std::vector<int> VI;
@@ -42,34 +29,138 @@ typedef std::vector<std::vector<int> > MI;
 typedef std::vector<std::string> VS;
 typedef Rcpp::DataFrame DF;
 
-#define Ith(v,i)    NV_Ith_S(v,i-1)         /* Ith numbers components 1..NEQ */
-#define IJth(A,i,j) SM_ELEMENT_D(A,i-1,j-1) /* IJth numbers rows,cols 1..NEQ */
+double CatmullRomSpline(realtype &t, std::vector<double> &time_vec, std::vector<double> &par_vec) {
+  int idx0, idx1, idx2, idx3;
+  double t0, t1, t2, t3;
+  double y0, y1, y2, y3;
 
-static int check_retval(void *returnvalue, const char *funcname, int opt);
+  idx0 = 0;
+  idx1 = 0;
+  idx2 = 0;
+  idx3 = 0;
+  t0 = t1 = t2 = t3 = 0.;
+  y0 = y1 = y2 = y3 = 0.;
 
-bool double_diff(double x, double y) {
-  bool equal = false;
-  double tolerance = 0.001;
-  if(std::abs(x - y) < tolerance) {
-    equal = true;
-  }
-  return equal;
+  for(size_t i = 0; i <= time_vec.size(); i++)  {
+    if (i == time_vec.size()) {
+
+      idx0 = time_vec.size() - 2;
+      t0 = time_vec[idx0];
+      y0 = par_vec[idx0];
+
+      idx1 = time_vec.size() - 1;
+      t1 = time_vec[idx1];
+      y1 = par_vec[idx1];
+
+      idx2 = time_vec.size()  - time_vec.size();
+      t2 = time_vec[idx2];
+      y2 = par_vec[idx2];
+
+      idx3 = time_vec.size() + 1 - time_vec.size();
+      t3 = time_vec[idx3];
+      y3 = par_vec[idx3];
+      break;
+    }else if (t>=time_vec[i] && t<time_vec[i+1]){
+      if (i==0) {
+        idx0 = time_vec.size(); //-1;
+        t0 = time_vec[idx0]; //-time_vec.back();
+      } else {
+        idx0 = i-1;
+        t0 = time_vec[idx0];
+      }
+      y0 = par_vec[idx0];
+      idx1 = i;
+      t1 = time_vec[idx1];
+      y1 = par_vec[idx1];
+      if ( i == time_vec.size()-1 ) {
+        idx2 = 0;
+        t2 = time_vec[idx2]+time_vec.back();
+      } else {
+        idx2 = i+1;
+        t2 = time_vec[idx2];
+      }
+      y2 = par_vec[idx2];
+      if ( i == time_vec.size()-2 ) {
+        idx3 = 0;
+        t3 = time_vec[idx3] + time_vec.back();
+      } else if ( i == time_vec.size()-1 ) {
+        idx3 = 1;
+        t3 = time_vec[idx3]+time_vec.back();
+      } else {
+        idx3 = i+2;
+        t3 = time_vec[idx3];
+      }
+      y3 = par_vec[idx3];
+      break;
+    }
+  } // search for the beginning of the interpolation intervall
+
+  double x = (t -t1) / (t2 -t1);
+  double m1 = (y2 -y0) / (t2 -t0);
+  double m2 = (y3 -y1) / (t3 -t1);
+
+  double res = (
+    (2.*pow(x,3) -3.*pow(x,2) +1.) *y1
+    + (pow(x,3) -2.*pow(x,2) +x) *(t2-t1) *m1
+    + (-2.*pow(x,3) +3.*pow(x,2)) *y2
+    + (pow(x,3) -pow(x,2)) *(t2-t1) *m2
+  );
+  return res;
 }
 
-void own_error_handler(int error_code, const char *module, const char *function, char *msg, void *usr_data) {
-  if(error_code < 0) {
-    Rcpp::Rcerr << "Error:" << " " << error_code << " " << msg << " " << "In module:" << " " << module << " " << "and in fct:" << " " << function << std::endl;
-  }
-  else if(error_code == 0) {
-    Rcpp::warning("\nSundials: function encounters error: %s", function);
-  } else {
-    Rcpp::warning("\nSundials-warning during integration with: error_code: %i", error_code);
+void params_sort (
+    realtype &t, std::vector<double> &params, std::vector<double> &par_vec, std::vector<double> &time_vec, std::vector<int> &param_idx_cuts){
+  // Get number of parameter
+  int no_par = param_idx_cuts.size();
+
+  params.resize(no_par);
+
+  std::vector<double> tmp_time_vec;
+  std::vector<double> tmp_par_vec;
+  int tmp_no_vals;
+  int idx_count = 0;
+
+  for (int i = 0; i < no_par; ++i) {
+    tmp_no_vals = param_idx_cuts[i];
+    if (tmp_no_vals==1){
+      params[i] = par_vec[idx_count];
+      ++idx_count;
+    }else{
+      tmp_par_vec.resize(tmp_no_vals);
+      tmp_time_vec.resize(tmp_no_vals);
+      for (int j = 0; j < tmp_no_vals; ++j) {
+        tmp_par_vec[j] = par_vec[idx_count];
+        tmp_time_vec[j] = time_vec[idx_count];
+        ++idx_count;
+      }
+      params[i] =  CatmullRomSpline(t, tmp_time_vec, tmp_par_vec);
+    }
   }
 }
 
+#define IJth(A,i,j) SM_ELEMENT_D(A,i-1,j-1) // IJth numbers rows,cols 1..NEQ
+
+static int check_retval(void *returnvalue, const char *funcname, int opt) {
+  int *retval;
+  if (opt == 0 && returnvalue == NULL) {
+    return(1);
+  } else if (opt == 1) {
+    retval = (int *) returnvalue;
+    if (*retval < 0) {
+      return(1); }
+  } else if (opt == 2 && returnvalue == NULL) {
+    return(1);
+  }
+
+  return(0);
+}
+
+
+// Rcpp::Rcerr is not thread safe!!!
+void own_error_handler(int error_code, const char *module, const char *function, char *msg, void *usr_data) {}
 
 struct usr_data{
-  Rcpp::Function ode_systen;
+  OS ode_system;
   std::vector<double> parameter;
   std::vector<double> parameter_time;
   std::vector<int> parameter_cut_idx;
@@ -79,16 +170,11 @@ int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
   // cast pointer to structure and store elements
   struct usr_data *my_ode_system = (struct usr_data*)user_data;
-  Rcpp::Function odes = (*my_ode_system).ode_systen;
+  OS odes;
+  odes = (*my_ode_system).ode_system;
   std::vector<double> params = (*my_ode_system).parameter;
   std::vector<double> params_time = (*my_ode_system).parameter_time;
   std::vector<int> params_cut_idx = (*my_ode_system).parameter_cut_idx;
-
-  // current state values ( = y)
-  Rcpp::NumericVector current_states(NV_LENGTH_S(y));
-  for(int i = 0; i < current_states.size(); i++) { //works; maybe use .length
-    current_states[i] = NV_Ith_S(y,i);
-  }
 
   // interpolate Parameter if necessary
   std::vector<double> parameter_input;
@@ -97,798 +183,408 @@ int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
   // extract time
   double time = t;
 
-  // new vector y
-  Rcpp::NumericVector new_states(NV_LENGTH_S(y));
+  sexp parameter(parameter_input.size(), parameter_input.data(), 2);
+  sexp y_(NV_LENGTH_S(y), N_VGetArrayPointer(y), 2);
+  sexp ydot_(NV_LENGTH_S(ydot), N_VGetArrayPointer(ydot), 2);
 
-  new_states = odes(time, parameter_input, current_states);
-
-  for(int i = 0; i < new_states.size(); i++) {
-    NV_Ith_S(ydot, i) = new_states[i];
-  }
+  odes(time, y_, ydot_, parameter);
 
   return 0;
 }
 
-double solver_bdf(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
+std::mutex mtx2;
+
+double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_state_information &solv_param_struc) {
+
+
+  mtx2.lock();
+  std::vector<double> init_state = solv_param_struc.init_state;
+  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
+  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
+  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
+  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
+  mtx2.unlock();
+
+  // Begin Solver
+  int NEQ = hs_cut_idx_vec.size();
+  realtype reltol, t;// tout;
+  N_Vector y, abstol;
+  SUNMatrix A;
+  SUNLinearSolver LS;
+  void *cvode_mem;
+  int retval; // retvalr, iout;
+
+  y = abstol = NULL;
+  A = NULL;
+  LS = NULL;
+  cvode_mem = NULL;
+
+  y = N_VNew_Serial(NEQ);
+  if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+  abstol = N_VNew_Serial(NEQ);
+  if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+
+  mtx2.lock();
+  for (int i = 0; i < NEQ; ++i) {
+    NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
+    NV_Ith_S(y, i) = solv_param_struc.init_state[i];
+  }
+
+  reltol = solv_param_struc.reltol;
+  mtx2.unlock();
+
+  cvode_mem = CVodeCreate(CV_BDF);
+  if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+
+  // set error handler to Rcpp::Rcerr
+  //void* ptr_to_cvode_mem = &cvode_mem;
+  void* ptr_to_nothing = &cvode_mem;
+  retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
+
+  double sum_of_least_squares = 0.;
+
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
+  void*ptr_to_my_ode_system = &my_ode_system;
+  retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
+  if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+
+  retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
+  if (check_retval(&retval, "CVodeInit", 1)) return(1);
+
+  retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
+  if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+
+  A = SUNDenseMatrix(NEQ, NEQ);
+  if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
+
+  LS = SUNLinSol_Dense(y, A);
+  if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
+
+  retval = CVodeSetLinearSolver(cvode_mem, LS, A);
+  if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
+
+  //int CVodetmpcount=0;
+  double return_time;
+  float return_steps=1.;
+  std::vector<double> temp_measured(init_state.size());
+  //int num_states = init_state.size();
+
+  for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
+    for (int j = 1; j <= return_steps; j++) {
+      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
+      for (int n = 0; n < NV_LENGTH_S(y); n++) {
+        temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
+        if(std::isnan(temp_measured[n])) { }
+        else {
+          //sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+          sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
+        }
+      }
+      if(retval < 0) {
+        sum_of_least_squares = 1.79769e+308; //1000000.; //1.79769e+308
+        break;
+      }
+    }
+  }
+
+  N_VDestroy(y);
+  N_VDestroy(abstol);
+  CVodeFree(&cvode_mem);
+  SUNLinSolFree(LS);
+  SUNMatDestroy(A);
+
+  return sum_of_least_squares/static_cast<double>(integration_times.size());
+}
+
+double solver_bdf_save(std::vector<double> &param_combi_start, OS ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
 
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t;// tout;
-   N_Vector y, abstol;
-   SUNMatrix A;
-   SUNLinearSolver LS;
-   void *cvode_mem;
-   int retval; // retvalr, iout;
+  // Begin Solver
+  int NEQ = hs_cut_idx_vec.size();
+  realtype reltol, t; // tout;
+  N_Vector y, abstol;
+  SUNMatrix A;
+  SUNLinearSolver LS;
+  void *cvode_mem;
+  int retval; // retvalr, iout;
 
-   y = abstol = NULL;
-   A = NULL;
-   LS = NULL;
-   cvode_mem = NULL;
+  y = abstol = NULL;
+  A = NULL;
+  LS = NULL;
+  cvode_mem = NULL;
 
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+  y = N_VNew_Serial(NEQ);
+  if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+  abstol = N_VNew_Serial(NEQ);
+  if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
+  for (int i = 0; i < NEQ; ++i) {
+    NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
+    NV_Ith_S(y, i) = solv_param_struc.init_state[i];
+  }
 
-   reltol = solv_param_struc.reltol;
+  reltol = solv_param_struc.reltol;
 
-   cvode_mem = CVodeCreate(CV_BDF);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+  cvode_mem = CVodeCreate(CV_BDF);
+  if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_cvode_mem = &cvode_mem;
-   void* ptr_to_nothing = &cvode_mem;
-   retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
+  // set error handler to Rcpp::Rcerr
+  //void* ptr_to_cvode_mem = &cvode_mem;
+  void* ptr_to_nothing = &cvode_mem;
+  retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
 
-   double sum_of_least_squares = 0.;
+  double sum_of_least_squares = 0.;
 
-   struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-   void*ptr_to_my_ode_system = &my_ode_system;
-   retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-   if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
+  void*ptr_to_my_ode_system = &my_ode_system;
+  retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
+  if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
 
-   retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
-   if (check_retval(&retval, "CVodeInit", 1)) return(1);
+  retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
+  if (check_retval(&retval, "CVodeInit", 1)) return(1);
 
-   retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-   if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+  retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
+  if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
 
-   A = SUNDenseMatrix(NEQ, NEQ);
-   if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
+  A = SUNDenseMatrix(NEQ, NEQ);
+  if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
 
-   LS = SUNLinSol_Dense(y, A);
-   if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
+  LS = SUNLinSol_Dense(y, A);
+  if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
 
-   retval = CVodeSetLinearSolver(cvode_mem, LS, A);
-   if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
+  retval = CVodeSetLinearSolver(cvode_mem, LS, A);
+  if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
 
-   //int CVodetmpcount=0;
-   double return_time;
-   float return_steps=1.;
+  //int CVodetmpcount=0;
+  double return_time;
+  float return_steps=1.;
 
-   std::vector<double> temp_measured(init_state.size());
-   //int num_states = init_state.size();
+  std::vector<double> temp_measured(init_state.size());
+  //int num_states = init_state.size();
 
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       }
-                   }
-                   if(retval < 0) {
-                     sum_of_least_squares = 1.79769e+308; //1000000.; //1.79769e+308
-                     break;
-                   }
-           }
-       }
 
-    N_VDestroy(y);
-    N_VDestroy(abstol);
-    CVodeFree(&cvode_mem);
-    SUNLinSolFree(LS);
-    SUNMatDestroy(A);
+  for(int i = 0; i < NV_LENGTH_S(y); i++) {
+    DF(0 , i) = NV_Ith_S(y,i);
+  }
 
- return sum_of_least_squares/static_cast<double>(integration_times.length());
+  int counter = 1;
+  for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
+    for (int j = 1; j <= return_steps; j++) {
+      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL); //
+      for (int n = 0; n < NV_LENGTH_S(y); n++) {
+        DF(counter, n) = NV_Ith_S(y,n);
+        temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
+        if(std::isnan(temp_measured[n])) { }
+        else {
+          //sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+          sum_of_least_squares += std::abs((1./temp_measured[n])*std::abs(NV_Ith_S(y,n) - temp_measured[n]) );
+          //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
+        }
+      }
+      if (check_retval(&retval, "CVode", 1)) {
+        break;}
+    }
+    counter++;
+  }
+
+  N_VDestroy(y);
+  N_VDestroy(abstol);
+  CVodeFree(&cvode_mem);
+  SUNLinSolFree(LS);
+  SUNMatDestroy(A);
+
+  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }
 
-double solver_bdf_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF) {
+double solver_adams(std::vector<double> &param_combi_start, OS ode_system, time_state_information &solv_param_struc) {
 
+  mtx2.lock();
+  std::vector<double> init_state = solv_param_struc.init_state;
+  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
+  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
+  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
+  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
+  std::vector<double> integration_times = solv_param_struc.integration_times;
+  mtx2.unlock();
+
+  // Begin Solver
+  int NEQ = hs_cut_idx_vec.size();
+  realtype reltol, t;// tout;
+  N_Vector y, abstol;
+  void *cvode_mem;
+  int retval; // retvalr, iout;
+
+  y = abstol = NULL;
+  cvode_mem = NULL;
+
+  y = N_VNew_Serial(NEQ);
+  if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+  abstol = N_VNew_Serial(NEQ);
+  if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+
+  mtx2.lock();
+  for (int i = 0; i < NEQ; ++i) {
+    NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
+    NV_Ith_S(y, i) = solv_param_struc.init_state[i];
+  }
+
+  reltol = solv_param_struc.reltol;
+  mtx2.unlock();
+  cvode_mem = CVodeCreate(CV_ADAMS);
+  if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+
+  // set error handler to Rcpp::Rcerr
+  //void* ptr_to_cvode_mem = &cvode_mem;
+  void* ptr_to_nothing = &cvode_mem;
+  retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
+
+  double sum_of_least_squares = 0.;
+
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
+  void*ptr_to_my_ode_system = &my_ode_system;
+  retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
+  if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+
+  retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
+  if (check_retval(&retval, "CVodeInit", 1)) return(1);
+
+  retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
+  if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+
+  retval = CVDiag(cvode_mem);
+  if(check_retval(&retval, "CVDiag", 1)) return(1);
+
+  //int CVodetmpcount=0;
+  double return_time;
+  float return_steps=1.;
+
+  std::vector<double> temp_measured(init_state.size());
+  //int num_states = init_state.size();
+
+  for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
+    for (int j = 1; j <= return_steps; j++) {
+      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
+      for (int n = 0; n < NV_LENGTH_S(y); n++) {
+        temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
+        if(std::isnan(temp_measured[n])) { }
+        else {
+          sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+        }
+      }
+      if(retval < 0) {
+        sum_of_least_squares = 1.79769e+308;//1000000.;
+        break;
+      }
+    }
+  }
+
+  N_VDestroy(y);
+  N_VDestroy(abstol);
+  CVodeFree(&cvode_mem);
+
+  return sum_of_least_squares/static_cast<double>(integration_times.size());
+}
+
+double solver_adams_save(std::vector<double> &param_combi_start, OS ode_system, time_state_information solv_param_struc,  Rcpp::NumericMatrix &DF) {
 
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
   std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
   std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
-
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t; // tout;
-   N_Vector y, abstol;
-   SUNMatrix A;
-   SUNLinearSolver LS;
-   void *cvode_mem;
-   int retval; // retvalr, iout;
-
-   y = abstol = NULL;
-   A = NULL;
-   LS = NULL;
-   cvode_mem = NULL;
-
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
-
-   reltol = solv_param_struc.reltol;
-
-   cvode_mem = CVodeCreate(CV_BDF);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
-
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_cvode_mem = &cvode_mem;
-   void* ptr_to_nothing = &cvode_mem;
-   retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
-
-   double sum_of_least_squares = 0.;
-
-     struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-     void*ptr_to_my_ode_system = &my_ode_system;
-     retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
-
-     retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
-     if (check_retval(&retval, "CVodeInit", 1)) return(1);
-
-     retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-     if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
-
-     A = SUNDenseMatrix(NEQ, NEQ);
-     if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
-
-     LS = SUNLinSol_Dense(y, A);
-     if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
-
-     retval = CVodeSetLinearSolver(cvode_mem, LS, A);
-     if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
-
-     //int CVodetmpcount=0;
-     double return_time;
-     float return_steps=1.;
-
-     std::vector<double> temp_measured(init_state.size());
-     //int num_states = init_state.size();
-
-
-     for(int i = 0; i < NV_LENGTH_S(y); i++) {
-         DF(0 , i) = NV_Ith_S(y,i);
-     }
-
-     int counter = 1;
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                     DF(counter, n) = NV_Ith_S(y,n);
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
-                       }
-                   }
-                   if (check_retval(&retval, "CVode", 1)) {
-                       break;}
-           }
-           counter++;
-       }
-
-       N_VDestroy(y);
-       N_VDestroy(abstol);
-       CVodeFree(&cvode_mem);
-       SUNLinSolFree(LS);
-       SUNMatDestroy(A);
-
- return sum_of_least_squares/static_cast<double>(integration_times.length());
-}
-
-double solver_adams(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
-
-  std::vector<double> init_state = solv_param_struc.init_state;
-  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
-  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
-  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
-  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
-
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t;// tout;
-   N_Vector y, abstol;
-   void *cvode_mem;
-   int retval; // retvalr, iout;
-
-   y = abstol = NULL;
-   cvode_mem = NULL;
-
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
-
-   reltol = solv_param_struc.reltol;
-
-   cvode_mem = CVodeCreate(CV_ADAMS);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
-
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_cvode_mem = &cvode_mem;
-   void* ptr_to_nothing = &cvode_mem;
-   retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
-
-   double sum_of_least_squares = 0.;
-
-     struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-     void*ptr_to_my_ode_system = &my_ode_system;
-     retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
-
-     retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
-     if (check_retval(&retval, "CVodeInit", 1)) return(1);
-
-     retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-     if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
-
-     retval = CVDiag(cvode_mem);
-     if(check_retval(&retval, "CVDiag", 1)) return(1);
-
-     //int CVodetmpcount=0;
-     double return_time;
-     float return_steps=1.;
-
-     std::vector<double> temp_measured(init_state.size());
-     //int num_states = init_state.size();
-
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       }
-                   }
-                   if(retval < 0) {
-                     sum_of_least_squares = 1.79769e+308;//1000000.;
-                     break;
-                   }
-           }
-       }
-
-       N_VDestroy(y);
-       N_VDestroy(abstol);
-       CVodeFree(&cvode_mem);
-
- return sum_of_least_squares/static_cast<double>(integration_times.length());
-}
-
-double solver_adams_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF) {
-
-  std::vector<double> init_state = solv_param_struc.init_state;
-  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
-  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
-  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
-  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
-
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t; // tout;
-   N_Vector y, abstol;
-   void *cvode_mem;
-   int retval; // retvalr, iout;
-
-   y = abstol = NULL;
-   cvode_mem = NULL;
-
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
-
-   reltol = solv_param_struc.reltol;
-
-   cvode_mem = CVodeCreate(CV_ADAMS);
-   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
-
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_cvode_mem = &cvode_mem;
-   void* ptr_to_nothing = &cvode_mem;
-   retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
-
-   double sum_of_least_squares = 0.;
-
-     struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-     void*ptr_to_my_ode_system = &my_ode_system;
-     retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
-
-     retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
-     if (check_retval(&retval, "CVodeInit", 1)) return(1);
-
-     retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
-     if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
-
-     retval = CVDiag(cvode_mem);
-     if(check_retval(&retval, "CVDiag", 1)) return(1);
-
-     //int CVodetmpcount=0;
-     double return_time;
-     float return_steps=1.;
-
-     std::vector<double> temp_measured(init_state.size());
-     //int num_states = init_state.size();
-
-     for(int i = 0; i < NV_LENGTH_S(y); i++) {
-         DF(0 , i) = NV_Ith_S(y,i);
-     }
-
-     int counter = 1;
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                     DF(counter, n) = NV_Ith_S(y,n);
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
-                       }
-                   }
-                   if (check_retval(&retval, "CVode", 1)) {
-                       break;}
-
-           }
-       }
-
-       N_VDestroy(y);
-       N_VDestroy(abstol);
-       CVodeFree(&cvode_mem);
-
- return sum_of_least_squares/static_cast<double>(integration_times.length());
-}
-
-double solver_erk(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
-
-  std::vector<double> init_state = solv_param_struc.init_state;
-  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
-  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
-  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
-  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
-
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t; // tout;
-   N_Vector y, abstol;
-   void *arkode_mem;
-   int retval; // retvalr, iout;
-
-   y = abstol = NULL;
-   arkode_mem = NULL;
-
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
-
-   reltol = solv_param_struc.reltol;
-
-   arkode_mem = ERKStepCreate(wrapper_ode_system, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ERKCreate", 0)) return(1);
-
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_arkode_mem = &arkode_mem;
-   void* ptr_to_nothing = &arkode_mem;
-   retval = ARKStepSetErrHandlerFn(arkode_mem, own_error_handler, ptr_to_nothing);
-
-   double sum_of_least_squares = 0.;
-
-     struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-     void*ptr_to_my_ode_system = &my_ode_system;
-     retval = ERKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "ERKStepSetUserData", 0)) return(1);
-
-     retval = ERKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ERKStepSVtolerances", 1)) return(1);
-
-     //int CVodetmpcount=0;
-     double return_time;
-     float return_steps=1.;
-
-     std::vector<double> temp_measured(init_state.size());
-     //int num_states = init_state.size();
-
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = ERKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       }
-                   }
-                   if(retval < 0) {
-                     sum_of_least_squares = 1.79769e+308; //1000000.;
-                     break;
-                   }
-           }
-       }
-
-       N_VDestroy(y);
-       N_VDestroy(abstol);
-       ERKStepFree(&arkode_mem);
-
- return sum_of_least_squares/static_cast<double>(integration_times.length());
-}
-
-double solver_erk_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF) {
-
-  std::vector<double> init_state = solv_param_struc.init_state;
-  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
-  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
-  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
-  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
-
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t; // tout;
-   N_Vector y, abstol;
-   void *arkode_mem;
-   int retval; // retvalr, iout;
-
-   y = abstol = NULL;
-   arkode_mem = NULL;
-
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
-
-   reltol = solv_param_struc.reltol;
-
-   arkode_mem = ERKStepCreate(wrapper_ode_system, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ERKCreate", 0)) return(1);
-
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_arkode_mem = &arkode_mem;
-   void* ptr_to_nothing = &arkode_mem;
-   retval = ARKStepSetErrHandlerFn(arkode_mem, own_error_handler, ptr_to_nothing);
-
-   double sum_of_least_squares = 0.;
-
-     struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-     void*ptr_to_my_ode_system = &my_ode_system;
-     retval = ERKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "ERKStepSetUserData", 0)) return(1);
-
-     retval = ERKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ERKStepSVtolerances", 1)) return(1);
-
-     //int CVodetmpcount=0;
-     double return_time;
-     float return_steps=1.;
-
-     std::vector<double> temp_measured(init_state.size());
-     //int num_states = init_state.size();
-
-     for(int i = 0; i < NV_LENGTH_S(y); i++) {
-         DF(0 , i) = NV_Ith_S(y,i);
-     }
-
-     int counter = 1;
-
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = ERKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                      DF(counter, n) = NV_Ith_S(y,n);
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
-                       }
-                   }
-                   if (check_retval(&retval, "CVode", 1)) {
-                       break;}
-           }
-       }
-
-       N_VDestroy(y);
-       N_VDestroy(abstol);
-       ERKStepFree(&arkode_mem);
-
- return sum_of_least_squares/static_cast<double>(integration_times.length());
-}
-
-double solver_ark(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information &solv_param_struc) {
-
-  std::vector<double> init_state = solv_param_struc.init_state;
-  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
-  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
-  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
-  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
-
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t; // tout;
-   N_Vector y, abstol;
-   SUNMatrix A = NULL;
-   SUNLinearSolver LS = NULL;
-   void *arkode_mem;
-   int retval; // retvalr, iout;
-
-   y = abstol = NULL;
-   arkode_mem = NULL;
-
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
-
-   reltol = solv_param_struc.reltol;
-
-   A = SUNDenseMatrix(NEQ, NEQ);
-   if (check_retval((void *)A, "SUNDenseMatrix", 0)) return 1;
-   LS = SUNLinSol_Dense(y, A);
-   if (check_retval((void*)LS, "SUNLinSol_Dense", 0)) return 1;
-
-   // right hand side => y' = f(t,y); f(t,y) = f_E + f_I
-   // f_E = explizit Part; f_I = implicit part
-   // f_E is zero => fully implicit
-   arkode_mem = ARKStepCreate(NULL, wrapper_ode_system, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ARKStepCreate", 0)) return(1);
-
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_arkode_mem = &arkode_mem;
-   void* ptr_to_nothing = &arkode_mem;
-   retval = ARKStepSetErrHandlerFn(arkode_mem, own_error_handler, ptr_to_nothing);
-
-   double sum_of_least_squares = 0.;
-
-     struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-     void*ptr_to_my_ode_system = &my_ode_system;
-     retval = ARKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "ARKStepSetUserData", 0)) return(1);
-
-     retval = ARKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ARKStepSVtolerances", 1)) return(1);
-
-     retval = ARKStepSetLinearSolver(arkode_mem, LS, A);
-     if (check_retval(&retval, "ARKStepSetLinearSolver", 1)) return(1);
-
-     //retval = ARKStepSetLinear(arkode_mem, 1);
-     //if (check_retval(&retval, "ARKStepSetLinear", 1)) return 1;
-
-     //int CVodetmpcount=0;
-     double return_time;
-     float return_steps=1.;
-
-     std::vector<double> temp_measured(init_state.size());
-     //int num_states = init_state.size();
-
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = ARKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       }
-                   }
-                   if(retval < 0) {
-                     sum_of_least_squares = 1.79769e+308; //1000000.;
-                     break;
-                   }
-           }
-       }
-
-       N_VDestroy(y);
-       N_VDestroy(abstol);
-       SUNMatDestroy(A);
-       SUNLinSolFree(LS);
-       ARKStepFree(&arkode_mem);
-
- return sum_of_least_squares/static_cast<double>(integration_times.length());
-}
-
-double solver_ark_save(std::vector<double> &param_combi_start, SEXP ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF) {
-
-  std::vector<double> init_state = solv_param_struc.init_state;
-  std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
-  std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
-  std::vector<double> hs_harvest_state_combi_vec = solv_param_struc.state_measured;
-  std::vector<double> hs_time_combi_vec = solv_param_struc.state_times;
-  std::vector<int> hs_cut_idx_vec = solv_param_struc.state_idx_cut;
-  Rcpp::NumericVector integration_times = solv_param_struc.integration_times;
-
-    // Begin Solver
-   int NEQ = hs_cut_idx_vec.size();
-   realtype reltol, t; // tout;
-   N_Vector y, abstol;
-   SUNMatrix A = NULL;
-   SUNLinearSolver LS = NULL;
-   void *arkode_mem;
-   int retval; // retvalr, iout;
-
-   y = abstol = NULL;
-   arkode_mem = NULL;
-
-   y = N_VNew_Serial(NEQ);
-   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-   abstol = N_VNew_Serial(NEQ);
-   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
-   for (int i = 0; i < NEQ; ++i) {
-     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
-     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
-   }
-
-   reltol = solv_param_struc.reltol;
-
-   A = SUNDenseMatrix(NEQ, NEQ);
-   if (check_retval((void *)A, "SUNDenseMatrix", 0)) return 1;
-   LS = SUNLinSol_Dense(y, A);
-   if (check_retval((void*)LS, "SUNLinSol_Dense", 0)) return 1;
-
-   // right hand side => y' = f(t,y); f(t,y) = f_E + f_I
-   // f_E = explizit Part; f_I = implicit part
-   // f_E is zero => fully implicit
-   arkode_mem = ARKStepCreate(NULL, wrapper_ode_system, integration_times[0], y);
-   if (check_retval((void *)arkode_mem, "ARKCreate", 0)) return(1);
-
-   // set error handler to Rcpp::Rcerr
-   //void* ptr_to_arkode_mem = &arkode_mem;
-   void* ptr_to_nothing = &arkode_mem;
-   retval = ARKStepSetErrHandlerFn(arkode_mem, own_error_handler, ptr_to_nothing);
-
-   double sum_of_least_squares = 0.;
-
-     struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
-     void*ptr_to_my_ode_system = &my_ode_system;
-     retval = ARKStepSetUserData(arkode_mem, ptr_to_my_ode_system);
-     if (check_retval((void *)arkode_mem, "aRKStepSetUserData", 0)) return(1);
-
-     retval = ARKStepSVtolerances(arkode_mem, reltol, abstol);
-     if (check_retval(&retval, "ARKStepSVtolerances", 1)) return(1);
-
-     retval = ARKStepSetLinearSolver(arkode_mem, LS, A);
-     if (check_retval(&retval, "ARKStepSetLinearSolver", 1)) return(1);
-
-     //int CVodetmpcount=0;
-     double return_time;
-     float return_steps=1.;
-
-     std::vector<double> temp_measured(init_state.size());
-     //int num_states = init_state.size();
-
-     for(int i = 0; i < NV_LENGTH_S(y); i++) {
-         DF(0 , i) = NV_Ith_S(y,i);
-     }
-
-     int counter = 1;
-
-       for ( int ti = 1; ti < integration_times.size(); ti++) {
-           for (int j = 1; j <= return_steps; j++) {
-               return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
-               retval = ARKStepEvolve(arkode_mem, return_time, y, &t, ARK_NORMAL);
-                   for (int n = 0; n < NV_LENGTH_S(y); n++) {
-                     DF(counter, n) = NV_Ith_S(y,n);
-                       temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
-                       if(std::isnan(temp_measured[n])) { }
-                       else {
-                       sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
-                       //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
-                       }
-                   }
-                   if (check_retval(&retval, "CVode", 1)) {
-                     break;}
-           }
-       }
-
-       N_VDestroy(y);
-       N_VDestroy(abstol);
-       SUNMatDestroy(A);
-       SUNLinSolFree(LS);
-       ARKStepFree(&arkode_mem);
-
- return sum_of_least_squares/static_cast<double>(integration_times.length());
-}
-
-static int check_retval(void *returnvalue, const char *funcname, int opt)
-{
-  int *retval;
-  /* Check if SUNDIALS function returned NULL pointer - no memory allocated */
-  if (opt == 0 && returnvalue == NULL) {
-    Rcpp::Rcerr << "SUNDIALS_ERROR:" << " " << funcname << " " << "failed - returned NULL pointer" << std::endl;
-    return(1); }
-  /* Check if retval < 0 */
-  else if (opt == 1) {
-    retval = (int *) returnvalue;
-    if (*retval < 0) {
-      Rcpp::Rcerr << "SUNDIALS_ERROR:" << " " << funcname << " " << "failed with retval = " << " " << *retval << std::endl;
-      return(1); }}
-  /* Check if function returned NULL pointer - no memory allocated */
-  else if (opt == 2 && returnvalue == NULL) {
-    Rcpp::Rcerr << "MEMORY_ERROR:" << " " << funcname << " " << "failed - returned NULL pointer" << std::endl;
-    return(1); }
-
-  return(0);
+  std::vector<double> integration_times = solv_param_struc.integration_times;
+
+  // Begin Solver
+  int NEQ = hs_cut_idx_vec.size();
+  realtype reltol, t; // tout;
+  N_Vector y, abstol;
+  void *cvode_mem;
+  int retval; // retvalr, iout;
+
+  y = abstol = NULL;
+  cvode_mem = NULL;
+
+  y = N_VNew_Serial(NEQ);
+  if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
+  abstol = N_VNew_Serial(NEQ);
+  if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
+
+  for (int i = 0; i < NEQ; ++i) {
+    NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
+    NV_Ith_S(y, i) = solv_param_struc.init_state[i];
+  }
+
+  reltol = solv_param_struc.reltol;
+
+  cvode_mem = CVodeCreate(CV_ADAMS);
+  if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
+
+  // set error handler to Rcpp::Rcerr
+  //void* ptr_to_cvode_mem = &cvode_mem;
+  void* ptr_to_nothing = &cvode_mem;
+  retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
+
+  double sum_of_least_squares = 0.;
+
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec};
+  void*ptr_to_my_ode_system = &my_ode_system;
+  retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
+  if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
+
+  retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
+  if (check_retval(&retval, "CVodeInit", 1)) return(1);
+
+  retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
+  if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
+
+  retval = CVDiag(cvode_mem);
+  if(check_retval(&retval, "CVDiag", 1)) return(1);
+
+  //int CVodetmpcount=0;
+  double return_time;
+  float return_steps=1.;
+
+  std::vector<double> temp_measured(init_state.size());
+  //int num_states = init_state.size();
+
+  for(int i = 0; i < NV_LENGTH_S(y); i++) {
+    DF(0 , i) = NV_Ith_S(y,i);
+  }
+
+  int counter = 1;
+  for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
+    for (int j = 1; j <= return_steps; j++) {
+      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
+      for (int n = 0; n < NV_LENGTH_S(y); n++) {
+        DF(counter, n) = NV_Ith_S(y,n);
+        temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
+        if(std::isnan(temp_measured[n])) { }
+        else {
+          sum_of_least_squares += std::abs(NV_Ith_S(y,n) - temp_measured[n]);
+          //Rcpp::Rcerr << NV_Ith_S(y,n) << "\t" << temp_measured[n] << "\t" << return_time << std::endl;
+        }
+      }
+      if (check_retval(&retval, "CVode", 1)) {
+        break;}
+
+    }
+    counter++;
+  }
+
+  N_VDestroy(y);
+  N_VDestroy(abstol);
+  CVodeFree(&cvode_mem);
+
+  return sum_of_least_squares/static_cast<double>(integration_times.size());
 }

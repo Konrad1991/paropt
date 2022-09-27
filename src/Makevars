@@ -1,4 +1,4 @@
-CXX_STD=CXX11
+CXX_STD=CXX17
 
 PKG_CPPFLAGS= -I../inst -I../inst/include
 PKG_CXXFLAGS= $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
@@ -42,29 +42,12 @@ SOURCES_CVODE= ./sundials/cvode/cvode.c ./sundials/cvode/cvode_bandpre.c \
 ./sundials/cvode/cvode_ls.c \
 ./sundials/cvode/cvode_nls.c
 
-SOURCES_ARKODE = ./sundials/arkode/arkode.c \
-./sundials/arkode/arkode_adapt.c \
-./sundials/arkode/arkode_arkstep.c \
-./sundials/arkode/arkode_arkstep_io.c \
-./sundials/arkode/arkode_arkstep_nls.c \
-./sundials/arkode/arkode_bandpre.c \
-./sundials/arkode/arkode_bbdpre.c \
-./sundials/arkode/arkode_butcher.c \
-./sundials/arkode/arkode_butcher_dirk.c \
-./sundials/arkode/arkode_butcher_erk.c ./sundials/arkode/arkode_erkstep.c ./sundials/arkode/arkode_erkstep_io.c \
-./sundials/arkode/arkode_interp.c \
-./sundials/arkode/arkode_io.c \
-./sundials/arkode/arkode_ls.c \
-./sundials/arkode/arkode_mristep.c \
-./sundials/arkode/arkode_mristep_io.c \
-./sundials/arkode/arkode_root.c
 
-
-SOURCES =  interface_fct.cpp solver.cpp param_interpolation.cpp params.cpp state.cpp RcppExports.cpp optimizer.cpp solve_ode_system.cpp ode_example.cpp function_access_in_rcpp.cpp solver_Rcpp_interface.cpp optimizer_access_in_Rcpp.cpp optimizer_Rcpp_interface.cpp modify_dataframe.cpp test-runner.cpp test_spline.cpp solver_master.cpp optimizer_master.cpp master_fct.cpp master_solving.cpp
+SOURCES = RcppExports.cpp solver.cpp optimizer.cpp wrapper_solver.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 
-SOURCES_SUNDIALS_ALL= $(SOURCES_NVECSERIAL) $(SOURCES_SUNDIALS) $(SOURCES_SUNMAT) $(SOURCES_SUNLINSOL_DENSE) $(SOURCES_SUNLINSOL_BAND) $(SOURCES_SUNNONLINSOL) $(SOURCES_CVODE) $(SOURCES_ARKODE)
+SOURCES_SUNDIALS_ALL= $(SOURCES_NVECSERIAL) $(SOURCES_SUNDIALS) $(SOURCES_SUNMAT) $(SOURCES_SUNLINSOL_DENSE) $(SOURCES_SUNLINSOL_BAND) $(SOURCES_SUNNONLINSOL) $(SOURCES_CVODE)
 
 OBJECTS_SUNDIALS_ALL = $(SOURCES_SUNDIALS_ALL:.c=.o)
 
@@ -88,8 +71,6 @@ clean:
 	(cd ./sundials/sunnonlinsol/newton;rm -f *.o)
 	(cd ./sundials/sunnonlinsol/fixedpoint;rm -f *.o)
 	(cd ./sundials/cvode;rm -f *.o)
-	(cd ./sundials/arkode;rm -f *.o)
-	(cd ./sundials/arkode;rm -f *.o)
 	rm -f *.dll
 	rm -f *.exe
 	(cd ../inst;rm -f *.a)

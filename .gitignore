@@ -4,3 +4,5 @@ $ cat .git/info/exclude
 *.[oa]
 *.so
 
+/doc/
+/Meta/
