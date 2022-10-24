@@ -2,7 +2,7 @@ Package: paropt
 Type: Package
 Title: Parameter Optimizing of ODE-Systems
 Version: 0.3
-Date: 2022-09-27
+Date: 2022-10-17
 Author: Krämer Konrad [aut, cre],
   Krämer Johannes [aut],
   Heyer Arnd [ths],

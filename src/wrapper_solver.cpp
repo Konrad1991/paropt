@@ -30,7 +30,7 @@ Rcpp::List wrapper_solver(vd& init_state,
 
   // define solver
   solver_ptr_save save_fct;
-  if(solvertype = 1) {
+  if(solvertype == 1) {
     save_fct = solver_bdf_save;
   } else if(solvertype == 2){
     save_fct = solver_adams_save;

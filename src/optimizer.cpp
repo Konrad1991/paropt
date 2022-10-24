@@ -71,7 +71,7 @@ double min_objfn_val;
 // define solver
 solver_ptr objfct;
 solver_ptr_save save_fct;
-if(solvertype = 1) {
+if(solvertype == 1) {
   objfct = solver_bdf;
   save_fct = solver_bdf_save;
 } else if(solvertype == 2){
