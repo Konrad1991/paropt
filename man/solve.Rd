@@ -31,11 +31,11 @@
 
   \strong{The ode system:}
   \hr{}
-  The ode system is an R function which accepts four arguments and returns nothing.
+  The ode system is an R function which accepts four arguments and returns one.
   \enumerate{
     \item the first argument is \strong{t} whichdefines the (time-) point of then independent variable at which the ode-system is evaluated.
     \item the second argument is a vector called \strong{y} which defines the current states at timepoint \strong{t}
-    \item the third argument is a vector called \strong{ydot} which should be filled with the derivative (left hand side) of the ode-system. \strong{do not return the vector}
+    \item the third argument is a vector called \strong{ydot} which should be filled with the derivative (left hand side) of the ode-system. It has already the correct length! \strong{This vector has to be returned.}
     \item the last argument is called \strong{parameter} and is a vector containing the current parameter-set which is tested by the optimization algorithm. \cr
     \strong{If the parameters can change over time. The already interpolated value is passed to the ode-system.} \cr
   }
@@ -55,7 +55,7 @@
   }
 
   \itemize{
-    \item The function returns nothing. It is only necessary to fill the vector \strong{ydot}. Check the package \emph{ast2ast} for more details how this works.
+    \item The function returns \emph{ydot}. It is only necessary to fill the vector \strong{ydot}. Check the package \emph{ast2ast} for more details how this works.
     \item The R function is translated to a C++ function using the package \emph{ast2ast}, see also \href{https://CRAN.R-project.org/package=ast2ast}{ast2ast on CRAN} and \code{\link[ast2ast:translate]{ast2ast::translate()}}. Therefore, if you are calling 'solve' for the first time the function has to be compiled. This can require a bit of time.
   }
   \strong{The parameters:}
@@ -150,6 +150,7 @@ ode <- function(t, y, ydot, parameter) {
   prey_db = at(y, 2)
   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+  return(ydot)
 }
 path <- system.file("examples", package = "paropt")
 states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)

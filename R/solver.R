@@ -2,6 +2,8 @@ solve <- function(ode, parameter,
                   reltol = 1e-06, abstol = 1e-08,
                   states,
                   solvertype = "bdf",
+                  own_error_fct,
+                  own_spline_fct,
                   verbose = FALSE) {
 
   stopifnot(!missing(ode))
@@ -16,9 +18,60 @@ solve <- function(ode, parameter,
   stopifnot(is.logical(verbose))
   name_f <- as.character(substitute(f))
 
+  this_is_returned <- check_fct(ode, optimizer = FALSE)
+
   fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = FALSE,
                                     types_of_args = c("double", rep("sexp", 3)),
-                                    return_type = "void")
+                                    return_type = "sexp")
+
+  ecf <- NULL
+  if(missing(own_error_fct)) {
+    ecf <- get_default_error_fct()
+  } else {
+    ecf <- ast2ast::translate(own_error_fct, verbose = verbose, output = "XPtr",
+                              reference = FALSE,
+                              types_of_args = c("double", "double", "double"),
+                              return_type = "sexp")
+  }
+
+  sf <- NULL
+  if(missing(own_spline_fct)) {
+    sf <- get_default_spline_fct()
+  } else {
+    sf <- ast2ast::translate(own_spline_fct, verbose = verbose, output = "XPtr",
+                             reference = TRUE,
+                             types_of_args = c("double", "sexp", "sexp"),
+                             return_type = "sexp")
+  }
+
+  # own jac function
+  stype <- NULL
+  if(solvertype == "bdf") {
+    stype <- 1
+  } else if(solvertype == "adams") {
+    stype <- 2
+  }
+
+  stype <- NULL
+  if(solvertype == "bdf") {
+    stype <- 1
+  } else if(solvertype == "adams") {
+    stype <- 2
+  }
+
+  jf <- get_mock_jac_fct()
+  if(!missing(own_jac_fct)) {
+    if(stype == 2) {
+      warning("own jacobian function cannot be used by solver adams. The function is ignored")
+    } else {
+      stype <- 3
+      jf <- ast2ast::translate(own_jac_fct, verbose = verbose, output = "XPtr",
+                               reference = TRUE,
+                               types_of_args = c("double", "sexp", "sexp", "sexp", "sexp"),
+                               return_type = "sexp")
+    }
+  }
+
 
   # boundaries
   par_time <- c()
@@ -53,13 +106,6 @@ solve <- function(ode, parameter,
     atol = abstol
   }
 
-  stype <- NULL
-  if(solvertype == "bdf") {
-    stype <- 1
-  } else if(solvertype == "adams") {
-    stype <- 2
-  }
-
   par_time <- as.vector(par_time)
   par_cut_idx <- as.integer(par_cut_idx)
   istate <- unlist(states[1, 2:dim(states)[2]])
@@ -71,7 +117,7 @@ solve <- function(ode, parameter,
     parameter_vec = parb,
     state_measured = st, state_idx_cuts = state_idx_cuts,
     integration_times = integration_times,
-    reltol, atol, fct_ret, stype)
+    reltol, atol, fct_ret, stype, ecf, sf, jf)
 
   # states
   is_states <- data.frame(states$time, ret[[2]])

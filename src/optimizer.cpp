@@ -13,7 +13,10 @@ Rcpp::List wrapper_optimizer(vd& init_state,
                        Rcpp::XPtr<OS> fct,
                        int nswarm, int ngen,
                        double error,
-                       int solvertype) {
+                       int solvertype,
+                       Rcpp::XPtr<error_calc_fct> ecf,
+                       Rcpp::XPtr<spline_fct> sf,
+                       Rcpp::XPtr<JAC> jf) {
 
 // add parameter to struct
 time_state_information tsi;
@@ -26,6 +29,9 @@ tsi.state_idx_cut = state_idx_cuts;
 tsi.integration_times = integration_times;
 tsi.reltol = reltol;
 tsi.absolute_tolerances= absolute_tolerances;
+tsi.ecf = *ecf;
+tsi.sf = *sf;
+tsi.jf = *jf;
 
 OS ode = *fct;
 av lb = lb_;
@@ -77,6 +83,9 @@ if(solvertype == 1) {
 } else if(solvertype == 2){
   objfct = solver_adams;
   save_fct = solver_adams_save;
+} else if(solvertype == 3) {
+  objfct = solver_bdf_with_jac;
+  save_fct = solver_bdf_save_with_jac;
 }
 Rcpp::NumericMatrix df(integration_times.size(), init_state.size());
 
@@ -268,7 +277,10 @@ while( iter < ngen) {
     Rcpp::Rcerr << "global best val" << "\t" << global_best << std::endl;
     Rcpp::Rcerr << "Generation number:" << "\t" << iter << std::endl;
   }
-  error = global_best;
+  if(global_best <= error) {
+    Rcpp::Rcout << "found sufficient solution" << std::endl;
+    break;
+  }
   Rcpp::checkUserInterrupt();
 } // end generation loop
 

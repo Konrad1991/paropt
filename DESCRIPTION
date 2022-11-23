@@ -9,7 +9,7 @@ Author: Krämer Konrad [aut, cre],
   University of Stuttgart [uvp],
   Institute of Biomaterials and Biomolecular Systems at the University of Stuttgart [his]
   | file AUTHORS
-Maintainer: Krämer Konrad <Konrad_kraemer@yahoo.de>
+Maintainer: Krämer Konrad <konrad_kraemer@yahoo.de>
 Copyright: file COPYRIGHTS
 BugReports: https://github.com/Konrad1991/paropt
 Description: Enable optimization of parameters of ordinary differential equations.

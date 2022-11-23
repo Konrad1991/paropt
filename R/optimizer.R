@@ -4,6 +4,9 @@ optimize <- function(ode, lb, ub,
                      error = 0.0001,
                      states,
                      solvertype = "bdf",
+                     own_error_fct,
+                     own_spline_fct,
+                     own_jac_fct,
                      verbose = FALSE) {
 
     stopifnot(!missing(ode))
@@ -25,12 +28,58 @@ optimize <- function(ode, lb, ub,
     integration_times <- states[, 1]
     stopifnot("names have to be the same in ub and lb" = names(lb) == names(ub) )
     stopifnot(is.logical(verbose))
-    name_f <- as.character(substitute(f))
+
+    this_is_returned <- check_fct(ode, optimizer = TRUE)
+
+    name_f <- as.character(substitute(ode))
     fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = FALSE,
                                   types_of_args = c("double", rep("sexp", 3)),
-                                  return_type = "void")
-    stopifnot("Found differnce in dim() between lower and upper boundary" =
+                                  return_type = "sexp")
+    stopifnot("Found difference in dim() between lower and upper boundary" =
                 identical(dim(lb), dim(ub)))
+
+    # own error function
+    ecf <- NULL
+    if(missing(own_error_fct)) {
+      ecf <- get_default_error_fct()
+    } else {
+      ecf <- ast2ast::translate(own_error_fct, verbose = verbose, output = "XPtr",
+                                          reference = FALSE,
+                                          types_of_args = c("double", "double", "double"),
+                                          return_type = "sexp")
+    }
+
+    # own spline function
+    sf <- NULL
+    if(missing(own_spline_fct)) {
+      sf <- get_default_spline_fct()
+    } else {
+      sf <- ast2ast::translate(own_spline_fct, verbose = verbose, output = "XPtr",
+                                          reference = TRUE,
+                                          types_of_args = c("double", "sexp", "sexp"),
+                                          return_type = "sexp")
+    }
+
+    # own jac function
+    stype <- NULL
+    if(solvertype == "bdf") {
+      stype <- 1
+    } else if(solvertype == "adams") {
+      stype <- 2
+    }
+
+    jf <- get_mock_jac_fct()
+    if(!missing(own_jac_fct)) {
+      if(stype == 2) {
+        warning("own jacobian function cannot be used by solver adams. The function is ignored")
+      } else {
+        stype <- 3
+        jf <- ast2ast::translate(own_jac_fct, verbose = verbose, output = "XPtr",
+                                 reference = TRUE,
+                                 types_of_args = c("double", "sexp", "sexp", "sexp", "sexp"),
+                                 return_type = "sexp")
+      }
+    }
 
     # boundaries
     par_time <- c()
@@ -82,13 +131,6 @@ optimize <- function(ode, lb, ub,
       atol = abstol
     }
 
-    stype <- NULL
-    if(solvertype == "bdf") {
-      stype <- 1
-    } else if(solvertype == "adams") {
-      stype <- 2
-    }
-
     par_time <- as.vector(par_time)
     par_cut_idx <- as.integer(par_cut_idx)
     istate <- unlist(states[1, 2:dim(states)[2]])
@@ -101,7 +143,7 @@ optimize <- function(ode, lb, ub,
                       state_measured = st, state_idx_cuts = state_idx_cuts,
                       integration_times = integration_times,
                       reltol, atol, fct_ret, npop, ngen,
-                      error, stype)
+                      error, stype, ecf, sf, jf)
 
     # states
     is_states <- data.frame(states$time, ret[[3]])

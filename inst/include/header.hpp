@@ -19,6 +19,10 @@
 #include <limits>
 #include <vector>
 
+typedef sexp (*error_calc_fct)(double num_points, double a, double b);
+typedef sexp (*spline_fct)(realtype& t, sexp& time_vec, sexp& par_vec);
+typedef sexp (*JAC)(double t, sexp&y, sexp& ydot, sexp& J, sexp& params);
+
 struct time_state_information {
   std::vector<double> init_state;
   std::vector<double> par_times;
@@ -28,9 +32,13 @@ struct time_state_information {
   std::vector<double> integration_times;
   double reltol;
   std::vector<double> absolute_tolerances;
+  error_calc_fct ecf;
+  spline_fct sf;
+  JAC jf;
 };
 
-typedef void (*OS)(double t, sexp& y, sexp& ydot, sexp& params);
+typedef sexp (*OS)(double t, sexp& y, sexp& ydot, sexp& params);
+
 typedef std::vector<double> vd;
 typedef std::vector<int> vi;
 typedef arma::vec av;

@@ -43,7 +43,7 @@ SOURCES_CVODE= ./sundials/cvode/cvode.c ./sundials/cvode/cvode_bandpre.c \
 ./sundials/cvode/cvode_nls.c
 
 
-SOURCES = RcppExports.cpp solver.cpp optimizer.cpp wrapper_solver.cpp
+SOURCES = RcppExports.cpp solver.cpp optimizer.cpp wrapper_solver.cpp default_error_spline_fct.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 
