@@ -30,6 +30,8 @@ optimize <- function(ode, lb, ub,
     stopifnot(is.logical(verbose))
 
     this_is_returned <- check_fct(ode, optimizer = TRUE)
+    args <- formalArgs(ode)
+    stopifnot("Four arguments have to be passed to ode-function!"=length(args)==4)
 
     name_f <- as.character(substitute(ode))
     fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = FALSE,
@@ -43,6 +45,10 @@ optimize <- function(ode, lb, ub,
     if(missing(own_error_fct)) {
       ecf <- get_default_error_fct()
     } else {
+      this_is_returned <- check_fct(own_error_fct, optimizer = TRUE)
+      args <- formalArgs(own_error_fct)
+      stopifnot("Three arguments have to be passed to error-function!"=length(args)==3)
+
       ecf <- ast2ast::translate(own_error_fct, verbose = verbose, output = "XPtr",
                                           reference = FALSE,
                                           types_of_args = c("double", "double", "double"),
@@ -54,6 +60,9 @@ optimize <- function(ode, lb, ub,
     if(missing(own_spline_fct)) {
       sf <- get_default_spline_fct()
     } else {
+      this_is_returned <- check_fct(own_spline_fct, optimizer = TRUE)
+      args <- formalArgs(own_spline_fct)
+      stopifnot("Three arguments have to be passed to spline-function!"=length(args)==3)
       sf <- ast2ast::translate(own_spline_fct, verbose = verbose, output = "XPtr",
                                           reference = TRUE,
                                           types_of_args = c("double", "sexp", "sexp"),
@@ -73,6 +82,9 @@ optimize <- function(ode, lb, ub,
       if(stype == 2) {
         warning("own jacobian function cannot be used by solver adams. The function is ignored")
       } else {
+        this_is_returned <- check_fct(own_jac_fct, optimizer = TRUE)
+        args <- formalArgs(own_jac_fct)
+        stopifnot("Three arguments have to be passed to spline-function!"=length(args)==5)
         stype <- 3
         jf <- ast2ast::translate(own_jac_fct, verbose = verbose, output = "XPtr",
                                  reference = TRUE,

@@ -27,9 +27,6 @@ check_fct <- function(f, optimizer = TRUE) {
   }
 
   e$found_what <- NULL
-  args <- formalArgs(f)
-  stopifnot("Four arguments have to be passed to function!"=length(args)==4)
-
   trash <- e$walk_ast(body(f))
   stopifnot("Found no return statement"=e$found==TRUE)
 
