@@ -4,6 +4,7 @@ solve <- function(ode, parameter,
                   solvertype = "bdf",
                   own_error_fct,
                   own_spline_fct,
+                  own_jac_fct,
                   verbose = FALSE) {
 
   stopifnot(!missing(ode))
