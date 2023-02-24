@@ -72,12 +72,31 @@ solve <- function(ode, parameter,
   if(!missing(own_jac_fct)) {
     if(stype == 2) {
       warning("own jacobian function cannot be used by solver adams. The function is ignored")
-    } else {
+    } else if(is.function(own_jac_fct)){
       stype <- 3
       this_is_returned <- check_fct(own_jac_fct, optimizer = FALSE)
       args <- formalArgs(own_jac_fct)
       stopifnot("Three arguments have to be passed to spline-function!"=length(args)==5)
       jf <- ast2ast::translate(own_jac_fct, verbose = verbose, output = "XPtr",
+                               reference = TRUE,
+                               types_of_args = c("double", "sexp", "sexp", "sexp", "sexp"),
+                               return_type = "sexp")
+    } else if(own_jac_fct == "dfdr") {
+      stype <- 3
+      l <- dfdr::fcts()
+      cmr <- function(a, b, c) 1
+      l <- dfdr::fcts_add_fct(l, cmr, cmr, keep = TRUE)
+      args <- formalArgs(ode)
+      y_arg <- rlang::as_string(args[[2]])
+      ydot_arg <- rlang::as_string(args[[3]])
+      y_arg <- rlang::ensym(y_arg)
+      ydot_arg <- rlang::ensym(ydot_arg)
+      jac <- dfdr::jacobian(ode, !!ydot_arg, !!y_arg, derivs = l)
+      jac_body <- body(jac)
+      jac_body <- jac_body[-2]
+      jac_fct <- function(t, y, ydot, jac_mat, parameter) {}
+      body(jac_fct) <- jac_body
+      jf <- ast2ast::translate(jac_fct, verbose = verbose, output = "XPtr",
                                reference = TRUE,
                                types_of_args = c("double", "sexp", "sexp", "sexp", "sexp"),
                                return_type = "sexp")

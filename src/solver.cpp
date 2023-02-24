@@ -207,9 +207,8 @@ int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
 
 int wrapper_jac_system(realtype t, N_Vector y, N_Vector ydot,
-                      SUNMatrix J, void *user_data, 
+                      SUNMatrix J, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-
   // cast pointer to structure and store elements
   struct usr_data_jac *my_ode_system = (struct usr_data_jac*)user_data;
   JAC odes_jac;
@@ -634,7 +633,7 @@ double solver_bdf_save_with_jac(std::vector<double> &param_combi_start, OS ode_s
 
   retval = CVodeSetJacFn(cvode_mem, wrapper_jac_system);
   if (check_retval(&retval, "CVodeSetJacFn", 1)) return(1);
-  
+
   //int CVodetmpcount=0;
   double return_time;
   float return_steps=1.;
