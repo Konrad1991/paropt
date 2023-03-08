@@ -4,7 +4,7 @@
  *                Radu Serban @ LLNL
  * ----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2020, Lawrence Livermore National Security
+ * Copyright (c) 2002-2022, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -88,9 +88,15 @@ SUNDIALS_EXPORT int CVodeSetLinearSolver(void *cvode_mem,
   -----------------------------------------------------------------*/
 
 SUNDIALS_EXPORT int CVodeSetJacFn(void *cvode_mem, CVLsJacFn jac);
-SUNDIALS_EXPORT int CVodeSetMaxStepsBetweenJac(void *cvode_mem,
-                                               long int msbj);
+SUNDIALS_EXPORT int CVodeSetJacEvalFrequency(void *cvode_mem,
+                                             long int msbj);
+SUNDIALS_EXPORT int CVodeSetLinearSolutionScaling(void *cvode_mem,
+                                                  booleantype onoff);
+SUNDIALS_EXPORT int CVodeSetDeltaGammaMaxBadJac(void *cvode_mem,
+                                                realtype dgmax_jbad);
 SUNDIALS_EXPORT int CVodeSetEpsLin(void *cvode_mem, realtype eplifac);
+SUNDIALS_EXPORT int CVodeSetLSNormFactor(void *arkode_mem,
+                                         realtype nrmfac);
 SUNDIALS_EXPORT int CVodeSetPreconditioner(void *cvode_mem,
                                            CVLsPrecSetupFn pset,
                                            CVLsPrecSolveFn psolve);
@@ -103,6 +109,9 @@ SUNDIALS_EXPORT int CVodeSetLinSysFn(void *cvode_mem, CVLsLinSysFn linsys);
   Optional outputs from the CVLS linear solver interface
   -----------------------------------------------------------------*/
 
+SUNDIALS_EXPORT int CVodeGetJac(void *cvode_mem, SUNMatrix *J);
+SUNDIALS_EXPORT int CVodeGetJacTime(void *cvode_mem, sunrealtype *t_J);
+SUNDIALS_EXPORT int CVodeGetJacNumSteps(void *cvode_mem, long int *nst_J);
 SUNDIALS_EXPORT int CVodeGetLinWorkSpace(void *cvode_mem,
                                          long int *lenrwLS,
                                          long int *leniwLS);
@@ -122,10 +131,14 @@ SUNDIALS_EXPORT int CVodeGetNumJtimesEvals(void *cvode_mem,
                                            long int *njvevals);
 SUNDIALS_EXPORT int CVodeGetNumLinRhsEvals(void *cvode_mem,
                                            long int *nfevalsLS);
+SUNDIALS_EXPORT int CVodeGetLinSolveStats(void* cvode_mem,
+                                          long int* njevals, long int* nfevalsLS,
+                                          long int* nliters, long int* nlcfails,
+                                          long int* npevals, long int* npsolves,
+                                          long int* njtsetups, long int* njtimes);
 SUNDIALS_EXPORT int CVodeGetLastLinFlag(void *cvode_mem,
                                         long int *flag);
 SUNDIALS_EXPORT char *CVodeGetLinReturnFlagName(long int flag);
-
 
 #ifdef __cplusplus
 }

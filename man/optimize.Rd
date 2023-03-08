@@ -17,6 +17,7 @@ optimize(
   own_error_fct,
   own_spline_fct,
   own_jac_fct,
+  number_threads,
   verbose
 )
 }
@@ -34,8 +35,9 @@ optimize(
 \item{solvertype}{a string defining the type of solver which should be used "bdf" or "adams" are the possible values. The default value is "bdf". \cr
                   "bdf" is an abbreviation for Backward Differentiation Formulas. "adams" is an abbreviation for the Adams-Moulton algorithm}
 \item{own_error_fct}{An optional function to calculate the error between \emph{in silico} value and the specified value in the data.frame states. The default error calculation is specified in the section notes.}
-\item{own_sline_fct}{An optional function to interpolate the values for vairable parameters. The default function is a CatmullRome spline interpolation.}
+\item{own_spline_fct}{An optional function to interpolate the values for vairable parameters. The default function is a CatmullRome spline interpolation.}
 \item{own_jac_fct}{An optional function which returns the jacobian function. Furthermore it is possible to calculate the jacobian using the R package dfdr. If this is desired "dfdr" has to be passed as argument. If nothing is passed the jacobian matrix is numerically calculated.}
+\item{number_threads}{An optional numeric value defining the number of threads which should be used. If nothing is passed the maximum number of cores is used. The default value is NULL}
 \item{verbose}{A logical value defining whether the output during compilation should be shown or not. The default value is FALSE}
 }
 \description{

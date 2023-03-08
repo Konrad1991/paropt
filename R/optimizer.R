@@ -7,6 +7,7 @@ optimize <- function(ode, lb, ub,
                      own_error_fct,
                      own_spline_fct,
                      own_jac_fct,
+                     number_threads = NULL,
                      verbose = FALSE) {
 
     stopifnot(!missing(ode))
@@ -28,6 +29,15 @@ optimize <- function(ode, lb, ub,
     integration_times <- states[, 1]
     stopifnot("names have to be the same in ub and lb" = names(lb) == names(ub) )
     stopifnot(is.logical(verbose))
+
+    # threads
+    if(is.null(number_threads)) {
+      number_threads <- RcppThread::detectCores()
+    } else {
+      stopifnot(is.numeric(number_threads))
+      stopifnot(number_threads >= 1)
+    }
+
 
     this_is_returned <- check_fct(ode, optimizer = TRUE)
     args <- formalArgs(ode)
@@ -86,7 +96,6 @@ optimize <- function(ode, lb, ub,
         this_is_returned <- check_fct(own_jac_fct, optimizer = TRUE)
         args <- formalArgs(own_jac_fct)
         stopifnot("Five arguments have to be passed to jacobian-function!"=length(args)==5)
-        stype <- 3
         jf <- ast2ast::translate(own_jac_fct, verbose = verbose, output = "XPtr",
                                  reference = TRUE,
                                  types_of_args = c("double", "sexp", "sexp", "sexp", "sexp"),
@@ -175,7 +184,7 @@ optimize <- function(ode, lb, ub,
                       state_measured = st, state_idx_cuts = state_idx_cuts,
                       integration_times = integration_times,
                       reltol, atol, fct_ret, npop, ngen,
-                      error, stype, ecf, sf, jf)
+                      error, stype, ecf, sf, jf, number_threads)
 
     # states
     is_states <- data.frame(states$time, ret[[3]])

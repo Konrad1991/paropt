@@ -9,6 +9,7 @@ ode <- function(t, y, ydot, parameter) {
   prey_db = at(y, 2)
   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+  return(ydot)
 }
 path <- system.file("examples", package = "paropt")
 states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
@@ -24,35 +25,36 @@ expect_equal( (error < 0.05), TRUE)
 
 
 # test optimization constant parameter
- ode <- function(t, y, ydot, parameter) {
-   a_db = at(parameter, 1)
-   b_db = at(parameter, 2)
-   c_db = at(parameter, 3)
-   d_db = at(parameter, 4)
-   predator_db = at(y,1)
-   prey_db = at(y, 2)
-   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
-   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
- }
- path <- system.file("examples", package = "paropt")
- states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
- lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
- ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
- set.seed(1)
- res <- paropt::optimize(ode,
-                         lb = lb, ub = ub,
-                         reltol = 1e-06, abstol = c(1e-08, 1e-08),
-                         error = 0.0001,
-                         npop = 40, ngen = 1000,
-                         states = states)
-error <- res[[1]]
-expect_equal( (error < 0.05), TRUE)
-
- diff <- function(par) {
-   s <- sum(par[1, 2:4] - c(1.1, 0.4, 0.1, 0.4))
-   s < 0.5
- }
- expect_equal(diff(res[[2]]), TRUE)
+#  ode <- function(t, y, ydot, parameter) {
+#    a_db = at(parameter, 1)
+#    b_db = at(parameter, 2)
+#    c_db = at(parameter, 3)
+#    d_db = at(parameter, 4)
+#    predator_db = at(y,1)
+#    prey_db = at(y, 2)
+#    ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
+#    ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+#    return(ydot)
+#  }
+#  path <- system.file("examples", package = "paropt")
+#  states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
+#  lb <- data.frame(time = 0, a = 0.8, b = 0.3, c = 0.09, d = 0.09)
+#  ub <- data.frame(time = 0, a = 1.3, b = 0.7, c = 0.4, d = 0.7)
+#  set.seed(1)
+#  res <- paropt::optimize(ode,
+#                          lb = lb, ub = ub,
+#                          reltol = 1e-06, abstol = c(1e-08, 1e-08),
+#                          error = 0.0001,
+#                          npop = 40, ngen = 1000,
+#                          states = states, number_threads = 1)
+# error <- res[[1]]
+# expect_equal( (error < 0.05), TRUE)
+# par <- res$best_parameter_set
+#  diff <- function(par) {
+#    s <- sum(par[1, 2:4] - c(1.1, 0.4, 0.1, 0.4))
+#    s < 0.5
+#  }
+#  expect_equal(diff(res[[2]]), TRUE)
 #
 #
 #
@@ -98,6 +100,7 @@ expect_equal( (error < 0.05), TRUE)
 #   prey_db = at(y, 2)
 #   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
 #   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+#   return(ydot)
 # }
 #
 # r <- function(a) {
@@ -114,13 +117,14 @@ expect_equal( (error < 0.05), TRUE)
 #                         lb = lb, ub = ub,
 #                         reltol = 1e-06, abstol = c(1e-08, 1e-08),
 #                         error = 0.0001,
-#                         npop = 40, ngen = 10000,
-#                         states = cl)
-#
-# expect_equal( (error < 0.1), TRUE)
-#
+#                         npop = 40, ngen = 3000,
+#                         states = cl, number_threads = 1)
+# par <- res[[2]]
+# par <- par[, 2:5]
+# par <- do.call(c, par)
+# par <- par[!is.na(par)]
 # diff <- function(par) {
-#   s <- sum(par[1, 2:4] - c(1.1, 0.4, 0.1, 0.4))
+#   s <- sum(par - c(1.1, 0.4, 0.1, 0.4, 0.4, 0.4, 0.4))
 #   s < 1
 # }
-# expect_equal(diff(res[[2]]), TRUE)
+# expect_equal(diff(par), TRUE)

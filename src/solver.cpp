@@ -140,8 +140,6 @@ void params_sort (
   }
 }
 
-#define IJth(A,i,j) SM_ELEMENT_D(A,i-1,j-1) // IJth numbers rows,cols 1..NEQ
-
 static int check_retval(void *returnvalue, const char *funcname, int opt) {
   int *retval;
   if (opt == 0 && returnvalue == NULL) {
@@ -167,14 +165,7 @@ struct usr_data{
   std::vector<double> parameter_time;
   std::vector<int> parameter_cut_idx;
   spline_fct sf;
-};
-
-struct usr_data_jac{
   JAC jac_system;
-  std::vector<double> parameter;
-  std::vector<double> parameter_time;
-  std::vector<int> parameter_cut_idx;
-  spline_fct sf;
 };
 
 int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
@@ -210,7 +201,7 @@ int wrapper_jac_system(realtype t, N_Vector y, N_Vector ydot,
                       SUNMatrix J, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
   // cast pointer to structure and store elements
-  struct usr_data_jac *my_ode_system = (struct usr_data_jac*)user_data;
+  struct usr_data *my_ode_system = (struct usr_data*)user_data;
   JAC odes_jac;
   odes_jac = (*my_ode_system).jac_system;
   std::vector<double> params = (*my_ode_system).parameter;
@@ -229,8 +220,9 @@ int wrapper_jac_system(realtype t, N_Vector y, N_Vector ydot,
   sexp y_(NV_LENGTH_S(y), N_VGetArrayPointer(y), 2);
   sexp ydot_(NV_LENGTH_S(ydot), N_VGetArrayPointer(ydot), 2);
   sexp J_(SUNDenseMatrix_Rows(J), SUNDenseMatrix_Columns(J), SUNDenseMatrix_Data(J), 2);
-  sexp trash = odes_jac(time, y_, ydot_, J_, parameter);
-
+  
+  sexp trash = odes_jac(t, y_, ydot_, J_, parameter);
+  
   return 0;
 }
 
@@ -239,8 +231,6 @@ int wrapper_jac_system(realtype t, N_Vector y, N_Vector ydot,
 std::mutex mtx2;
 
 double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_state_information &solv_param_struc) {
-
-
   mtx2.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -253,22 +243,28 @@ double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_st
   mtx2.unlock();
 
   // Begin Solver
+  SUNContext sunctx;
   int NEQ = hs_cut_idx_vec.size();
-  realtype reltol, t;// tout;
+  realtype reltol, t;
   N_Vector y, abstol;
   SUNMatrix A;
   SUNLinearSolver LS;
-  void *cvode_mem;
-  int retval; // retvalr, iout;
+  void* cvode_mem;
+  int retval;
 
   y = abstol = NULL;
   A = NULL;
   LS = NULL;
   cvode_mem = NULL;
+  
+  // Create the SUNDIALS context 
+  retval = SUNContext_Create(NULL, &sunctx);
+  if (check_retval(&retval, "SUNContext_Create", 1)) return(1);
 
-  y = N_VNew_Serial(NEQ);
+  // initial conditions
+  y = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-  abstol = N_VNew_Serial(NEQ);
+  abstol = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
   mtx2.lock();
@@ -280,7 +276,7 @@ double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_st
   reltol = solv_param_struc.reltol;
   mtx2.unlock();
 
-  cvode_mem = CVodeCreate(CV_BDF);
+  cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
   // set error handler to Rcpp::Rcerr
@@ -290,7 +286,7 @@ double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_st
 
   double sum_of_least_squares = 0.;
 
-  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf};
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf, nullptr};
   void*ptr_to_my_ode_system = &my_ode_system;
   retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
   if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
@@ -301,24 +297,20 @@ double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_st
   retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
   if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
 
-  A = SUNDenseMatrix(NEQ, NEQ);
+  A = SUNDenseMatrix(NEQ, NEQ, sunctx);
   if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
 
-  LS = SUNLinSol_Dense(y, A);
+  LS = SUNLinSol_Dense(y, A, sunctx);
   if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
 
   retval = CVodeSetLinearSolver(cvode_mem, LS, A);
   if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
 
-  //int CVodetmpcount=0;
   double return_time;
-  float return_steps=1.;
   std::vector<double> temp_measured(init_state.size());
-  //int num_states = init_state.size();
 
   for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
-    for (int j = 1; j <= return_steps; j++) {
-      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      return_time = integration_times[ti];
       retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
       for (int n = 0; n < NV_LENGTH_S(y); n++) {
         temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
@@ -328,10 +320,9 @@ double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_st
         }
       }
       if(retval < 0) {
-        sum_of_least_squares = 1.79769e+308; //1000000.; //1.79769e+308
+        sum_of_least_squares = std::numeric_limits<double>::max();
         break;
       }
-    }
   }
 
   N_VDestroy(y);
@@ -343,10 +334,7 @@ double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_st
   return sum_of_least_squares;
 }
 
-
 double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system, time_state_information &solv_param_struc) {
-
-
   mtx2.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
@@ -360,22 +348,27 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
   mtx2.unlock();
 
   // Begin Solver
+  SUNContext sunctx;
   int NEQ = hs_cut_idx_vec.size();
   realtype reltol, t;// tout;
   N_Vector y, abstol;
   SUNMatrix A;
   SUNLinearSolver LS;
-  void *cvode_mem;
+  void* cvode_mem;
   int retval; // retvalr, iout;
+  
+  // Create the SUNDIALS context 
+  retval = SUNContext_Create(NULL, &sunctx);
+  if (check_retval(&retval, "SUNContext_Create", 1)) return(1);
 
   y = abstol = NULL;
   A = NULL;
   LS = NULL;
   cvode_mem = NULL;
 
-  y = N_VNew_Serial(NEQ);
+  y = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-  abstol = N_VNew_Serial(NEQ);
+  abstol = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
   mtx2.lock();
@@ -387,7 +380,7 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
   reltol = solv_param_struc.reltol;
   mtx2.unlock();
 
-  cvode_mem = CVodeCreate(CV_BDF);
+  cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
   // set error handler to Rcpp::Rcerr
@@ -397,8 +390,8 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
 
   double sum_of_least_squares = 0.;
 
-  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf};
-  void*ptr_to_my_ode_system = &my_ode_system;
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf, jac_system};
+  void* ptr_to_my_ode_system = &my_ode_system;
   retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
   if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
 
@@ -408,10 +401,10 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
   retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
   if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
 
-  A = SUNDenseMatrix(NEQ, NEQ);
+  A = SUNDenseMatrix(NEQ, NEQ, sunctx);
   if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
 
-  LS = SUNLinSol_Dense(y, A);
+  LS = SUNLinSol_Dense(y, A, sunctx);
   if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
 
   retval = CVodeSetLinearSolver(cvode_mem, LS, A);
@@ -423,13 +416,11 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
 
   //int CVodetmpcount=0;
   double return_time;
-  float return_steps=1.;
+  
   std::vector<double> temp_measured(init_state.size());
-  //int num_states = init_state.size();
-
+  
   for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
-    for (int j = 1; j <= return_steps; j++) {
-      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      return_time = integration_times[ti];
       retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
       for (int n = 0; n < NV_LENGTH_S(y); n++) {
         temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
@@ -439,10 +430,9 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
         }
       }
       if(retval < 0) {
-        sum_of_least_squares = 1.79769e+308; //1000000.; //1.79769e+308
+        sum_of_least_squares = std::numeric_limits<double>::max(); //1.79769e+308; //1000000.; //1.79769e+308
         break;
       }
-    }
   }
 
   N_VDestroy(y);
@@ -454,10 +444,9 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
   return sum_of_least_squares;
 }
 
-
-
 double solver_bdf_save(std::vector<double> &param_combi_start, OS ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF) {
 
+  mtx2.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
@@ -466,79 +455,82 @@ double solver_bdf_save(std::vector<double> &param_combi_start, OS ode_system, ti
   std::vector<double> integration_times = solv_param_struc.integration_times;
   error_calc_fct ecf = solv_param_struc.ecf;
   spline_fct sf = solv_param_struc.sf;
-
+  mtx2.unlock();
+  
   // Begin Solver
+  SUNContext sunctx;
   int NEQ = hs_cut_idx_vec.size();
-  realtype reltol, t; // tout;
+  realtype reltol, t;
   N_Vector y, abstol;
   SUNMatrix A;
   SUNLinearSolver LS;
-  void *cvode_mem;
-  int retval; // retvalr, iout;
-
+  void* cvode_mem;
+  int retval;
+  
   y = abstol = NULL;
   A = NULL;
   LS = NULL;
   cvode_mem = NULL;
-
-  y = N_VNew_Serial(NEQ);
+  
+  // Create the SUNDIALS context 
+  retval = SUNContext_Create(NULL, &sunctx);
+  if (check_retval(&retval, "SUNContext_Create", 1)) return(1);
+  
+  // initial conditions
+  y = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-  abstol = N_VNew_Serial(NEQ);
+  abstol = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
+  
+  mtx2.lock();
   for (int i = 0; i < NEQ; ++i) {
     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
   }
-
+  
   reltol = solv_param_struc.reltol;
-
-  cvode_mem = CVodeCreate(CV_BDF);
+  mtx2.unlock();
+  
+  cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
-
+  
   // set error handler to Rcpp::Rcerr
   //void* ptr_to_cvode_mem = &cvode_mem;
   void* ptr_to_nothing = &cvode_mem;
   retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
-
+  
   double sum_of_least_squares = 0.;
-
-  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf};
+  
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf, nullptr};
   void*ptr_to_my_ode_system = &my_ode_system;
   retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
   if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
-
+  
   retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
   if (check_retval(&retval, "CVodeInit", 1)) return(1);
-
+  
   retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
   if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
-
-  A = SUNDenseMatrix(NEQ, NEQ);
+  
+  A = SUNDenseMatrix(NEQ, NEQ, sunctx);
   if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
-
-  LS = SUNLinSol_Dense(y, A);
+  
+  LS = SUNLinSol_Dense(y, A, sunctx);
   if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
-
+  
   retval = CVodeSetLinearSolver(cvode_mem, LS, A);
   if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
-
-  //int CVodetmpcount=0;
+  
   double return_time;
-  float return_steps=1.;
-
   std::vector<double> temp_measured(init_state.size());
-  //int num_states = init_state.size();
-
-
+  
   for(int i = 0; i < NV_LENGTH_S(y); i++) {
     DF(0 , i) = NV_Ith_S(y,i);
   }
 
   int counter = 1;
   for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
-    for (int j = 1; j <= return_steps; j++) {
-      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      return_time = integration_times[ti];
       retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL); //
       for (int n = 0; n < NV_LENGTH_S(y); n++) {
         DF(counter, n) = NV_Ith_S(y,n);
@@ -550,7 +542,6 @@ double solver_bdf_save(std::vector<double> &param_combi_start, OS ode_system, ti
       }
       if (check_retval(&retval, "CVode", 1)) {
         break;}
-    }
     counter++;
   }
 
@@ -565,6 +556,7 @@ double solver_bdf_save(std::vector<double> &param_combi_start, OS ode_system, ti
 
 double solver_bdf_save_with_jac(std::vector<double> &param_combi_start, OS ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF) {
 
+  mtx2.lock();
   std::vector<double> init_state = solv_param_struc.init_state;
   std::vector<double> params_time_combi_vec = solv_param_struc.par_times;
   std::vector<int> params_cut_idx_vec = solv_param_struc.param_idx_cuts;
@@ -574,82 +566,88 @@ double solver_bdf_save_with_jac(std::vector<double> &param_combi_start, OS ode_s
   error_calc_fct ecf = solv_param_struc.ecf;
   spline_fct sf = solv_param_struc.sf;
   JAC jac_system = solv_param_struc.jf;
-
+  mtx2.unlock();
+  
   // Begin Solver
+  SUNContext sunctx;
   int NEQ = hs_cut_idx_vec.size();
-  realtype reltol, t; // tout;
+  realtype reltol, t;// tout;
   N_Vector y, abstol;
   SUNMatrix A;
   SUNLinearSolver LS;
-  void *cvode_mem;
+  void* cvode_mem;
+  void* jac_mem;
   int retval; // retvalr, iout;
-
+  
+  // Create the SUNDIALS context 
+  retval = SUNContext_Create(NULL, &sunctx);
+  if (check_retval(&retval, "SUNContext_Create", 1)) return(1);
+  
   y = abstol = NULL;
   A = NULL;
   LS = NULL;
   cvode_mem = NULL;
-
-  y = N_VNew_Serial(NEQ);
+  jac_mem = NULL;
+  
+  y = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-  abstol = N_VNew_Serial(NEQ);
+  abstol = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
-
+  
+  mtx2.lock();
   for (int i = 0; i < NEQ; ++i) {
     NV_Ith_S(abstol, i) = solv_param_struc.absolute_tolerances[i];
     NV_Ith_S(y, i) = solv_param_struc.init_state[i];
   }
-
+  
   reltol = solv_param_struc.reltol;
-
-  cvode_mem = CVodeCreate(CV_BDF);
+  mtx2.unlock();
+  
+  cvode_mem = CVodeCreate(CV_BDF, sunctx);
   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
-
+  
   // set error handler to Rcpp::Rcerr
   //void* ptr_to_cvode_mem = &cvode_mem;
   void* ptr_to_nothing = &cvode_mem;
   retval = CVodeSetErrHandlerFn(cvode_mem, own_error_handler, ptr_to_nothing);
-
+  
   double sum_of_least_squares = 0.;
-
-  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf};
-  void*ptr_to_my_ode_system = &my_ode_system;
+  
+  struct usr_data my_ode_system = {ode_system, param_combi_start, params_time_combi_vec, params_cut_idx_vec, sf, jac_system};
+  void* ptr_to_my_ode_system = &my_ode_system;
   retval = CVodeSetUserData(cvode_mem, ptr_to_my_ode_system);
   if (check_retval((void *)cvode_mem, "CVodeSetUserData", 0)) return(1);
-
+  
   retval = CVodeInit(cvode_mem, wrapper_ode_system, integration_times[0], y);
   if (check_retval(&retval, "CVodeInit", 1)) return(1);
-
+  
   retval = CVodeSVtolerances(cvode_mem, reltol, abstol);
   if (check_retval(&retval, "CVodeSVtolerances", 1)) return(1);
-
-  A = SUNDenseMatrix(NEQ, NEQ);
+  
+  A = SUNDenseMatrix(NEQ, NEQ, sunctx);
   if(check_retval((void *)A, "SUNDenseMatrix", 0)) return(1);
-
-  LS = SUNLinSol_Dense(y, A);
+  
+  LS = SUNLinSol_Dense(y, A, sunctx);
   if(check_retval((void *)LS, "SUNLinSol_Dense", 0)) return(1);
-
+  
   retval = CVodeSetLinearSolver(cvode_mem, LS, A);
   if(check_retval(&retval, "CVodeSetLinearSolver", 1)) return(1);
-
+  
+  // user jac function
   retval = CVodeSetJacFn(cvode_mem, wrapper_jac_system);
   if (check_retval(&retval, "CVodeSetJacFn", 1)) return(1);
-
-  //int CVodetmpcount=0;
+  
   double return_time;
   float return_steps=1.;
-
   std::vector<double> temp_measured(init_state.size());
-  //int num_states = init_state.size();
-
-
+  
   for(int i = 0; i < NV_LENGTH_S(y); i++) {
     DF(0 , i) = NV_Ith_S(y,i);
   }
 
   int counter = 1;
   for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
-    for (int j = 1; j <= return_steps; j++) {
-      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      return_time = integration_times[ti];
       retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL); //
       for (int n = 0; n < NV_LENGTH_S(y); n++) {
         DF(counter, n) = NV_Ith_S(y,n);
@@ -661,7 +659,6 @@ double solver_bdf_save_with_jac(std::vector<double> &param_combi_start, OS ode_s
       }
       if (check_retval(&retval, "CVode", 1)) {
         break;}
-    }
     counter++;
   }
 
@@ -688,18 +685,23 @@ double solver_adams(std::vector<double> &param_combi_start, OS ode_system, time_
   mtx2.unlock();
 
   // Begin Solver
+  SUNContext sunctx;
   int NEQ = hs_cut_idx_vec.size();
   realtype reltol, t;// tout;
   N_Vector y, abstol;
   void *cvode_mem;
   int retval; // retvalr, iout;
+  
+  // Create the SUNDIALS context 
+  retval = SUNContext_Create(NULL, &sunctx);
+  if (check_retval(&retval, "SUNContext_Create", 1)) return(1);
 
   y = abstol = NULL;
   cvode_mem = NULL;
 
-  y = N_VNew_Serial(NEQ);
+  y = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-  abstol = N_VNew_Serial(NEQ);
+  abstol = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
   mtx2.lock();
@@ -710,7 +712,7 @@ double solver_adams(std::vector<double> &param_combi_start, OS ode_system, time_
 
   reltol = solv_param_struc.reltol;
   mtx2.unlock();
-  cvode_mem = CVodeCreate(CV_ADAMS);
+  cvode_mem = CVodeCreate(CV_ADAMS, sunctx);
   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
   // set error handler to Rcpp::Rcerr
@@ -733,17 +735,12 @@ double solver_adams(std::vector<double> &param_combi_start, OS ode_system, time_
 
   retval = CVDiag(cvode_mem);
   if(check_retval(&retval, "CVDiag", 1)) return(1);
-
-  //int CVodetmpcount=0;
   double return_time;
-  float return_steps=1.;
 
   std::vector<double> temp_measured(init_state.size());
-  //int num_states = init_state.size();
 
   for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
-    for (int j = 1; j <= return_steps; j++) {
-      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      return_time = integration_times[ti];
       retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
       for (int n = 0; n < NV_LENGTH_S(y); n++) {
         temp_measured[n] =  hs_harvest_state_combi_vec[hs_cut_idx_vec[n] * n + ti];
@@ -753,10 +750,9 @@ double solver_adams(std::vector<double> &param_combi_start, OS ode_system, time_
         }
       }
       if(retval < 0) {
-        sum_of_least_squares = 1.79769e+308;//1000000.;
+        sum_of_least_squares = std::numeric_limits<double>::max(); //1.79769e+308;//1000000.;
         break;
       }
-    }
   }
 
   N_VDestroy(y);
@@ -778,18 +774,23 @@ double solver_adams_save(std::vector<double> &param_combi_start, OS ode_system, 
   spline_fct sf = solv_param_struc.sf;
 
   // Begin Solver
+  SUNContext sunctx;
   int NEQ = hs_cut_idx_vec.size();
   realtype reltol, t; // tout;
   N_Vector y, abstol;
   void *cvode_mem;
   int retval; // retvalr, iout;
+  
+  // Create the SUNDIALS context 
+  retval = SUNContext_Create(NULL, &sunctx);
+  if (check_retval(&retval, "SUNContext_Create", 1)) return(1);
 
   y = abstol = NULL;
   cvode_mem = NULL;
 
-  y = N_VNew_Serial(NEQ);
+  y = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)y, "N_VNew_Serial", 0)) return(1);
-  abstol = N_VNew_Serial(NEQ);
+  abstol = N_VNew_Serial(NEQ, sunctx);
   if (check_retval((void *)abstol, "N_VNew_Serial", 0)) return(1);
 
   for (int i = 0; i < NEQ; ++i) {
@@ -799,7 +800,7 @@ double solver_adams_save(std::vector<double> &param_combi_start, OS ode_system, 
 
   reltol = solv_param_struc.reltol;
 
-  cvode_mem = CVodeCreate(CV_ADAMS);
+  cvode_mem = CVodeCreate(CV_ADAMS, sunctx);
   if (check_retval((void *)cvode_mem, "CVodeCreate", 0)) return(1);
 
   // set error handler to Rcpp::Rcerr
@@ -822,13 +823,9 @@ double solver_adams_save(std::vector<double> &param_combi_start, OS ode_system, 
 
   retval = CVDiag(cvode_mem);
   if(check_retval(&retval, "CVDiag", 1)) return(1);
-
-  //int CVodetmpcount=0;
   double return_time;
-  float return_steps=1.;
 
   std::vector<double> temp_measured(init_state.size());
-  //int num_states = init_state.size();
 
   for(int i = 0; i < NV_LENGTH_S(y); i++) {
     DF(0 , i) = NV_Ith_S(y,i);
@@ -836,8 +833,7 @@ double solver_adams_save(std::vector<double> &param_combi_start, OS ode_system, 
 
   int counter = 1;
   for (unsigned int ti = 1; ti < integration_times.size(); ti++) {
-    for (int j = 1; j <= return_steps; j++) {
-      return_time = integration_times[ti-1] +j/return_steps*(integration_times[ti]-integration_times[ti-1]);
+      return_time = integration_times[ti];
       retval = CVode(cvode_mem, return_time, y, &t, CV_NORMAL);
       for (int n = 0; n < NV_LENGTH_S(y); n++) {
         DF(counter, n) = NV_Ith_S(y,n);
@@ -849,8 +845,6 @@ double solver_adams_save(std::vector<double> &param_combi_start, OS ode_system, 
       }
       if (check_retval(&retval, "CVode", 1)) {
         break;}
-
-    }
     counter++;
   }
 

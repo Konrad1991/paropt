@@ -21,7 +21,7 @@
 
 typedef sexp (*error_calc_fct)(double num_points, double a, double b);
 typedef sexp (*spline_fct)(realtype& t, sexp& time_vec, sexp& par_vec);
-typedef sexp (*JAC)(double t, sexp&y, sexp& ydot, sexp& J, sexp& params);
+typedef sexp (*JAC)(realtype& t, sexp&y, sexp& ydot, sexp& J, sexp& params);
 
 struct time_state_information {
   std::vector<double> init_state;

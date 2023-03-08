@@ -16,7 +16,8 @@ Rcpp::List wrapper_optimizer(vd& init_state,
                        int solvertype,
                        Rcpp::XPtr<error_calc_fct> ecf,
                        Rcpp::XPtr<spline_fct> sf,
-                       Rcpp::XPtr<JAC> jf) {
+                       Rcpp::XPtr<JAC> jf,
+                       int number_threads) {
 
 // add parameter to struct
 time_state_information tsi;
@@ -90,7 +91,7 @@ if(solvertype == 1) {
 Rcpp::NumericMatrix df(integration_times.size(), init_state.size());
 
 // thread pool
-RcppThread::ThreadPool pool;
+RcppThread::ThreadPool pool(number_threads);
 std::vector<std::future<double> > futures(nswarm);
 
 // init

@@ -44,8 +44,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // wrapper_optimizer
-Rcpp::List wrapper_optimizer(vd& init_state, vd& par_times, vi& param_idx_cuts, vd& lb_, vd& ub_, vd& state_measured, vi& state_idx_cuts, vd& integration_times, double reltol, vd& absolute_tolerances, Rcpp::XPtr<OS> fct, int nswarm, int ngen, double error, int solvertype, Rcpp::XPtr<error_calc_fct> ecf, Rcpp::XPtr<spline_fct> sf, Rcpp::XPtr<JAC> jf);
-RcppExport SEXP _paropt_wrapper_optimizer(SEXP init_stateSEXP, SEXP par_timesSEXP, SEXP param_idx_cutsSEXP, SEXP lb_SEXP, SEXP ub_SEXP, SEXP state_measuredSEXP, SEXP state_idx_cutsSEXP, SEXP integration_timesSEXP, SEXP reltolSEXP, SEXP absolute_tolerancesSEXP, SEXP fctSEXP, SEXP nswarmSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP, SEXP ecfSEXP, SEXP sfSEXP, SEXP jfSEXP) {
+Rcpp::List wrapper_optimizer(vd& init_state, vd& par_times, vi& param_idx_cuts, vd& lb_, vd& ub_, vd& state_measured, vi& state_idx_cuts, vd& integration_times, double reltol, vd& absolute_tolerances, Rcpp::XPtr<OS> fct, int nswarm, int ngen, double error, int solvertype, Rcpp::XPtr<error_calc_fct> ecf, Rcpp::XPtr<spline_fct> sf, Rcpp::XPtr<JAC> jf, int number_threads);
+RcppExport SEXP _paropt_wrapper_optimizer(SEXP init_stateSEXP, SEXP par_timesSEXP, SEXP param_idx_cutsSEXP, SEXP lb_SEXP, SEXP ub_SEXP, SEXP state_measuredSEXP, SEXP state_idx_cutsSEXP, SEXP integration_timesSEXP, SEXP reltolSEXP, SEXP absolute_tolerancesSEXP, SEXP fctSEXP, SEXP nswarmSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP, SEXP ecfSEXP, SEXP sfSEXP, SEXP jfSEXP, SEXP number_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -67,7 +67,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::XPtr<error_calc_fct> >::type ecf(ecfSEXP);
     Rcpp::traits::input_parameter< Rcpp::XPtr<spline_fct> >::type sf(sfSEXP);
     Rcpp::traits::input_parameter< Rcpp::XPtr<JAC> >::type jf(jfSEXP);
-    rcpp_result_gen = Rcpp::wrap(wrapper_optimizer(init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, sf, jf));
+    Rcpp::traits::input_parameter< int >::type number_threads(number_threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(wrapper_optimizer(init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, sf, jf, number_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -100,7 +101,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_paropt_get_default_error_fct", (DL_FUNC) &_paropt_get_default_error_fct, 0},
     {"_paropt_get_default_spline_fct", (DL_FUNC) &_paropt_get_default_spline_fct, 0},
     {"_paropt_get_mock_jac_fct", (DL_FUNC) &_paropt_get_mock_jac_fct, 0},
-    {"_paropt_wrapper_optimizer", (DL_FUNC) &_paropt_wrapper_optimizer, 18},
+    {"_paropt_wrapper_optimizer", (DL_FUNC) &_paropt_wrapper_optimizer, 19},
     {"_paropt_wrapper_solver", (DL_FUNC) &_paropt_wrapper_solver, 14},
     {NULL, NULL, 0}
 };
