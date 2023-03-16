@@ -99,7 +99,7 @@ sexp default_error_fct(double num_points, double a, double b) {
   return std::abs((a - b)/b)/num_points;
 }
 
-sexp mock_jac(double t, sexp&, sexp&, sexp&, sexp&) {
+sexp mock_jac(double& t, sexp&, sexp&, sexp&, sexp&) {
   Rcpp::stop("something went wrong. Mock jacobian is called!");
 }
 
