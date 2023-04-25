@@ -1,50 +1,44 @@
 CXX_STD=CXX17
 
-PKG_CPPFLAGS= -I../inst -I../inst/include
+PKG_CPPFLAGS= -I../inst -I../inst/include -I./sundials
 PKG_CXXFLAGS= $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
-PKG_LIBS= $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials
+PKG_LIBS=  $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials -lpthread -latomic
 LIBS=-L./ -L../inst
 
 .PHONY: all ../inst/libsundials.a
 
-SOURCES_NVECSERIAL= ./sundials/nvector/serial/fnvector_serial.c \
-./sundials/nvector/serial/nvector_serial.c
+SOURCES_NVECSERIAL= ./sundials/nvector/serial/nvector_serial.c
 
-SOURCES_SUNDIALS= ./sundials/sundials/sundials_band.c ./sundials/sundials/sundials_dense.c \
+SOURCES_SUNDIALS= ./sundials/sundials/sundials_dense.c \
+./sundials/sundials/sundials_context.c \
+./sundials/sundials/sundials_logger.c \
 ./sundials/sundials/sundials_direct.c ./sundials/sundials/sundials_iterative.c \
 ./sundials/sundials/sundials_linearsolver.c \
 ./sundials/sundials/sundials_math.c ./sundials/sundials/sundials_matrix.c \
 ./sundials/sundials/sundials_nonlinearsolver.c \
 ./sundials/sundials/sundials_nvector.c ./sundials/sundials/sundials_nvector_senswrapper.c
 
-SOURCES_SUNMAT = ./sundials/sunmatrix/dense/fsunmatrix_dense.c \
-./sundials/sunmatrix/dense/sunmatrix_dense.c \
-./sundials/sunmatrix/band/fsunmatrix_band.c \
-./sundials/sunmatrix/band/sunmatrix_band.c
+SOURCES_SUNMAT = ./sundials/sunmatrix/dense/sunmatrix_dense.c \
+./sundials/band/sunmatrix_band.c
 
-SOURCES_SUNLINSOL_DENSE = ./sundials/sunlinsol/dense/fsunlinsol_dense.c \
-./sundials/sunlinsol/dense/sunlinsol_dense.c
-
-SOURCES_SUNLINSOL_BAND = ./sundials/sunlinsol/band/sunlinsol_band.c \
-./sundials/sunlinsol/band/fsunlinsol_band.c
+SOURCES_SUNLINSOL_DENSE = ./sundials/sunlinsol/dense/sunlinsol_dense.c
 
 SOURCES_SUNNONLINSOL = ./sundials/sunnonlinsol/newton/sunnonlinsol_newton.c \
-./sundials/sunnonlinsol/newton/fsunnonlinsol_newton.c \
-./sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c \
-./sundials/sunnonlinsol/fixedpoint/fsunnonlinsol_fixedpoint.c
+./sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c 
 
-SOURCES_CVODE= ./sundials/cvode/cvode.c ./sundials/cvode/cvode_bandpre.c \
-./sundials/cvode/cvode_bbdpre.c \
+SOURCES_CVODE= ./sundials/cvode/cvode.c \
+./sundials/cvode/cvode_proj.c \
 ./sundials/cvode/cvode_diag.c \
 ./sundials/cvode/cvode_io.c \
 ./sundials/cvode/cvode_ls.c \
 ./sundials/cvode/cvode_nls.c
 
-SOURCES =  RcppExports.cpp solver.cpp optimizer.cpp wrapper_solver.cpp default_error_spline_fct.cpp
+
+SOURCES = RcppExports.cpp solver.cpp optimizer.cpp wrapper_solver.cpp default_error_spline_fct.cpp
 
 OBJECTS = $(SOURCES:.cpp=.o)
 
-SOURCES_SUNDIALS_ALL= $(SOURCES_NVECSERIAL) $(SOURCES_SUNDIALS) $(SOURCES_SUNMAT) $(SOURCES_SUNLINSOL_DENSE) $(SOURCES_SUNLINSOL_BAND) $(SOURCES_SUNNONLINSOL) $(SOURCES_CVODE) $(SOURCES_ARKODE)
+SOURCES_SUNDIALS_ALL= $(SOURCES_NVECSERIAL) $(SOURCES_SUNDIALS) $(SOURCES_SUNMAT) $(SOURCES_SUNLINSOL_DENSE) $(SOURCES_SUNNONLINSOL) $(SOURCES_CVODE)
 
 OBJECTS_SUNDIALS_ALL = $(SOURCES_SUNDIALS_ALL:.c=.o)
 
@@ -59,16 +53,16 @@ $(SHLIB): $(OBJECTS_SUNDIALS_ALL) ../inst/libsundials.a
 	$(RANLIB) $@
 
 clean:
+	(cd ./sundials/sundials; rm -f *.o)
 	(cd ./sundials/nvector/serial;rm -f *.o)
-	(cd ./sundials/sundials;rm -f *.o)
 	(cd ./sundials/sunmatrix/dense;rm -f *.o)
+	(cd ./sundials/band; rm -f *.o)
 	(cd ./sundials/sunmatrix/band;rm -f *.o)
 	(cd ./sundials/sunlinsol/dense;rm -f *.o)
 	(cd ./sundials/sunlinsol/band;rm -f *.o)
 	(cd ./sundials/sunnonlinsol/newton;rm -f *.o)
 	(cd ./sundials/sunnonlinsol/fixedpoint;rm -f *.o)
 	(cd ./sundials/cvode;rm -f *.o)
-	(cd ./sundials/arkode;rm -f *.o)
 	rm -f *.dll
 	rm -f *.exe
 	(cd ../inst;rm -f *.a)

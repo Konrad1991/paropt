@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const unsigned long HASH_PRIME        = 14695981039346656037U;
-static const unsigned long HASH_OFFSET_BASIS = 1099511628211U;
+static const unsigned long long HASH_PRIME        = 14695981039346656037U;
+static const unsigned long long HASH_OFFSET_BASIS = 1099511628211U;
 
 /*
   For a nice discussion on popular hashing algorithms see:
@@ -33,9 +33,9 @@ static const unsigned long HASH_OFFSET_BASIS = 1099511628211U;
   This is a 64-bit implementation of the 'a' modification of the
   Fowler–Noll–Vo hash (i.e., FNV1-a).
  */
-static unsigned long fnv1a_hash(const char* str)
+static unsigned long long fnv1a_hash(const char* str)
 {
-  unsigned long hash = HASH_OFFSET_BASIS;
+  unsigned long long hash = HASH_OFFSET_BASIS;
   char c;
   while ((c = *str++))
   {

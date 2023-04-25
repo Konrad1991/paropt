@@ -330,6 +330,7 @@ double solver_bdf(std::vector<double> &param_combi_start, OS ode_system, time_st
   CVodeFree(&cvode_mem);
   SUNLinSolFree(LS);
   SUNMatDestroy(A);
+  SUNContext_Free(&sunctx);
 
   return sum_of_least_squares;
 }
@@ -440,6 +441,7 @@ double solver_bdf_with_jac(std::vector<double> &param_combi_start, OS ode_system
   CVodeFree(&cvode_mem);
   SUNLinSolFree(LS);
   SUNMatDestroy(A);
+  SUNContext_Free(&sunctx);
 
   return sum_of_least_squares;
 }
@@ -550,6 +552,7 @@ double solver_bdf_save(std::vector<double> &param_combi_start, OS ode_system, ti
   CVodeFree(&cvode_mem);
   SUNLinSolFree(LS);
   SUNMatDestroy(A);
+  SUNContext_Free(&sunctx);
 
   return sum_of_least_squares;
 }
@@ -667,6 +670,7 @@ double solver_bdf_save_with_jac(std::vector<double> &param_combi_start, OS ode_s
   CVodeFree(&cvode_mem);
   SUNLinSolFree(LS);
   SUNMatDestroy(A);
+  SUNContext_Free(&sunctx);
 
   return sum_of_least_squares;
 }
@@ -758,6 +762,7 @@ double solver_adams(std::vector<double> &param_combi_start, OS ode_system, time_
   N_VDestroy(y);
   N_VDestroy(abstol);
   CVodeFree(&cvode_mem);
+  SUNContext_Free(&sunctx);
 
   return sum_of_least_squares;
 }
@@ -851,6 +856,7 @@ double solver_adams_save(std::vector<double> &param_combi_start, OS ode_system, 
   N_VDestroy(y);
   N_VDestroy(abstol);
   CVodeFree(&cvode_mem);
+  SUNContext_Free(&sunctx);
 
   return sum_of_least_squares;
 }
