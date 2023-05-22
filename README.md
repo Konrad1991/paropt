@@ -3,6 +3,7 @@
 ![License](https://img.shields.io/cran/l/paropt)
 ![Version](https://img.shields.io/cran/v/paropt)
 [![](http://cranlogs.r-pkg.org/badges/last-month/paropt?color=green)](https://cran.r-project.org/package=paropt)
+[![R-CMD-check](https://github.com/Konrad1991/paropt/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Konrad1991/paropt/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 # News 
