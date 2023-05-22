@@ -12,3 +12,4 @@
 ^docu.pdf
 ^log.txt
 ^CRAN-SUBMISSION$
+^\.github$
