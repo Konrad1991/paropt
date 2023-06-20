@@ -23,7 +23,7 @@ solve <- function(ode, parameter,
   args <- formalArgs(ode)
   stopifnot("Four arguments have to be passed to ode-function!"=length(args)==4)
 
-  fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = FALSE,
+  fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = TRUE,
                                     types_of_args = c("double", rep("sexp", 3)),
                                     return_type = "sexp")
 

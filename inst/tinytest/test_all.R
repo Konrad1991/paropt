@@ -17,10 +17,13 @@ parameter <- data.frame(time = 0, a = 1.1, b = 0.4, c = 0.1, d = 0.4)
 res <- paropt::solve(ode,
                      parameter,
                      reltol = 1e-06, abstol = c(1e-08, 1e-08),
-                     states = states)
+                     states = states, verbose = TRUE)
 
 error <- res[[1]]
 expect_equal( (error < 0.05), TRUE)
+
+
+
 
 
 

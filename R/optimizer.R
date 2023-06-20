@@ -44,7 +44,7 @@ optimize <- function(ode, lb, ub,
     stopifnot("Four arguments have to be passed to ode-function!"=length(args)==4)
 
     name_f <- as.character(substitute(ode))
-    fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = FALSE,
+    fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = TRUE,
                                   types_of_args = c("double", rep("sexp", 3)),
                                   return_type = "sexp")
     stopifnot("Found difference in dim() between lower and upper boundary" =

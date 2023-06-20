@@ -24,7 +24,7 @@ SOURCES_SUNMAT = ./sundials/sunmatrix/dense/sunmatrix_dense.c \
 SOURCES_SUNLINSOL_DENSE = ./sundials/sunlinsol/dense/sunlinsol_dense.c
 
 SOURCES_SUNNONLINSOL = ./sundials/sunnonlinsol/newton/sunnonlinsol_newton.c \
-./sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c 
+./sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c
 
 SOURCES_CVODE= ./sundials/cvode/cvode.c \
 ./sundials/cvode/cvode_proj.c \

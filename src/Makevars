@@ -2,7 +2,7 @@ CXX_STD=CXX17
 
 PKG_CPPFLAGS= -I../inst -I../inst/include -I./sundials
 PKG_CXXFLAGS= $(SHLIB_OPENMP_CXXFLAGS) -I../inst -I../inst/include
-PKG_LIBS=  $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)  -L../inst -lsundials -lpthread -latomic
+PKG_LIBS= $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS) -L../inst -lsundials -lpthread -latomic
 LIBS=-L./ -L../inst
 
 .PHONY: all ../inst/libsundials.a
@@ -24,7 +24,7 @@ SOURCES_SUNMAT = ./sundials/sunmatrix/dense/sunmatrix_dense.c \
 SOURCES_SUNLINSOL_DENSE = ./sundials/sunlinsol/dense/sunlinsol_dense.c
 
 SOURCES_SUNNONLINSOL = ./sundials/sunnonlinsol/newton/sunnonlinsol_newton.c \
-./sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c 
+./sundials/sunnonlinsol/fixedpoint/sunnonlinsol_fixedpoint.c
 
 SOURCES_CVODE= ./sundials/cvode/cvode.c \
 ./sundials/cvode/cvode_proj.c \
