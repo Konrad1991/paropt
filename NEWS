@@ -1,5 +1,9 @@
 News for package 'paropt'
 
+changes in paropt version 0.3.1
+
+- removed a small bug in the spline function
+
 changes in paropt version 0.3
 
 - removed unnecessary interfaces

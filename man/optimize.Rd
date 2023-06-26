@@ -35,7 +35,7 @@ optimize(
 \item{solvertype}{a string defining the type of solver which should be used "bdf" or "adams" are the possible values. The default value is "bdf". \cr
                   "bdf" is an abbreviation for Backward Differentiation Formulas. "adams" is an abbreviation for the Adams-Moulton algorithm}
 \item{own_error_fct}{An optional function to calculate the error between \emph{in silico} value and the specified value in the data.frame states. The default error calculation is specified in the section notes.}
-\item{own_spline_fct}{An optional function to interpolate the values for vairable parameters. The default function is a CatmullRome spline interpolation.}
+\item{own_spline_fct}{An optional function to interpolate the values for variable parameters. The default function is a CatmullRome spline interpolation.}
 \item{own_jac_fct}{An optional function which returns the jacobian function. Furthermore it is possible to calculate the jacobian using the R package dfdr. If this is desired "dfdr" has to be passed as argument. If nothing is passed the jacobian matrix is numerically calculated.}
 \item{number_threads}{An optional numeric value defining the number of threads which should be used. If nothing is passed the maximum number of cores is used. The default value is NULL}
 \item{verbose}{A logical value defining whether the output during compilation should be shown or not. The default value is FALSE}
@@ -154,7 +154,7 @@ error_fct <- function(num_points, insilico, measured) {
 }
 }
 
-\strong{own_sline_fct: }
+\strong{own_spline_fct: }
 \hr{}
 The spline function is called, directly before the ode-system is evaluated. However, the function is only called for non-constant parameters. See example Nr.2 and Nr.3 parameter \emph{d} as described above. The results of the spline function is then stored in the vector \strong{parameter} which is passed to the ode-system. The function expects three arguments:
 \itemize{
@@ -223,17 +223,14 @@ The last element are the \emph{in silico} states returned from the ode-solver us
 
 \note{
 \itemize{
-  \item The error between the defined states and the \emph{in silico} states is a relative error calculated using the following equation: \cr
-  \eqn{
-    error = \frac{1}{num\_of\_comparisons}\sum_{n = 1}^{num\_of\_states}{|in\_silico_n - measured_n|}
-  }
+  \item The error between the defined states and the \emph{in silico} states is the absolute difference normalised using the true state.
   \item The optimization algorithms runs in parallel. Therefore, the ode-system should not contain any printing terms or random number generators.
   \item a particle swarm algorithm is used for optimization.
 }
 }
 
 \examples{
-\dontrun{
+\donttest{
 # Optimize (all parameters are constant)
 ode <- function(t, y, ydot, parameter) {
   a_db = at(parameter, 1)
@@ -255,7 +252,7 @@ res <- paropt::optimize(ode,
                         lb = lb, ub = ub,
                         reltol = 1e-06, abstol = c(1e-08, 1e-08),
                         error = 0.0001,
-                        npop = 40, ngen = 1000,
+                        npop = 40, ngen = 100, # 1000 would be better
                         states = states)
 
 
@@ -273,7 +270,7 @@ res <- paropt::optimize(ode,
                         lb = lb, ub = ub,
                         reltol = 1e-06, abstol = c(1e-08, 1e-08),
                         error = 0.0001,
-                        npop = 40, ngen = 10000,
+                        npop = 40, ngen = 100, # 1000 would be better
                         states = states)
 
 
@@ -328,7 +325,7 @@ res <- paropt::optimize(ode,
                         lb = lb, ub = ub,
                         reltol = 1e-06, abstol = c(1e-08, 1e-08),
                         error = 0.0001,
-                        npop = 40, ngen = 1000,
+                        npop = 40, ngen = 100, # 1000 would be better
                         states = states,
                         verbose = TRUE,
                         own_error_fct = error_fct,

@@ -26,7 +26,7 @@
   \item{solvertype}{a string defining the type of solver which should be used "bdf" or "adams" are the possible values. The default value is "bdf". \cr
     "bdf" is an abbreviation for Backward Differentiation Formulas. "adams" is an abbreviation for the Adams-Moulton algorithm}
   \item{own_error_fct}{An optional function to calculate the error between \emph{in silico} value and the specified value in the data.frame states. The default error calculation is specified in the section notes.}
-  \item{own_spline_fct}{An optional function to interpolate the values for vairable parameters. The default function is a CatmullRome spline interpolation.}
+  \item{own_spline_fct}{An optional function to interpolate the values for variable parameters. The default function is a CatmullRome spline interpolation.}
   \item{own_jac_fct}{An optional function which returns the jacobian function. Furthermore it is possible to calculate the jacobian using the R package dfdr. If this is desired "dfdr" has to be passed as argument. If nothing is passed the jacobian matrix is numerically calculated.}
   \item{verbose}{A logical value defining whether the output during compilation should be shown or not. The default value is FALSE}
 }
@@ -142,7 +142,7 @@ error_fct <- function(num_points, insilico, measured) {
 }
 }
 
-\strong{own_sline_fct: }
+\strong{own_spline_fct: }
 \hr{}
 The spline function is called, directly before the ode-system is evaluated. However, the function is only called for non-constant parameters. See example Nr.2 and Nr.3 parameter \emph{d} as described above. The results of the spline function is then stored in the vector \strong{parameter} which is passed to the ode-system. The function expects three arguments:
 \itemize{
@@ -210,14 +210,11 @@ The jacobian function expects 5 arguments.
 }
 \note{
   \itemize{
-    \item The error between the defined states and the \emph{in silico} states is a relative error calculated using the following equation: \cr
-    \eqn{
-      error = \frac{1}{num\_of\_comparisons}\sum_{n = 1}^{num\_of\_states}{|in\_silico_n - measured_n|}
-    }
+    \item The error between the defined states and the \emph{in silico} states is the absolute difference normalised using the true state.
   }
 }
 \examples{
-  \dontrun{
+  \donttest{
 # Solve an ode-system
 ode <- function(t, y, ydot, parameter) {
   a_db = at(parameter, 1)
