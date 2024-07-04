@@ -13,3 +13,4 @@
 ^log.txt
 ^CRAN-SUBMISSION$
 ^\.github$
+^\.development$

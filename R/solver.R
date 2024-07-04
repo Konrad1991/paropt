@@ -6,7 +6,6 @@ solve <- function(ode, parameter,
                   own_spline_fct,
                   own_jac_fct,
                   verbose = FALSE) {
-
   stopifnot(!missing(ode))
   stopifnot(is.function(ode))
   stopifnot(is.data.frame(parameter))
@@ -21,67 +20,80 @@ solve <- function(ode, parameter,
 
   this_is_returned <- check_fct(ode, optimizer = FALSE)
   args <- formalArgs(ode)
-  stopifnot("Four arguments have to be passed to ode-function!"=length(args)==4)
+  stopifnot("Four arguments have to be passed to ode-function!" = length(args) == 4)
 
-  fct_ret <- ast2ast::translate(ode, verbose = verbose, output = "XPtr", reference = TRUE,
-                                    types_of_args = c("double", rep("sexp", 3)),
-                                    return_type = "sexp")
+  fct_ret <- ast2ast::translate(ode,
+    references = rep(TRUE, 4),
+    types_of_args = rep("double", 4),
+    data_structures = c("scalar", rep("borrow", 3)),
+    handle_inputs = rep("", 4),
+    verbose = verbose, output = "XPtr"
+  )
 
   ecf <- NULL
-  if(missing(own_error_fct)) {
+  if (missing(own_error_fct)) {
     ecf <- get_default_error_fct()
   } else {
     this_is_returned <- check_fct(own_error_fct, optimizer = FALSE)
     args <- formalArgs(own_error_fct)
-    stopifnot("Three arguments have to be passed to error-function!"=length(args)==3)
-    ecf <- ast2ast::translate(own_error_fct, verbose = verbose, output = "XPtr",
-                              reference = FALSE,
-                              types_of_args = c("double", "double", "double"),
-                              return_type = "sexp")
+    stopifnot("Three arguments have to be passed to error-function!" = length(args) == 3)
+    ecf <- ast2ast::translate(own_error_fct,
+      verbose = verbose, output = "XPtr",
+      references = rep(FALSE, 3),
+      types_of_args = c("double", "double", "double"),
+      data_structures = rep("scalar", 3),
+      handle_inputs = rep("", 3)
+    )
   }
 
   sf <- NULL
-  if(missing(own_spline_fct)) {
+  if (missing(own_spline_fct)) {
     sf <- get_default_spline_fct()
   } else {
     this_is_returned <- check_fct(own_spline_fct, optimizer = FALSE)
     args <- formalArgs(own_spline_fct)
-    stopifnot("Three arguments have to be passed to spline-function!"=length(args)==3)
-    sf <- ast2ast::translate(own_spline_fct, verbose = verbose, output = "XPtr",
-                             reference = TRUE,
-                             types_of_args = c("double", "sexp", "sexp"),
-                             return_type = "sexp")
+    stopifnot("Three arguments have to be passed to spline-function!" = length(args) == 3)
+    sf <- ast2ast::translate(own_spline_fct,
+      verbose = verbose, output = "XPtr",
+      references = rep(TRUE, 3),
+      types_of_args = c("double", "double", "double"),
+      data_structures = c("scalar", rep("vector", 2)),
+      handle_inputs = rep("", 3)
+    )
   }
 
   # own jac function
   stype <- NULL
-  if(solvertype == "bdf") {
+  if (solvertype == "bdf") {
     stype <- 1
-  } else if(solvertype == "adams") {
+  } else if (solvertype == "adams") {
     stype <- 2
   }
 
   stype <- NULL
-  if(solvertype == "bdf") {
+  if (solvertype == "bdf") {
     stype <- 1
-  } else if(solvertype == "adams") {
+  } else if (solvertype == "adams") {
     stype <- 2
   }
 
   jf <- get_mock_jac_fct()
-  if(!missing(own_jac_fct)) {
-    if(stype == 2) {
+  if (!missing(own_jac_fct)) {
+    if (stype == 2) {
       warning("own jacobian function cannot be used by solver adams. The function is ignored")
-    } else if(is.function(own_jac_fct)){
+    } else if (is.function(own_jac_fct)) {
       stype <- 3
       this_is_returned <- check_fct(own_jac_fct, optimizer = FALSE)
       args <- formalArgs(own_jac_fct)
-      stopifnot("Three arguments have to be passed to spline-function!"=length(args)==5)
-      jf <- ast2ast::translate(own_jac_fct, verbose = verbose, output = "XPtr",
-                               reference = TRUE,
-                               types_of_args = c("double", "sexp", "sexp", "sexp", "sexp"),
-                               return_type = "sexp")
-    } else if(own_jac_fct == "dfdr") {
+      stopifnot("Three arguments have to be passed to spline-function!" = length(args) == 5)
+      jf <- ast2ast::translate(own_jac_fct,
+        verbose = verbose, output = "XPtr",
+        references = rep(TRUE, 5),
+        types_of_args = rep("double", 5),
+        data_structures = c("scalar", rep("borrow", 4)),
+        handle_inputs = rep("", 5)
+      )
+    } else if (own_jac_fct == "dfdr") {
       stype <- 3
       l <- dfdr::fcts()
       cmr <- function(a, b, c) 1
@@ -96,10 +108,13 @@ solve <- function(ode, parameter,
       jac_body <- jac_body[-2]
       jac_fct <- function(t, y, ydot, jac_mat, parameter) {}
       body(jac_fct) <- jac_body
-      jf <- ast2ast::translate(jac_fct, verbose = verbose, output = "XPtr",
-                               reference = TRUE,
-                               types_of_args = c("double", "sexp", "sexp", "sexp", "sexp"),
-                               return_type = "sexp")
+      jf <- ast2ast::translate(jac_fct,
+        verbose = verbose, output = "XPtr",
+        references = rep(TRUE, 5),
+        types_of_args = rep("double", 5),
+        data_structures = c("scalar", rep("borrow", 4)),
+        handle_inputs = rep("", 5)
+      )
     }
   }
 
@@ -108,7 +123,7 @@ solve <- function(ode, parameter,
   par_time <- c()
   par_cut_idx <- c()
   parb <- c()
-  for(i in 2:dim(parameter)[2]) {
+  for (i in 2:dim(parameter)[2]) {
     temp_par <- parameter[, i]
     idx_par <- !is.na(temp_par)
     temp_par <- temp_par[idx_par]
@@ -122,19 +137,21 @@ solve <- function(ode, parameter,
 
   # states
   st <- c()
-  for(i in 2:dim(states)[2]) {
+  for (i in 2:dim(states)[2]) {
     st <- c(st, states[, i])
   }
-  state_idx_cuts <- rep(dim(states)[1], dim(states)[2] -1)
+  state_idx_cuts <- rep(dim(states)[1], dim(states)[2] - 1)
 
   # tolerances
   atol <- NULL
-  if(missing(abstol)) {
+  if (missing(abstol)) {
     atol <- rep(1e-08, dim(states)[2] - 1)
   } else {
-    stopifnot("Wrong number of absolute tolerances" =
-                (dim(states)[2] - 1) == length(abstol) )
-    atol = abstol
+    stopifnot(
+      "Wrong number of absolute tolerances" =
+        (dim(states)[2] - 1) == length(abstol)
+    )
+    atol <- abstol
   }
 
   par_time <- as.vector(par_time)
@@ -148,7 +165,8 @@ solve <- function(ode, parameter,
     parameter_vec = parb,
     state_measured = st, state_idx_cuts = state_idx_cuts,
     integration_times = integration_times,
-    reltol, atol, fct_ret, stype, ecf, sf, jf)
+    reltol, atol, fct_ret, stype, ecf, sf, jf
+  )
 
   # states
   is_states <- data.frame(states$time, ret[[2]])

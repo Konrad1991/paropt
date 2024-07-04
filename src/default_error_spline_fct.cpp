@@ -1,8 +1,9 @@
 #include "header.hpp"
 
-sexp default_spline(double &t, sexp &time_vec, sexp &par_vec) {
+etr::Vec<double> default_spline(double &t, etr::Vec<double> &time_vec,
+                                etr::Vec<double> &par_vec) {
 
-  if(etr::length(time_vec) == 0) {
+  if (etr::length(time_vec) == 0) {
     Rcpp::stop("time vector is empty");
   }
 
@@ -95,11 +96,14 @@ sexp default_spline(double &t, sexp &time_vec, sexp &par_vec) {
   return res;
 }
 
-sexp default_error_fct(double num_points, double a, double b) {
+etr::Vec<double> default_error_fct(double num_points, double a, double b) {
   return std::abs((a - b) / b) / num_points;
 }
 
-sexp mock_jac(double &t, sexp &, sexp &, sexp &, sexp &) {
+void mock_jac(double &t, etr::Vec<double, etr::Borrow<double>> &,
+              etr::Vec<double, etr::Borrow<double>> &,
+              etr::Vec<double, etr::Borrow<double>> &,
+              etr::Vec<double, etr::Borrow<double>> &) {
   Rcpp::stop("something went wrong. Mock jacobian is called!");
 }
 
