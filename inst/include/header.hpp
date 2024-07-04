@@ -3,25 +3,30 @@
 
 // [[Rcpp::depends(ast2ast)]]
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::plugins(cpp17)]]
-#include <RcppThread.h>
+// [[Rcpp::plugins(cpp2a)]]
 #include "etr.hpp"
+#include <RcppThread.h>
 
 #include <cassert>
-#include <nvector/nvector_serial.h>
-#include <sundials/sundials_types.h>
 #include <cvode/cvode.h>
-#include <sunmatrix/sunmatrix_dense.h>
-#include <sunlinsol/sunlinsol_dense.h>
-#include <sundials/sundials_math.h>
 #include <cvode/cvode_diag.h> // for ADAMS
+#include <nvector/nvector_serial.h>
+#include <sundials/sundials_math.h>
+#include <sundials/sundials_types.h>
+#include <sunlinsol/sunlinsol_dense.h>
+#include <sunmatrix/sunmatrix_dense.h>
 
 #include <limits>
 #include <vector>
 
-typedef sexp (*error_calc_fct)(double num_points, double a, double b);
-typedef sexp (*spline_fct)(double& t, sexp& time_vec, sexp& par_vec);
-typedef sexp (*JAC)(double& t, sexp& y, sexp& ydot, sexp& J, sexp& params);
+typedef etr::Vec<double> (*error_calc_fct)(double num_points, double a,
+                                           double b);
+typedef etr::Vec<double> (*spline_fct)(double &t, etr::Vec<double> &time_vec,
+                                       etr::Vec<double> &par_vec);
+typedef void (*JAC)(double &t, etr::Vec<double, etr::Borrow<double>> &y,
+                    etr::Vec<double, etr::Borrow<double>> &ydot,
+                    etr::Vec<double, etr::Borrow<double>> &J,
+                    etr::Vec<double, etr::Borrow<double>> &params);
 
 struct time_state_information {
   std::vector<double> init_state;
@@ -37,13 +42,20 @@ struct time_state_information {
   JAC jf;
 };
 
-typedef sexp (*OS)(double& t, sexp& y, sexp& ydot, sexp& params);
+typedef void (*OS)(double &t, etr::Vec<double, etr::Borrow<double>> &y,
+                   etr::Vec<double, etr::Borrow<double>> &ydot,
+                   etr::Vec<double, etr::Borrow<double>> &params);
 
 typedef std::vector<double> vd;
 typedef std::vector<int> vi;
 typedef arma::vec av;
 typedef arma::mat am;
-typedef double (*solver_ptr)(std::vector<double> &param_combi_start, OS ode_system, time_state_information &solv_param_struc);
-typedef double (*solver_ptr_save)(std::vector<double> &param_combi_start, OS ode_system, time_state_information solv_param_struc, Rcpp::NumericMatrix &DF);
+typedef double (*solver_ptr)(std::vector<double> &param_combi_start,
+                             OS ode_system,
+                             time_state_information &solv_param_struc);
+typedef double (*solver_ptr_save)(std::vector<double> &param_combi_start,
+                                  OS ode_system,
+                                  time_state_information solv_param_struc,
+                                  Rcpp::NumericMatrix &DF);
 
 #endif // HEAD

@@ -30,7 +30,8 @@ typedef std::vector<std::vector<int>> MI;
 typedef std::vector<std::string> VS;
 typedef Rcpp::DataFrame DF;
 
-double CatmullRomSpline(realtype &t, sexp &time_vec, sexp &par_vec) {
+etr::Vec<double> CatmullRomSpline(realtype &t, etr::Vec<double> &time_vec,
+                                  etr::Vec<double> &par_vec) {
   int idx0, idx1, idx2, idx3;
   double t0, t1, t2, t3;
   double y0, y1, y2, y3;
@@ -115,8 +116,8 @@ void params_sort(realtype &t, std::vector<double> &params,
 
   params.resize(no_par);
 
-  sexp tmp_time_vec;
-  sexp tmp_par_vec;
+  etr::Vec<double> tmp_time_vec;
+  etr::Vec<double> tmp_par_vec;
   int tmp_no_vals;
   int idx_count = 0;
 
@@ -126,8 +127,8 @@ void params_sort(realtype &t, std::vector<double> &params,
       params[i] = par_vec[idx_count];
       ++idx_count;
     } else {
-      tmp_par_vec = etr::vector(tmp_no_vals);
-      tmp_time_vec = etr::vector(tmp_no_vals);
+      tmp_par_vec = etr::vector_numeric(tmp_no_vals);
+      tmp_time_vec = etr::vector_numeric(tmp_no_vals);
       for (int j = 0; j < tmp_no_vals; ++j) {
         tmp_par_vec[j] = par_vec[idx_count];
         tmp_time_vec[j] = time_vec[idx_count];
@@ -185,11 +186,13 @@ int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
   // extract time
   double time = t;
 
-  sexp parameter(parameter_input.size(), parameter_input.data(), 2);
-  sexp y_(NV_LENGTH_S(y), N_VGetArrayPointer(y), 2);
-  sexp ydot_(NV_LENGTH_S(ydot), N_VGetArrayPointer(ydot), 2);
-
-  sexp trash = odes(time, y_, ydot_, parameter);
+  etr::Vec<double, etr::Borrow<double>> parameter(parameter_input.data(),
+                                                  parameter_input.size());
+  etr::Vec<double, etr::Borrow<double>> y_(N_VGetArrayPointer(y),
+                                           NV_LENGTH_S(y));
+  etr::Vec<double, etr::Borrow<double>> ydot_(N_VGetArrayPointer(ydot),
+                                              NV_LENGTH_S(ydot));
+  odes(time, y_, ydot_, parameter);
 
   return 0;
 }
@@ -213,13 +216,16 @@ int wrapper_jac_system(realtype t, N_Vector y, N_Vector ydot, SUNMatrix J,
   // extract time
   double time = t;
 
-  sexp parameter(parameter_input.size(), parameter_input.data(), 2);
-  sexp y_(NV_LENGTH_S(y), N_VGetArrayPointer(y), 2);
-  sexp ydot_(NV_LENGTH_S(ydot), N_VGetArrayPointer(ydot), 2);
-  sexp J_(SUNDenseMatrix_Rows(J), SUNDenseMatrix_Columns(J),
-          SUNDenseMatrix_Data(J), 2);
-
-  sexp trash = odes_jac(t, y_, ydot_, J_, parameter);
+  etr::Vec<double, etr::Borrow<double>> parameter(parameter_input.data(),
+                                                  parameter_input.size());
+  etr::Vec<double, etr::Borrow<double>> y_(N_VGetArrayPointer(y),
+                                           NV_LENGTH_S(y));
+  etr::Vec<double, etr::Borrow<double>> ydot_(N_VGetArrayPointer(ydot),
+                                              NV_LENGTH_S(ydot));
+  etr::Vec<double, etr::Borrow<double>> J_(SUNDenseMatrix_Data(J),
+                                           SUNDenseMatrix_Rows(J),
+                                           SUNDenseMatrix_Columns(J));
+  odes_jac(t, y_, ydot_, J_, parameter);
 
   return 0;
 }
