@@ -127,8 +127,8 @@ void params_sort(realtype &t, std::vector<double> &params,
       params[i] = par_vec[idx_count];
       ++idx_count;
     } else {
-      tmp_par_vec = etr::vector_numeric(tmp_no_vals);
-      tmp_time_vec = etr::vector_numeric(tmp_no_vals);
+      tmp_par_vec = etr::numeric(tmp_no_vals);
+      tmp_time_vec = etr::numeric(tmp_no_vals);
       for (int j = 0; j < tmp_no_vals; ++j) {
         tmp_par_vec[j] = par_vec[idx_count];
         tmp_time_vec[j] = time_vec[idx_count];
@@ -222,7 +222,7 @@ int wrapper_jac_system(realtype t, N_Vector y, N_Vector ydot, SUNMatrix J,
                                            NV_LENGTH_S(y));
   etr::Vec<double, etr::Borrow<double>> ydot_(N_VGetArrayPointer(ydot),
                                               NV_LENGTH_S(ydot));
-  etr::Vec<double, etr::Borrow<double>> J_(SUNDenseMatrix_Data(J),
+  etr::Mat<double, etr::Borrow<double>> J_(SUNDenseMatrix_Data(J),
                                            SUNDenseMatrix_Rows(J),
                                            SUNDenseMatrix_Columns(J));
   odes_jac(t, y_, ydot_, J_, parameter);

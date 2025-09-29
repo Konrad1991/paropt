@@ -102,7 +102,7 @@ etr::Vec<double> default_error_fct(double num_points, double a, double b) {
 
 void mock_jac(double &t, etr::Vec<double, etr::Borrow<double>> &,
               etr::Vec<double, etr::Borrow<double>> &,
-              etr::Vec<double, etr::Borrow<double>> &,
+              etr::Mat<double, etr::Borrow<double>> &,
               etr::Vec<double, etr::Borrow<double>> &) {
   Rcpp::stop("something went wrong. Mock jacobian is called!");
 }
