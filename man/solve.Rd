@@ -225,7 +225,6 @@ ode <- function(t, y, ydot, parameter) {
   prey_db = at(y, 2)
   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
-  return(ydot)
 }
 path <- system.file("examples", package = "paropt")
 states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)

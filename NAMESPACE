@@ -1,5 +1,7 @@
 export(optimize)
 export(solve)
+S3method(summary,OptimResPAROPT)
+S3method(summary,SolverResPAROPT)
 importFrom(Rcpp,evalCpp)
 importFrom(methods, formalArgs)
 importFrom(RcppThread, detectCores)

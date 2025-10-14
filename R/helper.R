@@ -129,8 +129,8 @@ check_fct_jacobian <- function(f, optimizer) {
 resolve_jacobian <- function(own_jac_fct, verbose, optimizer) {
     check_fct_jacobian(own_jac_fct, optimizer)
 
-    fct_input <- own_spline_fct
-    var_names <- methods::formalArgs(own_spline_fct)
+    fct_input <- own_jac_fct
+    var_names <- methods::formalArgs(own_jac_fct)
     var_names[[1]] <- paste0(var_names[[1]], " |> type(double) |> ref()")
     var_names[[2]] <- paste0(var_names[[2]], " |> type(borrow_vec(double)) |> ref()")
     var_names[[3]] <- paste0(var_names[[3]], " |> type(borrow_vec(double)) |> ref()")
@@ -140,4 +140,38 @@ resolve_jacobian <- function(own_jac_fct, verbose, optimizer) {
     body(fct_input) <- str2lang(body)
 
     ast2ast::translate(own_jac_fct, fct_input, verbose)
+}
+
+summary.OptimResPAROPT <- function(object, ...) {
+  stopifnot(inherits(object, "OptimResPAROPT"))
+  cat(sprintf("Best error: %s", object$global_best_error), "\n")
+  cat("Parameters:\n")
+  print(object$best_parameter_set)
+
+  cat("In silico states:\n")
+  print(object$in_silico_states[1:6, ])
+  if (nrow(object$in_silico_states) > 6) {
+    cat("\t.\n\t.\n\t.\n")
+  }
+  cat("True states:\n")
+  print(object$original_states[1:6, ])
+  if (nrow(object$original_states) > 6) {
+    cat("\t.\n\t.\n\t.\n")
+  }
+  invisible(NULL)
+}
+summary.SolverResPAROPT <- function(object, ...) {
+  stopifnot(inherits(object, "SolverResPAROPT"))
+  cat(sprintf("Error: %s", object$error), "\n")
+  cat("States:\n")
+  print(object$in_silico_states[1:6, ])
+  if (nrow(object$in_silico_states) > 6) {
+    cat("\t.\n\t.\n\t.\n")
+  }
+  cat("True states:\n")
+  print(object$original_states[1:6, ])
+  if (nrow(object$original_states) > 6) {
+    cat("\t.\n\t.\n\t.\n")
+  }
+  invisible(NULL)
 }

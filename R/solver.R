@@ -92,6 +92,11 @@ solve <- function(ode, parameter,
   is_states <- data.frame(states$time, ret[[2]])
   names(is_states) <- names(states)
 
-  res <- list(error = ret[[1]], insilico_states = is_states)
-  return(res)
+  structure(
+    list(
+      error = ret[[1]],
+      in_silico_states = is_states,
+      original_states = states
+    ), class = "SolverResPAROPT"
+  )
 }

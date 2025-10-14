@@ -172,12 +172,12 @@ optimize <- function(ode, lb, ub,
   }
   names(params) <- names(lb)
 
-  # return
-  res <- list(
-    global_best_error = ret[[1]],
-    best_parameter_set = params,
-    in_silico_states = is_states
+  structure(
+    list(
+      global_best_error = ret[[1]],
+      best_parameter_set = params,
+      in_silico_states = is_states,
+      original_states = states
+    ), class = "OptimResPAROPT"
   )
-
-  return(res)
 }
