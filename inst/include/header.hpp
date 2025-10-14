@@ -25,7 +25,7 @@ typedef etr::Vec<double> (*spline_fct)(double &t, etr::Vec<double> &time_vec,
                                        etr::Vec<double> &par_vec);
 typedef void (*JAC)(double &t, etr::Vec<double, etr::Borrow<double>> &y,
                     etr::Vec<double, etr::Borrow<double>> &ydot,
-                    etr::Vec<double, etr::Borrow<double>> &J,
+                    etr::Mat<double, etr::Borrow<double>> &J,
                     etr::Vec<double, etr::Borrow<double>> &params);
 
 struct time_state_information {
