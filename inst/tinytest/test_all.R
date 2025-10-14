@@ -21,11 +21,6 @@ res <- paropt::solve(ode,
 error <- res[[1]]
 expect_equal( (error < 0.05), TRUE)
 
-
-
-
-
-
 # test optimization constant parameter
 ode <- function(t, y, ydot, parameter) {
   a_db = at(parameter, 1)
@@ -57,16 +52,12 @@ diff <- function(par) {
 }
 expect_equal(diff(res[[2]]), TRUE)
 
-
-
-
-
 # test optimization with variable parameter
 ode <- function(t, y, parameter) {
   a_db = at(parameter, 1)
   b_db = at(parameter, 2)
   c_db = at(parameter, 3)
-  d1 <- vector(0, 4)
+  d1 <- numeric(4)
   d1[1] = at(parameter, 4)
   d1[2] = at(parameter, 5)
   d1[3] = at(parameter, 6)
@@ -76,9 +67,10 @@ ode <- function(t, y, parameter) {
   d_db <- cmr(t_db, time, d1)
   predator_db = at(y,1)
   prey_db = at(y, 2)
-  ydot <- vector(0, 2)
+  ydot <- numeric(2)
   ydot[1] = predator_db*prey_db*c_db - predator_db*d_db
   ydot[2] = prey_db*a_db - prey_db*predator_db*b_db
+  return(ydot)
 }
 
 odecpp <- ast2ast::translate(ode)
