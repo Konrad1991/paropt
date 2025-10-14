@@ -7,88 +7,49 @@ optimize <- function(ode, lb, ub,
                      own_error_fct,
                      own_spline_fct,
                      own_jac_fct,
-                     number_threads = NULL,
+                     number_threads,
                      verbose = FALSE) {
+
   stopifnot(!missing(ode))
-  stopifnot(is.function(ode))
+
+  stopifnot(!missing(lb))
+  stopifnot(!missing(ub))
   stopifnot(is.data.frame(lb))
   stopifnot(is.data.frame(ub))
+
+  stopifnot(!missing(states))
   stopifnot(is.data.frame(states))
-  stopifnot(is.numeric(reltol))
-  stopifnot(is.numeric(abstol))
-  stopifnot(is.numeric(error))
-  stopifnot("Error has to be >= 0" = error >= 0)
-  stopifnot(is.atomic(npop))
-  stopifnot(is.atomic(ngen))
+
+  assert_num_length_one(reltol, s(reltol, 1L))
+  stopifnot("abstol has to be numeric" = is.numeric(abstol))
+  assert_num_length_one(error, s(error, 1L))
+  assert_num_length_one(npop, s(npop, 1L))
+  assert_num_length_one(ngen, s(ngen, 1L))
+
   stopifnot("number of particles has to be > 0" = npop > 0)
+  if (npop > 1000) warning("Unusually high number of particles.")
   stopifnot("number of generations has to be > 0" = ngen > 0)
+  if (ngen > 10^5) warning("Unusually high number of generations")
+
   stopifnot("time has to be the first column in lb" = names(lb)[1] == "time")
   stopifnot("time has to be the first column in ub" = names(ub)[1] == "time")
-  stopifnot("time has to be the first column in states" = names(states)[1] == "time")
-  integration_times <- states[, 1]
   stopifnot("names have to be the same in ub and lb" = names(lb) == names(ub))
-  stopifnot(is.logical(verbose))
-
-  # threads
-  if (is.null(number_threads)) {
-    number_threads <- RcppThread::detectCores()
-  } else {
-    stopifnot(is.numeric(number_threads))
-    stopifnot(number_threads >= 1)
-  }
-
-
-  this_is_returned <- check_fct(ode, optimizer = TRUE)
-  args <- formalArgs(ode)
-  stopifnot("Four arguments have to be passed to ode-function!" = length(args) == 4)
-
-  name_f <- as.character(substitute(ode))
-  fct_ret <- ast2ast::translate(ode,
-    references = rep(TRUE, 4),
-    types_of_args = rep("double", 4),
-    data_structures = c("scalar", rep("borrow", 3)),
-    handle_inputs = rep("", 4),
-    verbose = verbose, output = "XPtr"
-  )
   stopifnot(
     "Found difference in dim() between lower and upper boundary" =
       identical(dim(lb), dim(ub))
   )
 
-  # own error function
-  ecf <- NULL
-  if (missing(own_error_fct)) {
-    ecf <- get_default_error_fct()
-  } else {
-    this_is_returned <- check_fct(own_error_fct, optimizer = TRUE)
-    args <- formalArgs(own_error_fct)
-    stopifnot("Three arguments have to be passed to error-function!" = length(args) == 3)
+  stopifnot("time has to be the first column in states" = names(states)[1] == "time")
+  integration_times <- states[[1]]
 
-    ecf <- ast2ast::translate(own_error_fct,
-      verbose = verbose, output = "XPtr",
-      references = rep(FALSE, 3),
-      types_of_args = c("double", "double", "double"),
-      data_structures = rep("scalar", 3),
-      handle_inputs = rep("", 3)
-    )
-  }
+  assert_logical_length_one(verbose, s(verbose, 1L))
 
-  # own spline function
-  sf <- NULL
-  if (missing(own_spline_fct)) {
-    sf <- get_default_spline_fct()
-  } else {
-    this_is_returned <- check_fct(own_spline_fct, optimizer = TRUE)
-    args <- formalArgs(own_spline_fct)
-    stopifnot("Three arguments have to be passed to spline-function!" = length(args) == 3)
-    sf <- ast2ast::translate(own_spline_fct,
-      verbose = verbose, output = "XPtr",
-      references = rep(TRUE, 3),
-      types_of_args = c("double", "double", "double"),
-      data_structures = c("scalar", rep("vector", 2)),
-      handle_inputs = rep("", 3)
-    )
-  }
+  # threads
+  number_threads <- resolve_threads(number_threads)
+
+  fct_ret <- resolve_ode_function(ode, verbose, optimizer = TRUE)
+  ecf <- resolve_error_function(own_error_fct, verbose, optimizer = TRUE)
+  sf <- resolve_spline_function(own_spline_fct, verbose, optimizer = TRUE)
 
   # own jac function
   stype <- NULL
@@ -97,45 +58,13 @@ optimize <- function(ode, lb, ub,
   } else if (solvertype == "adams") {
     stype <- 2
   }
-
   jf <- get_mock_jac_fct()
   if (!missing(own_jac_fct)) {
     if (stype == 2) {
       warning("own jacobian function cannot be used by solver adams. The function is ignored")
     } else if (is.function(own_jac_fct)) {
       stype <- 3
-      this_is_returned <- check_fct(own_jac_fct, optimizer = TRUE)
-      args <- formalArgs(own_jac_fct)
-      stopifnot("Five arguments have to be passed to jacobian-function!" = length(args) == 5)
-      jf <- ast2ast::translate(own_jac_fct,
-        verbose = verbose, output = "XPtr",
-        references = rep(TRUE, 5),
-        types_of_args = rep("double", 5),
-        data_structures = c("scalar", rep("borrow", 4)),
-        handle_inputs = rep("", 5)
-      )
-    } else if (own_jac_fct == "dfdr") {
-      stype <- 3
-      l <- dfdr::fcts()
-      cmr <- function(a, b, c) 1
-      l <- dfdr::fcts_add_fct(l, cmr, cmr, keep = TRUE)
-      args <- formalArgs(ode)
-      y_arg <- rlang::as_string(args[[2]])
-      ydot_arg <- rlang::as_string(args[[3]])
-      y_arg <- rlang::ensym(y_arg)
-      ydot_arg <- rlang::ensym(ydot_arg)
-      jac <- dfdr::jacobian(ode, !!ydot_arg, !!y_arg, derivs = l)
-      jac_body <- body(jac)
-      jac_body <- jac_body[-2]
-      jac_fct <- function(t, y, ydot, jac_mat, parameter) {}
-      body(jac_fct) <- jac_body
-      jf <- ast2ast::translate(jac_fct,
-        verbose = verbose, output = "XPtr",
-        references = rep(TRUE, 5),
-        types_of_args = rep("double", 5),
-        data_structures = c("scalar", rep("borrow", 4)),
-        handle_inputs = rep("", 5)
-      )
+      jf <- resolve_jacobian(own_jac_fct, verbose, optimizer = TRUE)
     }
   }
 
@@ -144,7 +73,7 @@ optimize <- function(ode, lb, ub,
   par_cut_idx <- c()
   lowb <- c()
   upb <- c()
-  for (i in 2:dim(lb)[2]) {
+  for (i in 2:ncol(lb)) {
     temp_lb <- lb[, i]
     temp_ub <- ub[, i]
     idx_lb <- !is.na(temp_lb)
@@ -165,7 +94,7 @@ optimize <- function(ode, lb, ub,
     lb_time <- lb_time[idx_lb]
     ub_time <- ub_time[idx_ub]
     stopifnot(
-      "Found differnce in time column between lower and upper boundary" =
+      "Found difference in time column between lower and upper boundary" =
         identical(lb_time, ub_time)
     )
     if (length(temp_ub) != length(lb_time)) {
@@ -176,26 +105,26 @@ optimize <- function(ode, lb, ub,
 
   # states
   st <- c()
-  for (i in 2:dim(states)[2]) {
+  for (i in 2:ncol(states)) {
     st <- c(st, states[, i])
   }
-  state_idx_cuts <- rep(dim(states)[1], dim(states)[2] - 1)
+  state_idx_cuts <- rep(nrow(states), ncol(states) - 1L)
 
   # tolerances
   atol <- NULL
   if (missing(abstol)) {
-    atol <- rep(1e-08, dim(states)[2] - 1)
+    atol <- rep(1e-08, ncol(states) - 1L)
   } else {
     stopifnot(
       "Wrong number of absolute tolerances" =
-        (dim(states)[2] - 1) == length(abstol)
+        (ncol(states) - 1L) == length(abstol)
     )
     atol <- abstol
   }
 
   par_time <- as.vector(par_time)
   par_cut_idx <- as.integer(par_cut_idx)
-  istate <- unlist(states[1, 2:dim(states)[2]])
+  istate <- unlist(states[1, 2:ncol(states)])
 
   ret <- wrapper_optimizer(
     init_state = istate,
@@ -215,7 +144,7 @@ optimize <- function(ode, lb, ub,
   # parameter
   indevidual_time_for_params <- list()
 
-  params <- data.frame(matrix(NA, ncol = dim(lb)[2], nrow = length(lb$time)))
+  params <- data.frame(matrix(NA, ncol = ncol(lb), nrow = length(lb$time)))
   params[, 1] <- lb$time
   counter <- 2
   increment <- 1

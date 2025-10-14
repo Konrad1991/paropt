@@ -96,8 +96,8 @@ etr::Vec<double> default_spline(double &t, etr::Vec<double> &time_vec,
   return res;
 }
 
-etr::Vec<double> default_error_fct(double num_points, double a, double b) {
-  return std::abs((a - b) / b) / num_points;
+etr::Vec<double> default_error_fct(int num_points, double a, double b) {
+  return std::abs((a - b) / b) / static_cast<double>(num_points);
 }
 
 void mock_jac(double &t, etr::Vec<double, etr::Borrow<double>> &,

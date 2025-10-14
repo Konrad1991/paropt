@@ -188,6 +188,9 @@ int wrapper_ode_system(realtype t, N_Vector y, N_Vector ydot, void *user_data) {
 
   etr::Vec<double, etr::Borrow<double>> parameter(parameter_input.data(),
                                                   parameter_input.size());
+  double* y_ptr = N_VGetArrayPointer(y);
+  double* yd_ptr = N_VGetArrayPointer(ydot);
+  if (!y_ptr || !yd_ptr) return -1;
   etr::Vec<double, etr::Borrow<double>> y_(N_VGetArrayPointer(y),
                                            NV_LENGTH_S(y));
   etr::Vec<double, etr::Borrow<double>> ydot_(N_VGetArrayPointer(ydot),

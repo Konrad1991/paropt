@@ -19,7 +19,7 @@
 #include <limits>
 #include <vector>
 
-typedef etr::Vec<double> (*error_calc_fct)(double num_points, double a,
+typedef etr::Vec<double> (*error_calc_fct)(int num_points, double a,
                                            double b);
 typedef etr::Vec<double> (*spline_fct)(double &t, etr::Vec<double> &time_vec,
                                        etr::Vec<double> &par_vec);

@@ -15,7 +15,7 @@ Description: Enable optimization of parameters of ordinary differential equation
              Therefore, using 'SUNDIALS' to solve the ODE-System (see Hindmarsh, Alan C., Peter N. Brown, Keith E. Grant, Steven L. Lee, Radu Serban, Dan E. Shumaker, and Carol S. Woodward. (2005) <doi:10.1145/1089014.1089020>).
              Furthermore, for optimization the particle swarm algorithm is used (see: Akman, Devin, Olcay Akman, and Elsa Schaefer. (2018) <doi:10.1155/2018/9160793> and Sengupta, Saptarshi, Sanchita Basak, and Richard Peters. (2018) <doi:10.3390/make1010010>). 
 License: GPL-3 
-Imports: Rcpp (>= 1.0.4), ast2ast, methods, dfdr, RcppThread, rlang
+Imports: Rcpp (>= 1.0.4), ast2ast, methods, RcppThread, rlang
 LinkingTo: Rcpp, RcppArmadillo, RcppThread, ast2ast
 Suggests: knitr, rmarkdown, tinytest, deSolve
 VignetteBuilder: knitr
