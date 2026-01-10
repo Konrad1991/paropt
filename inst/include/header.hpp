@@ -19,14 +19,7 @@
 #include <limits>
 #include <vector>
 
-typedef etr::Vec<double> (*error_calc_fct)(int num_points, double a,
-                                           double b);
-typedef etr::Vec<double> (*spline_fct)(double &t, etr::Vec<double> &time_vec,
-                                       etr::Vec<double> &par_vec);
-typedef void (*JAC)(double &t, etr::Vec<double, etr::Borrow<double>> &y,
-                    etr::Vec<double, etr::Borrow<double>> &ydot,
-                    etr::Mat<double, etr::Borrow<double>> &J,
-                    etr::Vec<double, etr::Borrow<double>> &params);
+typedef etr::Double (*error_calc_fct)(etr::Integer num_points, etr::Double a, etr::Double b);
 
 struct time_state_information {
   std::vector<double> init_state;
@@ -38,13 +31,11 @@ struct time_state_information {
   double reltol;
   std::vector<double> absolute_tolerances;
   error_calc_fct ecf;
-  spline_fct sf;
-  JAC jf;
 };
 
-typedef void (*OS)(double &t, etr::Vec<double, etr::Borrow<double>> &y,
-                   etr::Vec<double, etr::Borrow<double>> &ydot,
-                   etr::Vec<double, etr::Borrow<double>> &params);
+typedef void (*OS)(etr::Double &t, etr::Array<etr::Double, etr::Borrow<etr::Double>> &y,
+                   etr::Array<etr::Double, etr::Borrow<etr::Double>> &ydot,
+                   etr::Array<etr::Double, etr::Borrow<etr::Double>> &params);
 
 typedef std::vector<double> vd;
 typedef std::vector<int> vi;

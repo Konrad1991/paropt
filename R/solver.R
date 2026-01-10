@@ -3,11 +3,8 @@ solve <- function(ode, parameter,
                   states,
                   solvertype = "bdf",
                   own_error_fct,
-                  own_spline_fct,
-                  own_jac_fct,
                   verbose = FALSE) {
   stopifnot(!missing(ode))
-
   stopifnot(is.data.frame(parameter))
   stopifnot(is.data.frame(states))
 
@@ -20,23 +17,13 @@ solve <- function(ode, parameter,
 
   fct_ret <- resolve_ode_function(ode, verbose, optimizer = FALSE)
   ecf <- resolve_error_function(own_error_fct, verbose, optimizer = FALSE)
-  sf <- resolve_spline_function(own_spline_fct, verbose, optimizer = FALSE)
 
-  # own jac function
+  # solver type
   stype <- NULL
   if (solvertype == "bdf") {
     stype <- 1
   } else if (solvertype == "adams") {
     stype <- 2
-  }
-  jf <- get_mock_jac_fct()
-  if (!missing(own_jac_fct)) {
-    if (stype == 2) {
-      warning("own jacobian function cannot be used by solver adams. The function is ignored")
-    } else if (is.function(own_jac_fct)) {
-      stype <- 3
-      jf <- resolve_jacobian(own_jac_fct, verbose, optimizer = FALSE)
-    }
   }
 
   # boundaries
@@ -85,7 +72,7 @@ solve <- function(ode, parameter,
     parameter_vec = parb,
     state_measured = st, state_idx_cuts = state_idx_cuts,
     integration_times = integration_times,
-    reltol, atol, fct_ret, stype, ecf, sf, jf
+    reltol, atol, fct_ret, stype, ecf
   )
 
   # states

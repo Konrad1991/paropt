@@ -23,29 +23,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// get_default_spline_fct
-Rcpp::XPtr<spline_fct> get_default_spline_fct();
-RcppExport SEXP _paropt_get_default_spline_fct() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(get_default_spline_fct());
-    return rcpp_result_gen;
-END_RCPP
-}
-// get_mock_jac_fct
-Rcpp::XPtr<JAC> get_mock_jac_fct();
-RcppExport SEXP _paropt_get_mock_jac_fct() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(get_mock_jac_fct());
-    return rcpp_result_gen;
-END_RCPP
-}
 // wrapper_optimizer
-Rcpp::List wrapper_optimizer(vd& init_state, vd& par_times, vi& param_idx_cuts, vd& lb_, vd& ub_, vd& state_measured, vi& state_idx_cuts, vd& integration_times, double reltol, vd& absolute_tolerances, Rcpp::XPtr<OS> fct, int nswarm, int ngen, double error, int solvertype, Rcpp::XPtr<error_calc_fct> ecf, Rcpp::XPtr<spline_fct> sf, Rcpp::XPtr<JAC> jf, int number_threads);
-RcppExport SEXP _paropt_wrapper_optimizer(SEXP init_stateSEXP, SEXP par_timesSEXP, SEXP param_idx_cutsSEXP, SEXP lb_SEXP, SEXP ub_SEXP, SEXP state_measuredSEXP, SEXP state_idx_cutsSEXP, SEXP integration_timesSEXP, SEXP reltolSEXP, SEXP absolute_tolerancesSEXP, SEXP fctSEXP, SEXP nswarmSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP, SEXP ecfSEXP, SEXP sfSEXP, SEXP jfSEXP, SEXP number_threadsSEXP) {
+Rcpp::List wrapper_optimizer(vd& init_state, vd& par_times, vi& param_idx_cuts, vd& lb_, vd& ub_, vd& state_measured, vi& state_idx_cuts, vd& integration_times, double reltol, vd& absolute_tolerances, Rcpp::XPtr<OS> fct, int nswarm, int ngen, double error, int solvertype, Rcpp::XPtr<error_calc_fct> ecf, int number_threads);
+RcppExport SEXP _paropt_wrapper_optimizer(SEXP init_stateSEXP, SEXP par_timesSEXP, SEXP param_idx_cutsSEXP, SEXP lb_SEXP, SEXP ub_SEXP, SEXP state_measuredSEXP, SEXP state_idx_cutsSEXP, SEXP integration_timesSEXP, SEXP reltolSEXP, SEXP absolute_tolerancesSEXP, SEXP fctSEXP, SEXP nswarmSEXP, SEXP ngenSEXP, SEXP errorSEXP, SEXP solvertypeSEXP, SEXP ecfSEXP, SEXP number_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,16 +45,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type error(errorSEXP);
     Rcpp::traits::input_parameter< int >::type solvertype(solvertypeSEXP);
     Rcpp::traits::input_parameter< Rcpp::XPtr<error_calc_fct> >::type ecf(ecfSEXP);
-    Rcpp::traits::input_parameter< Rcpp::XPtr<spline_fct> >::type sf(sfSEXP);
-    Rcpp::traits::input_parameter< Rcpp::XPtr<JAC> >::type jf(jfSEXP);
     Rcpp::traits::input_parameter< int >::type number_threads(number_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(wrapper_optimizer(init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, sf, jf, number_threads));
+    rcpp_result_gen = Rcpp::wrap(wrapper_optimizer(init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, number_threads));
     return rcpp_result_gen;
 END_RCPP
 }
 // wrapper_solver
-Rcpp::List wrapper_solver(vd& init_state, vd& par_times, vi& param_idx_cuts, vd& parameter_vec, vd& state_measured, vi& state_idx_cuts, vd& integration_times, double reltol, vd& absolute_tolerances, Rcpp::XPtr<OS> fct, int solvertype, Rcpp::XPtr<error_calc_fct> ecf, Rcpp::XPtr<spline_fct> sf, Rcpp::XPtr<JAC> jf);
-RcppExport SEXP _paropt_wrapper_solver(SEXP init_stateSEXP, SEXP par_timesSEXP, SEXP param_idx_cutsSEXP, SEXP parameter_vecSEXP, SEXP state_measuredSEXP, SEXP state_idx_cutsSEXP, SEXP integration_timesSEXP, SEXP reltolSEXP, SEXP absolute_tolerancesSEXP, SEXP fctSEXP, SEXP solvertypeSEXP, SEXP ecfSEXP, SEXP sfSEXP, SEXP jfSEXP) {
+Rcpp::List wrapper_solver(vd& init_state, vd& par_times, vi& param_idx_cuts, vd& parameter_vec, vd& state_measured, vi& state_idx_cuts, vd& integration_times, double reltol, vd& absolute_tolerances, Rcpp::XPtr<OS> fct, int solvertype, Rcpp::XPtr<error_calc_fct> ecf);
+RcppExport SEXP _paropt_wrapper_solver(SEXP init_stateSEXP, SEXP par_timesSEXP, SEXP param_idx_cutsSEXP, SEXP parameter_vecSEXP, SEXP state_measuredSEXP, SEXP state_idx_cutsSEXP, SEXP integration_timesSEXP, SEXP reltolSEXP, SEXP absolute_tolerancesSEXP, SEXP fctSEXP, SEXP solvertypeSEXP, SEXP ecfSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -90,19 +68,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::XPtr<OS> >::type fct(fctSEXP);
     Rcpp::traits::input_parameter< int >::type solvertype(solvertypeSEXP);
     Rcpp::traits::input_parameter< Rcpp::XPtr<error_calc_fct> >::type ecf(ecfSEXP);
-    Rcpp::traits::input_parameter< Rcpp::XPtr<spline_fct> >::type sf(sfSEXP);
-    Rcpp::traits::input_parameter< Rcpp::XPtr<JAC> >::type jf(jfSEXP);
-    rcpp_result_gen = Rcpp::wrap(wrapper_solver(init_state, par_times, param_idx_cuts, parameter_vec, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, solvertype, ecf, sf, jf));
+    rcpp_result_gen = Rcpp::wrap(wrapper_solver(init_state, par_times, param_idx_cuts, parameter_vec, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, solvertype, ecf));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_paropt_get_default_error_fct", (DL_FUNC) &_paropt_get_default_error_fct, 0},
-    {"_paropt_get_default_spline_fct", (DL_FUNC) &_paropt_get_default_spline_fct, 0},
-    {"_paropt_get_mock_jac_fct", (DL_FUNC) &_paropt_get_mock_jac_fct, 0},
-    {"_paropt_wrapper_optimizer", (DL_FUNC) &_paropt_wrapper_optimizer, 19},
-    {"_paropt_wrapper_solver", (DL_FUNC) &_paropt_wrapper_solver, 14},
+    {"_paropt_wrapper_optimizer", (DL_FUNC) &_paropt_wrapper_optimizer, 17},
+    {"_paropt_wrapper_solver", (DL_FUNC) &_paropt_wrapper_solver, 12},
     {NULL, NULL, 0}
 };
 

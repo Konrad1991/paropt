@@ -5,19 +5,11 @@ get_default_error_fct <- function() {
     .Call(`_paropt_get_default_error_fct`)
 }
 
-get_default_spline_fct <- function() {
-    .Call(`_paropt_get_default_spline_fct`)
+wrapper_optimizer <- function(init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, number_threads) {
+    .Call(`_paropt_wrapper_optimizer`, init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, number_threads)
 }
 
-get_mock_jac_fct <- function() {
-    .Call(`_paropt_get_mock_jac_fct`)
-}
-
-wrapper_optimizer <- function(init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, sf, jf, number_threads) {
-    .Call(`_paropt_wrapper_optimizer`, init_state, par_times, param_idx_cuts, lb_, ub_, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, nswarm, ngen, error, solvertype, ecf, sf, jf, number_threads)
-}
-
-wrapper_solver <- function(init_state, par_times, param_idx_cuts, parameter_vec, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, solvertype, ecf, sf, jf) {
-    .Call(`_paropt_wrapper_solver`, init_state, par_times, param_idx_cuts, parameter_vec, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, solvertype, ecf, sf, jf)
+wrapper_solver <- function(init_state, par_times, param_idx_cuts, parameter_vec, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, solvertype, ecf) {
+    .Call(`_paropt_wrapper_solver`, init_state, par_times, param_idx_cuts, parameter_vec, state_measured, state_idx_cuts, integration_times, reltol, absolute_tolerances, fct, solvertype, ecf)
 }
 

@@ -6,8 +6,7 @@ Rcpp::List wrapper_solver(vd &init_state, vd &par_times, vi &param_idx_cuts,
                           vi &state_idx_cuts, vd &integration_times,
                           double reltol, vd &absolute_tolerances,
                           Rcpp::XPtr<OS> fct, int solvertype,
-                          Rcpp::XPtr<error_calc_fct> ecf,
-                          Rcpp::XPtr<spline_fct> sf, Rcpp::XPtr<JAC> jf) {
+                          Rcpp::XPtr<error_calc_fct> ecf) {
 
   // add parameter to struct
   time_state_information tsi;
@@ -21,8 +20,6 @@ Rcpp::List wrapper_solver(vd &init_state, vd &par_times, vi &param_idx_cuts,
   tsi.reltol = reltol;
   tsi.absolute_tolerances = absolute_tolerances;
   tsi.ecf = *ecf;
-  tsi.sf = *sf;
-  tsi.jf = *jf;
   OS ode = *fct;
 
   // define solver
@@ -31,8 +28,6 @@ Rcpp::List wrapper_solver(vd &init_state, vd &par_times, vi &param_idx_cuts,
     save_fct = solver_bdf_save;
   } else if (solvertype == 2) {
     save_fct = solver_adams_save;
-  } else if (solvertype == 3) {
-    save_fct = solver_bdf_save_with_jac;
   }
   Rcpp::NumericMatrix df(integration_times.size(), init_state.size());
 

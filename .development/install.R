@@ -1,2 +1,4 @@
-setwd("/home/konrad/Documents/GitHub/RProjects/paropt_supplement")
-install.packages("paropt", repos = NULL, type = "source")
+# system('find -name "*.o" | xargs rm')
+# system('find -name "*.so" | xargs rm')
+Rcpp::compileAttributes(".")
+install.packages(".", repos = NULL, type = "source")

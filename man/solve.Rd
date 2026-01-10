@@ -11,7 +11,6 @@
     states,
     solvertype,
     own_error_fct,
-    own_spline_fct,
     own_jac_fct,
     verbose
   )
@@ -26,7 +25,6 @@
   \item{solvertype}{a string defining the type of solver which should be used "bdf" or "adams" are the possible values. The default value is "bdf". \cr
     "bdf" is an abbreviation for Backward Differentiation Formulas. "adams" is an abbreviation for the Adams-Moulton algorithm}
   \item{own_error_fct}{An optional function to calculate the error between \emph{in silico} value and the specified value in the data.frame states. The default error calculation is specified in the section notes.}
-  \item{own_spline_fct}{An optional function to interpolate the values for variable parameters. The default function is a CatmullRome spline interpolation.}
   \item{own_jac_fct}{An optional function which returns the jacobian function. If nothing is passed the jacobian matrix is numerically calculated.}
   \item{verbose}{A logical value defining whether the output during compilation should be shown or not. The default value is FALSE}
 }
@@ -142,54 +140,6 @@ error_fct <- function(num_points, insilico, measured) {
 }
 }
 
-\strong{own_spline_fct: }
-\hr{}
-The spline function is called, directly before the ode-system is evaluated. However, the function is only called for non-constant parameters. See example Nr.2 and Nr.3 parameter \emph{d} as described above. The results of the spline function is then stored in the vector \strong{parameter} which is passed to the ode-system. The function expects three arguments:
-\itemize{
-  \item The time-point at which the function is evaluated
-  \item a vector containing the time-points for which parameters are defined
-  \item a vector containing the parameters at the respective time-points
-}
-The function has to return a scalar value.See the example above for a linear interpolation:
-\verb{
-linear_interpolation <- function(t, time_vec, par_vec) {
-  left = 0
-  left_time = 0
-  right = 0
-  right_time = 0
-  for(i in 1:length(time_vec)) {
-
-    if(t == time_vec[i]) {
-      return(par_vec[i])
-    }
-
-    if(t < time_vec[i]) {
-      left = par_vec[i - 1]
-      right = par_vec[i]
-      left_time = time_vec[i - 1]
-      right_time = time_vec[i]
-      break
-    }
-  }
-
-  timespan = right_time - left_time
-  m = (right - left) / timespan
-  ret = left + m*(t - left_time)
-  return(ret)
-}
-}
-Mentionable, is that it hasn't to be a interpolation function. See the example above:
-\verb{
-fct <- function(t, time_vec, par_vec) {
-  ret = 0
-  for(i in par_vec) {
-    ret = ret + i
-  }
-  return(ret)
-}
-}
-
-
 \strong{own_jac_fct: }
 \hr{}
 The jacobian function expects 5 arguments.
@@ -235,7 +185,7 @@ res <- paropt::solve(ode,
                      states = states, verbose = FALSE)
 
 
- # solving with own error, spline and jacobian function
+ # solving with own error and jacobian function
 
  jac <- function(t, y, ydot, J, parameter) {
   a_db = at(parameter, 1)
@@ -258,14 +208,6 @@ error_fct <- function(c, a, b) {
   return(ret)
 }
 
-spline_fct <- function(t, time_vec, par_vec) {
-  ret = 0
-  for(i in par_vec) {
-    ret = ret + i
-  }
-  return(ret)
-}
-
 path <- system.file("examples", package = "paropt")
 states <- read.table(paste(path,"/states_LV.txt", sep = ""), header = TRUE)
 parameter <- data.frame(time = 0, a = 1.1, b = 0.4, c = 0.1, d = 0.4)
@@ -279,10 +221,7 @@ res <- paropt::solve(ode,
                         reltol = 1e-06, abstol = c(1e-08, 1e-08),
                         states = states, verbose = FALSE,
                         own_error_fct = error_fct,
-                        own_spline_fct = spline_fct,
                         own_jac_fct = jac)
-
-
   }
 }
 \seealso{

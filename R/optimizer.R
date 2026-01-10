@@ -5,13 +5,10 @@ optimize <- function(ode, lb, ub,
                      states,
                      solvertype = "bdf",
                      own_error_fct,
-                     own_spline_fct,
-                     own_jac_fct,
                      number_threads,
                      verbose = FALSE) {
 
   stopifnot(!missing(ode))
-
   stopifnot(!missing(lb))
   stopifnot(!missing(ub))
   stopifnot(is.data.frame(lb))
@@ -45,27 +42,19 @@ optimize <- function(ode, lb, ub,
   assert_logical_length_one(verbose, s(verbose, 1L))
 
   # threads
-  number_threads <- resolve_threads(number_threads)
+  if (missing(number_threads)) number_threads <- RcppThread::detectCores()
+  stopifnot(is.numeric(number_threads))
+  stopifnot(number_threads >= 1)
 
   fct_ret <- resolve_ode_function(ode, verbose, optimizer = TRUE)
   ecf <- resolve_error_function(own_error_fct, verbose, optimizer = TRUE)
-  sf <- resolve_spline_function(own_spline_fct, verbose, optimizer = TRUE)
 
-  # own jac function
+  # solver type
   stype <- NULL
   if (solvertype == "bdf") {
     stype <- 1
   } else if (solvertype == "adams") {
     stype <- 2
-  }
-  jf <- get_mock_jac_fct()
-  if (!missing(own_jac_fct)) {
-    if (stype == 2) {
-      warning("own jacobian function cannot be used by solver adams. The function is ignored")
-    } else if (is.function(own_jac_fct)) {
-      stype <- 3
-      jf <- resolve_jacobian(own_jac_fct, verbose, optimizer = TRUE)
-    }
   }
 
   # boundaries
@@ -133,8 +122,9 @@ optimize <- function(ode, lb, ub,
     lb_ = lowb, ub_ = upb,
     state_measured = st, state_idx_cuts = state_idx_cuts,
     integration_times = integration_times,
-    reltol, atol, fct_ret, npop, ngen,
-    error, stype, ecf, sf, jf, number_threads
+    reltol = reltol, absolute_tolerances = atol, fct = fct_ret,
+    nswarm = npop, ngen = ngen, error = error,
+    solvertype = stype, ecf = ecf, number_threads = number_threads
   )
 
   # states

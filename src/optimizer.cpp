@@ -6,7 +6,7 @@ Rcpp::List wrapper_optimizer(
     vd &state_measured, vi &state_idx_cuts, vd &integration_times,
     double reltol, vd &absolute_tolerances, Rcpp::XPtr<OS> fct, int nswarm,
     int ngen, double error, int solvertype, Rcpp::XPtr<error_calc_fct> ecf,
-    Rcpp::XPtr<spline_fct> sf, Rcpp::XPtr<JAC> jf, int number_threads) {
+    int number_threads) {
 
   // add parameter to struct
   time_state_information tsi;
@@ -20,8 +20,6 @@ Rcpp::List wrapper_optimizer(
   tsi.reltol = reltol;
   tsi.absolute_tolerances = absolute_tolerances;
   tsi.ecf = *ecf;
-  tsi.sf = *sf;
-  tsi.jf = *jf;
 
   OS ode = *fct;
   av lb = lb_;
@@ -73,9 +71,6 @@ Rcpp::List wrapper_optimizer(
   } else if (solvertype == 2) {
     objfct = solver_adams;
     save_fct = solver_adams_save;
-  } else if (solvertype == 3) {
-    objfct = solver_bdf_with_jac;
-    save_fct = solver_bdf_save_with_jac;
   }
   Rcpp::NumericMatrix df(integration_times.size(), init_state.size());
 
