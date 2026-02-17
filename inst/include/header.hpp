@@ -4,6 +4,7 @@
 // [[Rcpp::depends(ast2ast)]]
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::plugins(cpp2a)]]
+#include <RcppArmadillo.h>
 #include "etr.hpp"
 #include <RcppThread.h>
 
